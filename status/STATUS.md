@@ -1,7 +1,7 @@
 # Summer 2027 internship status
-_Updated 2026-10-23 19:28_
+_Updated 2026-10-23 19:45_
 
-**Total submitted: 26** · Needs Joseph: 119 · Skipped: 11
+**Total submitted: 39** · Needs Joseph: 122 · Skipped: 12
 
 ## Submitted
 | Company | Role | Link | Date submitted | Resume used |
@@ -32,6 +32,19 @@ _Updated 2026-10-23 19:28_
 | Pacific Fusion | Summer 2027 Internship - Software Engineering | https://job-boards.greenhouse.io/pacificfusion/jobs/4398373009 | 2026-10-23 | Bui_Joseph_Fall_2026_Resume.pdf |
 | Arc Boat Company | Software Engineering Intern | https://job-boards.greenhouse.io/arcboatcompany/jobs/5442881008 | 2026-10-23 | Bui_Joseph_Fall_2026_Resume.pdf |
 | WhiteWater Midstream | Data Science Intern - Summer 2027 | https://job-boards.greenhouse.io/whitewatermidstream/jobs/5217853007 | 2026-10-23 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Eulerity | Backend Developer Intern | https://job-boards.greenhouse.io/eulerity/jobs/4709040006 | 2026-10-23 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Schonfeld | 2027 Business Analytics Intern | https://job-boards.greenhouse.io/schonfeld/jobs/8171703 | 2026-10-23 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Revel | Internship: Full Stack Software Engineer | https://jobs.ashbyhq.com/revel/29968ce1-8838-44e8-ac4e-6b1c87ce5314 | 2026-10-23 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Revel | Internship: Forward Deployed Engineer, Software | https://jobs.ashbyhq.com/revel/34f97b81-c981-4c4b-9f4d-d471c33b46cc | 2026-10-23 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Revel | Internship: Embedded Software Engineer | https://jobs.ashbyhq.com/revel/f8eec1fd-da28-47ce-bca4-2fbe9c48a889 | 2026-10-23 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Antares Nuclear | Reactor Software Engineering Intern - Summer 2027 | https://jobs.ashbyhq.com/Antares/419ef2df-f0aa-4b68-994a-077e08a959e3 | 2026-10-23 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Apex Technology | Simulation Software Engineering Internship (Spring or Summer 2027) | https://jobs.ashbyhq.com/apex-technology-inc/d3e21f84-3637-4521-833d-fd07b3ca5f2e | 2026-10-23 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Decagon | Engineering Intern (Summer 2027) | https://jobs.ashbyhq.com/decagon/16529089-a048-4bc3-8456-3f197135e00b | 2026-10-23 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Cyvl | Data Operations Intern (Summer 2027) | https://jobs.ashbyhq.com/cyvl/f44bb1cf-7100-46f7-b3c2-6d2a566d4b0d | 2026-10-23 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Tessera Labs | Software Engineering Intern, Full Stack | https://jobs.ashbyhq.com/tessera-labs/892bb150-8c98-47f4-a8b6-93633ecb2ea7 | 2026-10-23 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Pace | Member of Technical Staff, Intern | https://jobs.ashbyhq.com/withpace/9acdae91-3834-4c08-8579-fd14ff40a76b | 2026-10-23 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Flint | Engineering Intern - Summer 2027 | https://jobs.ashbyhq.com/flint/39f9e665-7037-4dff-b77a-ff7039df2bfc | 2026-10-23 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Allen Control Systems | Computer Vision/Machine Learning Intern, 2027 | https://jobs.ashbyhq.com/allen-control-systems/a7831fef-7125-4c03-b828-5f0472989037 | 2026-10-23 | Bui_Joseph_Fall_2026_Resume.pdf |
 
 ## Skipped
 | Company | Role | Reason |
@@ -47,6 +60,7 @@ _Updated 2026-10-23 19:28_
 | Crusoe | Software Engineer Intern | API rate-limited; recheck later |
 | Epic Games | Backend Services Programmer Intern | Posting closed (404) when checked 2026-10-23 |
 | State Affairs | Software Engineer Intern (Summer 2027) | Required graduation question only offers December 2027 or May 2028; no truthful option for May 2030. |
+| Antares Nuclear | Electrical Engineering Intern - Summer 2027 | Electrical-engineering role outside your field (Applied Math & Stats); applied to Antares Reactor Software instead. |
 
 ## Needs Joseph
 | Company | Role | Deadline | What is needed | Link |
@@ -170,6 +184,9 @@ _Updated 2026-10-23 19:28_
 | The New York Times | Fellow, A.I. Initiatives | Not listed | 1) Question only you can answer: "Do you have more than five years of full-time, professional journalism experience, excluding internships?" Options: Yes / No 2) Question only you can answer: "After your review of the job description, do you meet each of the basic qualifications listed in the job?" Options: Yes / No / I'm Not Sure Everything else on this form I can fill. | https://job-boards.greenhouse.io/thenewyorktimes/jobs/4740369005 |
 | FanDuel | Sports Trader Intern - Summer 2027 | Not listed | 1) Question only you can answer: "Please list legal first and last name" 2) Question only you can answer: "Are you at least 18 years of age or will be by May 27, 2027?" Options: Yes / No 3) Question only you can answer: "Are you at least an intermediate user of Microsoft Excel?" Options: Yes / No 4) Question only you can answer: "Are you able to complete mental math problems under pressure and time constraint?" Options: Yes / No 5) Question only you can answer: "Do you have in-depth knowledge, including understanding the rules of play and key terminology, of at least one of the following sports?" Options: Yes / No 6) Question only you can answer: "Please select the sports you have in-depth knowledge of" Options: Baseball/MLB / Basketball/WNBA / Basketball/NBA / Basketball/NCAAB / Football/NFL / Hockey/NHL Everything else on this form I can fill. | https://job-boards.greenhouse.io/fanduel/jobs/8300829 |
 | MEMX | Data Engineering Intern, Summer 2027 (Hybrid, NYC) | Not listed | Human verification: Greenhouse emailed an 8-character security code to josephlongbui@gmail.com. Everything else is filled in the Chrome tab titled "Job Application for Data Engineering Intern ... at MEMX" - type the code there and click Submit. If that tab or code has expired, check Done and tell me when you are at your inbox; I will refill it and you enter the new code. | https://job-boards.greenhouse.io/memx/jobs/5450442008 |
+| Graviton Research Capital | Quantitative Researcher - 2027 Summer Internship | Not listed | Human verification: Greenhouse emailed an 8-character security code to josephlongbui@gmail.com. The form is filled in the Chrome tab titled "Job Application for Quantitative Researcher ... at Graviton" - type the code there and click Submit. If it expired, check Done and tell me when you are at your inbox; I will refill it for you to enter a fresh code. | https://job-boards.greenhouse.io/gravitonresearchcapital/jobs/8899673002 |
+| (General - unblocks several) | Full legal name | Not listed | Question only you can answer: What is your full legal name exactly as on your government ID (including any middle name)? Unblocks: Gecko Robotics SWE / Full Stack / AI-ML interns, Waymo SWE Commercialization + Maneuvering interns. Everything else on those forms I can fill. | https://jobs.ashbyhq.com/gecko-robotics/24561868-f075-4edf-a991-59ff0174e92a/application |
+| Skydio | Software Engineer Intern - Summer 2027 | Not listed | Question only you can answer (required): "Prior US Government Employment? Do you currently, or have you in the last 10 years, worked for the US government (e.g., Congressional staffer, member of military, state, or federal agencies)?" Options: Yes / No. (Your UNLV research assistant job was at a public state university - decide whether that counts.) Everything else on this form I can fill. | https://jobs.ashbyhq.com/skydio/79fdda46-4ff5-42c7-b208-55f2084cdb8c/application |
 
 ## Rounded, guessed, or judgment-call fields
 - Major: forms without 'Applied Mathematics & Statistics' got the closest option 'Mathematics' (Netflix, Affirm x2).
