@@ -1,7 +1,7 @@
 # Summer 2027 internship status
-_Updated 2026-10-24 04:32_
+_Updated 2026-10-24 12:20_
 
-**Total submitted: 66** · Needs Joseph: 546 · Skipped: 258
+**Total submitted: 81** · Needs Joseph: 546 · Skipped: 258
 
 ## Submitted
 | Company | Role | Link | Date submitted | Resume used |
@@ -72,6 +72,21 @@ _Updated 2026-10-24 04:32_
 | Multiply Labs | Robotics Software Intern (SF) | https://jobs.lever.co/multiplylabs/acca98ab-c206-4f71-b7a5-6977e4828586 | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
 | Crest Industries | Developer Intern (Pineville, LA / remote) | https://jobs.lever.co/crestoperations/e012721c-e731-483d-a4e3-1a240c48bfbd | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
 | TensorWave | Software Engineering Intern (Las Vegas, NV) | https://jobs.ashbyhq.com/tensorwave/39091eeb-13fc-46a7-b7e5-0d4584ac53ab | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Rhoda AI | Software Engineer Intern, Inference (Mountain View) | https://jobs.ashbyhq.com/rhoda-ai/2de33083-782f-489e-9b91-f40761a36bf4 | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Rhoda AI | Software Engineer Intern, Rhoda Platform (Mountain View) | https://jobs.ashbyhq.com/rhoda-ai/9a57c8ff-dd2b-4547-a46a-44658a699ba5 | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Melius | Software Engineering Intern [Spring/Summer 2027] (NYC) | https://jobs.ashbyhq.com/melius/b61f063a-4f94-4e50-a4ef-05aaab552280 | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Quadrillion Labs | Software Engineering Intern (Summer 2027) (NYC) | https://jobs.ashbyhq.com/quadrillion-labs/a4acc44c-31ce-41a0-ab44-2500487b4d05 | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
+| CTGT | Software Engineering Intern (Summer 2027) (SF) | https://jobs.ashbyhq.com/ctgt/f657c2f5-125e-42b6-a68a-646bbea3d155 | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Gritt Robotics | ML & Cloud Infrastructure Engineer Intern (South SF) | https://jobs.ashbyhq.com/gritt/46af6e69-40fc-4e53-940e-a99757137523 | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Cowboy Space | Intern, Software Engineering, 2027 (San Carlos) | https://jobs.ashbyhq.com/cowboyspace/56d1d7e4-fa7e-4c25-aa8b-6828447fc64a | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Allen Control Systems | Software Engineering Intern, 2027 (Austin) | https://jobs.ashbyhq.com/allen-control-systems/ed5c58a7-6a3c-474b-aa07-43ff2051cb5c | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Bild AI | AI/SWE Intern (SF) | https://jobs.ashbyhq.com/bild-ai/b333f0f7-0ca6-4509-8697-9303396b5364 | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Clera | Computer Vision & Robotics Intern (SF) | https://jobs.ashbyhq.com/clera/697c2212-e39d-4e6e-92c2-12e6603a61d0 | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Valon Tech | Software Engineer Intern (NYC/SF) | https://jobs.ashbyhq.com/valon/b5a62c0c-823c-42dd-8cb5-e4b1455bcc64 | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Clay | Software Engineering Intern (NYC) | https://jobs.ashbyhq.com/claylabs/5b7eced2-36bd-4265-a2a8-da0f786e47aa | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Scout AI | AI Engineer Intern - Fury Team (Summer 2027) (Sunnyvale) | https://jobs.ashbyhq.com/scout-ai/3b639e39-abd7-4a0c-9bea-e1cd0a72db99 | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Antares | Multiphysics Software Intern - Summer 2027 (LA) | https://jobs.ashbyhq.com/antares/922a527d-9826-446d-9aba-ffc611995830 | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Juicebox | Software Engineer Intern (SF) | https://jobs.ashbyhq.com/juicebox/1af7ec98-9c2e-4101-868e-58e6f35cd23a | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
 
 ## Skipped
 | Company | Role | Reason |
