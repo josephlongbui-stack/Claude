@@ -1,7 +1,7 @@
 # Summer 2027 internship status
-_Updated 2026-10-24 04:05_
+_Updated 2026-10-24 04:28_
 
-**Total submitted: 53** · Needs Joseph: 535 · Skipped: 246
+**Total submitted: 65** · Needs Joseph: 539 · Skipped: 252
 
 ## Submitted
 | Company | Role | Link | Date submitted | Resume used |
@@ -59,6 +59,18 @@ _Updated 2026-10-24 04:05_
 | TWG Global | AI Data Science Intern (MAQR) - Summer 2027 | https://apply.workable.com/twgai/j/AC536E5EE2 | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
 | ENFOS | Software Engineer Intern - Summer 2027 | https://apply.workable.com/enfos-inc/j/CA15908E0A |  | Bui_Joseph_Fall_2026_Resume.pdf |
 | Stevens Capital Management | Developer Internship (Radnor, PA) | https://job-boards.greenhouse.io/scm/jobs/721888 |  | Bui_Joseph_Fall_2026_Resume.pdf |
+| AiDash | Software Engineering Intern, Backend (Palo Alto) | https://job-boards.greenhouse.io/aidashinc/jobs/4436057009 | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Anduril | 2027 Software Engineer Intern (multi-location; top pref Costa Mesa) | https://job-boards.greenhouse.io/andurilindustries/jobs/5148079007 | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Anduril | 2027 Firmware Engineer Intern (Costa Mesa) | https://job-boards.greenhouse.io/andurilindustries/jobs/5265158007 | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Geneva Trading | Python Developer Intern (Chicago) | https://job-boards.greenhouse.io/genevatrading/jobs/5242196007 | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Emergent Labs | Software Engineering Intern (San Francisco) | https://job-boards.greenhouse.io/emergentlabsinc/jobs/4323651009 | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
+| SingleStore | Software Engineer Intern - Helios - 2027 | https://job-boards.greenhouse.io/singlestore/jobs/8205514 | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
+| HPR (Hyannis Port Research) | Software Engineering Intern - Summer 2027 (Needham, MA) | https://job-boards.greenhouse.io/hyannisportresearch/jobs/7822989003 | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Amperesand | AI/ML Engineering Intern (Sunnyvale) | https://job-boards.greenhouse.io/amperesand/jobs/4465899009 | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Humble Robotics | Embedded Software Engineer, 2027 Internship (SF) | https://jobs.lever.co/humble-robotics/8d1fb5d7-9b07-4fac-8c39-e395dca7f2b3 | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Multiply Labs | Software Intern (SF) | https://jobs.lever.co/multiplylabs/8203fbb3-4d42-4f6a-ae64-f05c3dcf0e9b | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Multiply Labs | Robotics Software Intern (SF) | https://jobs.lever.co/multiplylabs/acca98ab-c206-4f71-b7a5-6977e4828586 | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
+| Crest Industries | Developer Intern (Pineville, LA / remote) | https://jobs.lever.co/crestoperations/e012721c-e731-483d-a4e3-1a240c48bfbd | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
 
 ## Skipped
 | Company | Role | Reason |
@@ -309,6 +321,12 @@ _Updated 2026-10-24 04:05_
 | Ursa Major | Embedded Flight Software Intern | [CSV] Company already at 3-role cap (CSV note) |
 | S&C Electric Company | Electronics Engineering Intern - TBI | [CSV] Hardware Engineering role outside SWE/ML/data interests |
 | Epic Games | Tools Programmer Intern - Graphics | [CSV] Company already at 3-role cap (CSV note) |
+| SoloPulse | Software Engineer Intern/Co-op - Spring 2027 | [GitHub list] Spring 2027 term; Joseph is in school |
+| Zoox | Contract Student Worker - Freeways Data Evaluation (20 hrs/wk) | [GitHub list] Part-time school-year contract role |
+| Viget | Project & Product Manager Intern (2027) | [GitHub list] Project/product management role |
+| CesiumAstro | Summer 2027 - Embedded Software Engineering Internship | [GitHub list] Company already at 3-role cap (per CSV note) |
+| Hermeus | Flight Software & GNC Intern - Spring/Summer 2027 | [GitHub list] Company already at 3-role cap (per CSV note) |
+| Hermeus | Software Engineering Intern (HIL) - Spring/Summer 2027 | [GitHub list] Company already at 3-role cap (per CSV note) |
 
 ## Needs Joseph
 | Company | Role | Deadline | What is needed | Link |
@@ -848,6 +866,10 @@ _Updated 2026-10-24 04:05_
 | Sun Life | Data Science Intern | Not listed | Create account / sign in on Sun Life's careers portal (Workday), then check Done and I'll fill and submit the form. | https://sunlife.wd3.myworkdayjobs.com/en-US/Experienced-Jobs/job/Wellesley-Hills-Massachusetts/Data-Science-Intern---Summer-2027-Intern_JR00127666 |
 | Auto-Owners Insurance | Business Intelligence Developer Intern | Not listed | Create account / sign in on Auto-Owners Insurance's careers portal (Workday), then check Done and I'll fill and submit the form. | https://aoins.wd5.myworkdayjobs.com/AutoOwners/job/Lansing-MI/Business-Intelligence-Developer-Internship---Summer-2027_R_14772 |
 | Stoke Space | Summer 2027 Internship - Software (Kent, WA) | Not listed | Required essays (write all three in the box, labeled): (1) "What motivates you?" (2) "There are many valuable skills that aren't taught in the classroom or workplace. What have you learned outside of these environments that you think will make you..." (see link for the full prompt). (3) File upload: "In an essay of about 750 words, please answer the following prompt: What is the hardest thing you have done? What did you learn from it?" Also pick a team preference: Boltline Team / Vehicle Software / Information Technology / UX Design. I will answer: authorized Yes, sponsorship No, Henderson NV 89074, grad May 2030, available May-Aug 2027 Yes, GPA Not Applicable. | https://job-boards.greenhouse.io/stokespacetechnologies/jobs/6176786004 |
+| Trace3 | Data & Analytics Intern (Irvine, CA) | Not listed | Application is fully filled in my Chrome tab and submitted once; Greenhouse now asks for the 8-character security code it emailed to josephlongbui@gmail.com. Paste the code here (codes expire quickly; if expired I will resubmit to get a new one). | https://job-boards.greenhouse.io/trace3/jobs/8274818 |
+| ShopBack | Software Engineer Intern (San Francisco) | Not listed | ShopBack requires checking "Confirmation of Information Provided: I hereby confirm that all information provided to ShopBack Group... is true and accurate." I cannot tick attestations for you. Reply "OK to confirm ShopBack" and I will fill and submit, or apply yourself. Also asks "Which location are you currently based in?" (list is mostly Asia-Pacific; I will look for a U.S./Other option). Optional: future-opportunities contact box (I would leave unchecked). | https://jobs.lever.co/shopback-2/640ac3fb-dae5-4738-95b9-9cb80cc7ad15/apply |
+| ShopBack | Software Engineer Intern (New York) | Not listed | ShopBack requires checking "Confirmation of Information Provided: I hereby confirm that all information provided to ShopBack Group... is true and accurate." I cannot tick attestations for you. Reply "OK to confirm ShopBack" and I will fill and submit, or apply yourself. Also asks "Which location are you currently based in?" (list is mostly Asia-Pacific; I will look for a U.S./Other option). Optional: future-opportunities contact box (I would leave unchecked). | https://jobs.lever.co/shopback-2/e5f5e276-e7f7-43e0-a224-5259d242fe98/apply |
+| Toyota Research Institute | Human Aware Interactions and Learning Intern (Cambridge, MA) | Not listed | Required essay (1-3 sentences): "In 1-3 sentences, tell us about one thing TRI is working on that you find exciting?" Also requires selecting "I have read and understand the selection criteria" (needs your OK). I will answer: degree Bachelor's; eligible to work Yes; U.S. citizen/LPR Yes; national of sanctioned country No; how heard = Other (online internship list). | https://jobs.lever.co/tri/71e99c38-aa29-4414-956d-cc526644b9b7/apply |
 
 ## Rounded, guessed, or judgment-call fields
 - Major: forms without 'Applied Mathematics & Statistics' got the closest option 'Mathematics' (Netflix, Affirm x2).
@@ -869,3 +891,5 @@ _Updated 2026-10-24 04:05_
 - ServiceNow team preferences (not submitted yet): Platform Engineering, Application Engineering, Systems Engineering - chosen from your SWE/backend interests; change them in the open tab if you prefer.
 - Tesla (not submitted): phone type set to Mobile and start date May 26, 2027 (your 'late May' availability) - adjust in the open tab if needed.
 - ENFOS: "earliest available start date" required an exact date; entered 05/24/2027 for "late May 2027". "Willing to work in the office 5x a week" answered Yes based on "will relocate / work anywhere in the U.S.".
+- AiDash: the Greenhouse helper auto-checked a required data-processing consent box ('I agree to allow AiDASH, Inc. to store and process my data') on submit. Consent boxes now block submission and go to Needs Joseph instead.
+- Anduril 2027 SWE Intern: required 'top location preference' among 9 offices; chose Costa Mesa, CA (HQ, closest to Henderson, NV) since Joseph will work anywhere.
