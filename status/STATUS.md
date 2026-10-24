@@ -1,7 +1,7 @@
 # Summer 2027 internship status
-_Updated 2026-10-24 12:44_
+_Updated 2026-10-24 17:02_
 
-**Total submitted: 90** · Needs Joseph: 546 · Skipped: 264
+**Total submitted: 90** · Needs Joseph: 547 · Skipped: 264
 
 ## Submitted
 | Company | Role | Link | Date submitted | Resume used |
@@ -914,6 +914,7 @@ _Updated 2026-10-24 12:44_
 | Heliux | Software Engineer (Internship, Summer 2027) | Not listed | Required Yes/No: "Are you willing and able to work nights and weekends?" Only you can answer. Location = Henderson, NV. | https://jobs.ashbyhq.com/heliux/ff2b6f4b-00d0-4afe-b4f5-2dbf443409ef/application |
 | Braze | Intern, Software Engineering (NYC) | Not listed | Form is otherwise ready (contact, JHU, authorized Yes, sponsorship No, NYC office Yes, how heard Other, talent-community newsletter No). It has an OPTIONAL box: "By checking this box, I agree to allow Braze to retain my data for future opportunities for employment for up to 730 days..." Reply "submit Braze, leave box unchecked" (or "check it") and I will submit. | https://job-boards.greenhouse.io/braze/jobs/8301086 |
 | MS Transverse | Data Science Intern (NYC) | Not listed | LinkedIn Easy Apply (Workday-backed, 9 pages). Required EEO questions have NO decline option: "Please indicate if you are Hispanic or Latino" (Yes/No) and "Please select the ethnicity which most accurately describes how you identify yourself" (checkboxes; no decline). Gender has "Not Declared". Reply with your answers (or "skip") and I will finish it. Note: posting is for rising sophomores/juniors, so you qualify. | https://www.linkedin.com/jobs/view/4464184569/ |
+| Knollwood Investment Advisory | AI & Automation Intern (Cockeysville/Baltimore, MD; $20-30/hr) | Oct 31, 2026 | Handshake application requires an "Other" document titled "Supplemental Questions" (the questions are in the posting's attached "AI & Automation Intern Job Description" file). Answer them in a doc and give me the file path (or paste text and I'll make a PDF), and I will attach it with your resume and submit. Handshake shows you match: graduates by June 2030, freshman. DEADLINE Oct 31. | https://app.joinhandshake.com/jobs/11217122 |
 
 ## Rounded, guessed, or judgment-call fields
 - Major: forms without 'Applied Mathematics & Statistics' got the closest option 'Mathematics' (Netflix, Affirm x2).
