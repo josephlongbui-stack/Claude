@@ -1,7 +1,7 @@
 # Summer 2027 internship status
-_Updated 2026-10-24 03:31_
+_Updated 2026-10-24 04:05_
 
-**Total submitted: 53** · Needs Joseph: 496 · Skipped: 134
+**Total submitted: 53** · Needs Joseph: 535 · Skipped: 246
 
 ## Submitted
 | Company | Role | Link | Date submitted | Resume used |
@@ -197,6 +197,118 @@ _Updated 2026-10-24 03:31_
 | Wellmark | Software Engineer Intern - Metadata Enablement Team | Requires current junior/senior/master's student |
 | CapTech Consulting | Data Analysis/Data Engineering Intern | Requires expected graduation Dec 2027-May 2028 |
 | CapTech Consulting | Consulting Software Engineer Intern | Requires expected graduation Dec 2027-May 2028 |
+| Lyft | Software Engineer Intern - Backend | [CSV] Requires graduation Dec 2027-Summer 2028 |
+| The MJ Companies | Enterprise Data Intern | [CSV] Requires junior or senior standing by Summer 2027 |
+| Gallup | Fintech Intern - Summer 2027 | [CSV] Requires graduation from Aug 2027 and residence within 250 miles of Omaha |
+| Schonfeld | 2027 PhD Quantitative Research Intern | [CSV] PhD students only |
+| AXQ Capital | Quantitative Research Intern - Summer 2027 | [CSV] Targets 2027/2028 graduates |
+| Freestone Capital Management | Technology & Operations Intern | [CSV] Rising seniors only |
+| Enova | Software Engineer Intern | [CSV] Requires graduation Dec 2027-Jun 2028 |
+| SeatGeek | Data Analyst Intern | [CSV] Requires graduation spring/summer 2028 |
+| MongoDB | Software Engineer Intern | [CSV] Graduation window ends Summer 2029; Joseph graduates May 2030 |
+| ID.me | Analytics Engineer Intern | [CSV] College juniors (2028 grads) only |
+| DriveWealth | AI Consulting Associate Program Product Owner | [CSV] Requires 2027 or 2028 graduation |
+| Arc | Electrical Hardware Engineering Intern | [CSV] Hardware role; targets Summer 2028 or earlier graduation |
+| Atoms | Electrical Engineer Intern | [CSV] Electrical hardware role outside interests |
+| EQT Corporation | Midstream Services Intern | [CSV] Midstream energy operations role outside interests |
+| Peak Energy | Systems Integration and Test Engineer Intern | [CSV] Hardware integration/test role outside interests |
+| Zipline | Change Management Intern (Summer 2027) | [CSV] Change management role outside SWE/ML interests |
+| Varda Space | Avionics Engineering Intern | [CSV] Avionics hardware role outside interests |
+| C3.ai | AI Product Manager Intern - Summer 2027 | [CSV] Product management role |
+| Waabi | Safety Methodologies Internship/Co-op 2027 | [CSV] Toronto, ON only (non-U.S., not remote) |
+| Simbe Robotics | Data Analytics & Data Science Intern | [CSV] Targets final-year students and strong juniors |
+| Simbe Robotics | Computer Vision / Applied AI Intern | [CSV] Targets final-year students and strong juniors |
+| Simbe Robotics | Robot Software Engineer Intern | [CSV] Targets juniors/seniors and master's students |
+| Fab2 | Electrical Engineer Intern | [CSV] Electrical hardware role outside interests |
+| Aerotech | Electrical/Computer Engineering Intern Co-op | [CSV] Aerotech accepts sophomores and up; hardware role |
+| Excellus BCBS | College Operations Analyst Intern | [CSV] Operations analyst role outside SWE/ML interests |
+| HF Sinclair | Business Analytics Intern | [CSV] Branded fuels business analytics role |
+| TikTok | Client Solutions Intern - Global Business Solutions | [CSV] Client solutions (sales) role |
+| TikTok | Client Solutions Manager Intern - GBS-LATAM | [CSV] Client solutions (sales) role |
+| Kinder Morgan | ESG Intern | [CSV] ESG role outside interests |
+| Watts Water | Strategic Marketing Intern - Analytics & Segmentation | [CSV] Marketing role |
+| CSX | Mechanical Engineering Intern | [CSV] Mechanical engineering role |
+| TikTok | Ecosystem Analyst Intern - TikTok LIVE | [CSV] LIVE ecosystem operations role |
+| QTS | Sustainability Intern | [CSV] Sustainability role |
+| Corning | Imaging Sciences Engineer Intern | [CSV] Optics/imaging hardware role |
+| Intel | Platform Hardware and Systems Engineering Intern - Bachelor's | [CSV] Hardware role |
+| Corning | Optical Metrology Engineer Intern | [CSV] Optics/imaging hardware role |
+| TransUnion | Financial Services Argus Advisory Intern | [CSV] Financial advisory consulting role |
+| Airbus | Operational Excellence Analyst Intern - Data Analytics - Operational Excellence | [CSV] Operational excellence analyst role in manufacturing |
+| onsemi | Integrated Circuit Design Engineer Intern | [CSV] IC design hardware role |
+| ABB | Sales Excellence Data Analytics Intern | [CSV] Sales excellence role |
+| Paccar | Aftersales Data Analyst Intern | [CSV] Company cap reached via earlier Paccar cards |
+| JP Morgan Chase | Asset Management Data Scientist – Summer Associate Intern | [CSV] Summer Associate (MBA/graduate-level) role |
+| Macy's | Summer Internship - Technology | [CSV] Company already at 3-role cap (CSV note) |
+| LSEG | Engineering Intern - Multiple Teams | [CSV] Company already at 3-role cap (CSV note) |
+| LSEG | Engineering Intern | [CSV] Company already at 3-role cap (CSV note) |
+| Ernst & Young | Vector Capitalization Intern - Multiple Teams | [CSV] Company already at 3-role cap (CSV note) |
+| Tradeweb | Emerging Markets Internship | [CSV] Product Management role outside SWE/ML/data interests |
+| Navy Federal | Summer Associate Intern - Digital Payments Strategist | [CSV] Company already at 3-role cap (CSV note) |
+| Navy Federal | Product Strategist Intern - Student Loans | [CSV] Company already at 3-role cap (CSV note) |
+| RF-SMART | Product Strategy Intern | [CSV] Product Management role outside SWE/ML/data interests |
+| ID.me | Product Intern | [CSV] Product Management role outside SWE/ML/data interests |
+| Ernst & Young | Tax Technology and Transformation Products Intern - Tax | [CSV] Company already at 3-role cap (CSV note) |
+| OATEY | Product Management Intern | [CSV] Product Management role outside SWE/ML/data interests |
+| Johnson & Johnson | Technology and Digital Quality Intern | [CSV] Company already at 3-role cap (CSV note) |
+| Ernst & Young | Associate Intern - Multiple Teams | [CSV] Company already at 3-role cap (CSV note) |
+| TWG Global | Data Science Intern - MAQR | [CSV] Company already at 3-role cap (CSV note) |
+| Ernst & Young | Summer Associate Intern - Corporate Finance - Quantitative Finance and Economics | [CSV] Company already at 3-role cap (CSV note) |
+| iRhythm Technologies | Lifecycle Engineering Co-op Intern | [CSV] Hardware Engineering role outside SWE/ML/data interests |
+| EquipmentShare | Engineering Intern - Embedded | [CSV] Hardware Engineering role outside SWE/ML/data interests |
+| EquipmentShare | Electrical Engineering Intern - Embedded | [CSV] Hardware Engineering role outside SWE/ML/data interests |
+| Insulet | Life Cycle Engineering Co-op - Electrical | [CSV] Hardware Engineering role outside SWE/ML/data interests |
+| Intel | Silicon Hardware Engineering Intern - Bachelor's | [CSV] Hardware Engineering role outside SWE/ML/data interests |
+| K2 Space | Electrical Engineer Intern - Summer 2027 | [CSV] Hardware Engineering role outside SWE/ML/data interests |
+| Saab | Systems Engineering Co-op | [CSV] Hardware Engineering role outside SWE/ML/data interests |
+| Tradeweb | Digital Assets Intern | [CSV] Company already at 3-role cap (CSV note) |
+| RTX | AGS Software Engineering Co-op | [CSV] Company already at 3-role cap (CSV note) |
+| RTX | Electrical Engineer Intern | [CSV] Company already at 3-role cap (CSV note) |
+| GlobalFoundries | Technology Architecture Engineer Intern | [CSV] Company already at 3-role cap (CSV note) |
+| GlobalFoundries | Reliability Test Engineer Intern | [CSV] Company already at 3-role cap (CSV note) |
+| GlobalFoundries | Silicon Photonics Reliability Engineering Intern | [CSV] Company already at 3-role cap (CSV note) |
+| Muon Space | GNC Software Engineer Intern | [CSV] Company already at 3-role cap (CSV note) |
+| Astranis | Radio Frequency Hardware Intern | [CSV] Company already at 3-role cap (CSV note) |
+| General Motors | Systems/Calibration Engineer Intern - ADAS Drive | [CSV] Company already at 3-role cap (CSV note) |
+| Koch Industries | Product Management Intern | [CSV] Product Management role outside SWE/ML/data interests |
+| Assurant | Manufactured Housing Product Analysis Intern | [CSV] Company already at 3-role cap (CSV note) |
+| Cadence Solutions | Product Management Intern | [CSV] Product Management role outside SWE/ML/data interests |
+| RTX | Software Engineer Co-op | [CSV] Company already at 3-role cap (CSV note) |
+| RTX | Software Engineering Co-op | [CSV] Company already at 3-role cap (CSV note) |
+| General Motors | Fleet Reliability and Test Engineering Intern | [CSV] Company already at 3-role cap (CSV note) |
+| Rugged Robotics | Electrical Engineer Intern Co-op | [CSV] Hardware Engineering role outside SWE/ML/data interests |
+| RTX | Systems Engineer Co-op | [CSV] Company already at 3-role cap (CSV note) |
+| RTX | Electro-Optics Systems Engineer Intern | [CSV] Company already at 3-role cap (CSV note) |
+| RTX | Software Engineer Intern | [CSV] Company already at 3-role cap (CSV note) |
+| Walmart | Automation Product Manager Intern - Product Manager | [CSV] Company already at 3-role cap (CSV note) |
+| CVS Health | Innovation & Technology Internship - Product & Agile Delivery | [CSV] Product Management role outside SWE/ML/data interests |
+| RTX | Mission Analyst Intern | [CSV] Company already at 3-role cap (CSV note) |
+| General Dynamics Information Technology | Financial Data Analyst Intern | [CSV] Company already at 3-role cap (CSV note) |
+| CVS Health | Medicaid Data Analytics Intern | [CSV] Company already at 3-role cap (CSV note) |
+| CVS Health | Innovation & Technology Data Engineering Intern | [CSV] Company already at 3-role cap (CSV note) |
+| CVS Health | Innovation & Technology Data Science Intern | [CSV] Company already at 3-role cap (CSV note) |
+| Amazon | Software Engineer Intern - AWS Database | [CSV] Company already at 3-role cap (CSV note) |
+| Amazon | Systems Development Engineer Intern | [CSV] Company already at 3-role cap (CSV note) |
+| American Family Insurance Group | AI Platform Engineering Intern | [CSV] Company already at 3-role cap (CSV note) |
+| Westinghouse Electric Company | Software Engineering Intern | [CSV] Company already at 3-role cap (CSV note) |
+| Skydio | Frontend Software Engineer Intern | [CSV] Company already at 3-role cap (CSV note) |
+| Amazon | Product Manager Intern - ALA | [CSV] Company already at 3-role cap (CSV note) |
+| Philips | Service Offer Design Intern | [CSV] Product Management role outside SWE/ML/data interests |
+| Huntington Bancshares | Enterprise Payments Intern | [CSV] Product Management role outside SWE/ML/data interests |
+| Patreon | Product Manager Intern | [CSV] Product Management role outside SWE/ML/data interests |
+| Amazon | Associate Delivery Consultant Intern - AWS Professional Services | [CSV] Company already at 3-role cap (CSV note) |
+| Johnson & Johnson | Laboratory Automation Systems Intern | [CSV] Company already at 3-role cap (CSV note) |
+| Amazon | Cloud Hardware Development Engineer Intern | [CSV] Company already at 3-role cap (CSV note) |
+| Amazon | ASIC Engineer Intern | [CSV] Company already at 3-role cap (CSV note) |
+| Amazon | Software Engineer Intern - Embedded Systems | [CSV] Company already at 3-role cap (CSV note) |
+| Amazon | Hardware Development Engineer Intern | [CSV] Company already at 3-role cap (CSV note) |
+| GlobalFoundries | Tapeout Engineer Intern - Tapeout Operations | [CSV] Company already at 3-role cap (CSV note) |
+| GlobalFoundries | New Product Development Test Engineer Intern | [CSV] Company already at 3-role cap (CSV note) |
+| GlobalFoundries | CPU IP Design & Verification Intern - RISC-V Processor Development | [CSV] Company already at 3-role cap (CSV note) |
+| Renesas Electronics | Memory Server System Testing Intern | [CSV] Hardware Engineering role outside SWE/ML/data interests |
+| Ursa Major | Embedded Flight Software Intern | [CSV] Company already at 3-role cap (CSV note) |
+| S&C Electric Company | Electronics Engineering Intern - TBI | [CSV] Hardware Engineering role outside SWE/ML/data interests |
+| Epic Games | Tools Programmer Intern - Graphics | [CSV] Company already at 3-role cap (CSV note) |
 
 ## Needs Joseph
 | Company | Role | Deadline | What is needed | Link |
@@ -697,6 +809,45 @@ _Updated 2026-10-24 03:31_
 | AECOM | Engineering/Data Analytics Intern | Not listed | SmartRecruiters requires checking a consent box before Submit: "Please be informed that your application to this job offer will trigger some processing of your personal data by the recruiting company, the data controller..." I am not allowed to give that consent for you. Either apply yourself (resume, name, email, Henderson NV, phone, LinkedIn, GitHub as website; message to hiring team is optional) or reply in chat "OK to check the SmartRecruiters data-processing box" and I will fill and submit. Atlanta, GA. | https://jobs.smartrecruiters.com/AECOM2/744000155565444 |
 | Pilot Company | Process Automation Intern - Process Automation | Not listed | SmartRecruiters requires checking a consent box before Submit: "Please be informed that your application to this job offer will trigger some processing of your personal data by the recruiting company, the data controller..." I am not allowed to give that consent for you. Either apply yourself (resume, name, email, Henderson NV, phone, LinkedIn, GitHub as website; message to hiring team is optional) or reply in chat "OK to check the SmartRecruiters data-processing box" and I will fill and submit. Knoxville, TN. | https://jobs.smartrecruiters.com/PilotCompany/744000148576544 |
 | Robert Bosch Venture Capital | Software Engineering Co-op (Embedded AI, summer) | Not listed | SmartRecruiters requires checking a consent box before Submit: "Please be informed that your application to this job offer will trigger some processing of your personal data by the recruiting company, the data controller..." I am not allowed to give that consent for you. Either apply yourself (resume, name, email, Henderson NV, phone, LinkedIn, GitHub as website; message to hiring team is optional) or reply in chat "OK to check the SmartRecruiters data-processing box" and I will fill and submit. Fountain Inn, SC. | https://jobs.smartrecruiters.com/BoschGroup/744000156311682 |
+| Varda Space | Flight Software Intern | Not listed | Required cover letter (Greenhouse "Cover Letter" field). Write it or attach a file path; I will fill the rest (contact, education, work authorization). | https://job-boards.greenhouse.io/vardaspace/jobs/8010159003 |
+| Varda Space | Mission Operations Intern - Summer 2027 | Not listed | Required cover letter (Greenhouse "Cover Letter" field). Write it or attach a file path; I will fill the rest (contact, education, work authorization). | https://job-boards.greenhouse.io/vardaspace/jobs/8010682003 |
+| Ursa Major | Software Development Intern | Not listed | Essay (required, no limit stated): "Why are you interested in working for Ursa Major?" | https://job-boards.greenhouse.io/ursamajor/jobs/4746827005 |
+| Zipline | Aircraft Software Integration Intern (Summer 2027) | Not listed | Required scenario question (starts: "Imagine an aircraft computer vision system occasionally misclassifies 'clouds' as 'obstacles'..."); open the link for the full prompt. Also asks how you heard about Zipline (I would say: Online internship list). | https://job-boards.greenhouse.io/flyzipline/jobs/7986848003 |
+| Schonfeld | 2027 Systematic COO Intern | Not listed | Required: "What is your current cumulative GPA?" You have no college GPA yet; reply with what to enter (e.g. "N/A - first semester" or your HS GPA 3.985 labeled as such). | https://job-boards.greenhouse.io/schonfeld/jobs/8172059 |
+| C3.ai | Software Engineer - Intern (Summer 2027) | Not listed | Needs your OK on two required consents: "By clicking the I Accept button, you confirm that you have read C3 AI's Applicant & Candidate Privacy Notice" and "Do you consent to receiving follow up communication via text message (or SMS message)?" (Yes/No). Also: willing to work at Redwood City HQ 5 days/week = Yes (you will relocate); grad = May 2030. | https://job-boards.greenhouse.io/c3iot/jobs/8739037002 |
+| STR (Systems & Technology Research) | Data Analyst Intern - Summer 2027 (Arlington, VA or Woburn, MA) | Not listed | Required questions only you can answer: (1) "Are you a Dual Citizen?" (Yes/No; if yes, which country), (2) "Do you have relatives who currently work for STR? Please provide their name(s)." Also needs your OK to tick "I certify that the information provided in this application is true and complete..." and "What event did you find us through/meet STR at?" lists only career fairs (MIT, UMD, RIT, RPI, Georgia Tech, Harvard, UMass, CMU...); tell me if one applies or if I should pick the closest "other" option if one exists. I will answer: began undergrad August 2026; U.S. citizen = Yes. | https://job-boards.greenhouse.io/systemstechnologyresearch/jobs/4723980006 |
+| Saronic | Forward Deployed Engineer Intern (Summer 2027), Austin TX | Not listed | Essay (required, no limit stated): "Based on what is publicly available about Saronic, what is a challenging technical problem you hope to work on at Saronic?" I will answer: U.S. Person = Yes; onsite full-time in Austin = Yes. | https://jobs.ashbyhq.com/saronic/cffe4bc2-5f34-45bf-904d-e9a6c8a8e5ce/application |
+| Aramco Americas | R&D Intern - Boston Research Center | Not listed | JazzHR form with a visible reCAPTCHA, so you have to submit it yourself. It also requires "Current GPA" (you have no college GPA yet). Suggested answers: major Applied Mathematics & Statistics; graduation May 2030; Summer 2027 classification = Sophomore (rising); career fair = none. Tick Done once submitted. | https://aramcoservices.applytojob.com/apply/rnpFdnTdYb/Research-And-Development-Boston-Research-Center-2027-Summer-Student-Program |
+| Pattern | AI Automation Engineer Intern (Lehi, UT) | Not listed | Required dropdown "What is your cumulative GPA?" (options <3.0 to 4.0, no N/A). You have no college GPA yet; tell me what to pick (e.g. 4.0 based on HS 3.985 unweighted, or skip). Everything else I can fill: Lehi, UT office 3 days/week = Yes; school JHU; graduation May 2030; start date late May 2027. Optional: "What is the coolest thing you have ever built using AI?" (write it if you want it included). | https://jobs.lever.co/pattern/48945dce-b5ef-43cd-9d85-f8b26ce5b43e/apply |
+| Pattern | Data Science Intern (Lehi, UT) | Not listed | Required dropdown "What is your cumulative GPA?" (options <3.0 to 4.0, no N/A). You have no college GPA yet; tell me what to pick (e.g. 4.0 based on HS 3.985 unweighted, or skip). Everything else I can fill: Lehi, UT office 3 days/week = Yes; school JHU; graduation May 2030; start date late May 2027. Optional: "What is the coolest thing you have ever built using AI?" (write it if you want it included). | https://jobs.lever.co/pattern/ad978732-7171-473d-9400-0a6fc9e23cf7/apply |
+| Synchrony Financial | Digital Technology Center Intern | Not listed | Create account / sign in on Synchrony Financial's careers portal (Workday), then check Done and I'll fill and submit the form. | https://synchronyfinancial.wd5.myworkdayjobs.com/University/job/Stamford-Hub/UConn-Stamford-Digital-Technology-Center-Intern---Summer-2027_2602661 |
+| Northrop Grumman | Cyber Software Engineer Intern | Not listed | Create account / sign in on Northrop Grumman's careers portal (Workday), then check Done and I'll fill and submit the form. | https://ngc.wd1.myworkdayjobs.com/Northrop_Grumman_External_Site/job/United-States-Florida-Tampa/XMLNAME-2027-Cyber-Software-Engineer-Intern---Tampa-FL_R10249530 |
+| ACI Worldwide | Technology Intern | Not listed | Create account / sign in on ACI Worldwide's careers portal (Oracle Cloud), then check Done and I'll fill and submit the form. | https://ebwg.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/job/19943 |
+| Intel | Software Engineer Intern | Not listed | Create account / sign in on Intel's careers portal (Workday), then check Done and I'll fill and submit the form. | https://intel.wd1.myworkdayjobs.com/en-us/external/job/US-Oregon-Hillsboro/Software-Engineering---Intern--Bachelor-s_JR0286834 |
+| Caterpillar | Corporate Intern - Digital and Analytics | Not listed | Create account / sign in on Caterpillar's careers portal (Workday), then check Done and I'll fill and submit the form. | https://cat.wd5.myworkdayjobs.com/CaterpillarCareers/job/Peoria-Illinois/XMLNAME-2027-Summer-Corporate-Intern---Digital-and-Analytics_R0000392335 |
+| PanAgora | Equity Intern | Not listed | Create account / sign in on PanAgora's careers portal (Workday), then check Done and I'll fill and submit the form. | https://empower.wd12.myworkdayjobs.com/PanAgora/job/MA-Boston---PanAgora/Summer-2027-Intern_R0062297 |
+| Itron | Data Science Intern - Distributed Intelligence | Not listed | Create account / sign in on Itron's careers portal (Workday), then check Done and I'll fill and submit the form. | https://itron.wd5.myworkdayjobs.com/Early_Careers/job/United-States-of-America-Washington-Liberty-Lake/Intern---Data-Science--Distributed-Intelligence_JR102942-2 |
+| IAT Insurance Group | Data Engineering & Visualization Intern | Not listed | Create account / sign in on IAT Insurance Group's careers portal (Workday), then check Done and I'll fill and submit the form. | https://iatinsurancegroup.wd1.myworkdayjobs.com/iat/job/Raleigh-NC/Data-Engineering---Visualization-Internship_JR100441 |
+| Constellation Energy | Quantitative Analytics & Data Science Intern | Not listed | Create account / sign in on Constellation Energy's careers portal (iCIMS), then check Done and I'll fill and submit the form. | https://jobs.constellationenergy.com/jobs/139494?icims=1 |
+| UL Solutions | Data Science Intern | Not listed | Create account / sign in on UL Solutions's careers portal (Oracle Cloud), then check Done and I'll fill and submit the form. | https://fa-eups-saasfaprod1.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/en/sites/ULSolutionsCareers/job/10629 |
+| Blue Cross Blue Shield of Michigan | Data Analytics Intern - HEDIS | Not listed | Create account / sign in on Blue Cross Blue Shield of Michigan's careers portal (Oracle Cloud), then check Done and I'll fill and submit the form. | https://ejko.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_3/job/14838 |
+| Moog | Software Engineer Intern | Not listed | Create account / sign in on Moog's careers portal (Workday), then check Done and I'll fill and submit the form. | https://moog.wd5.myworkdayjobs.com/moog_external_career_site/job/Mineral-Wells-TX/Intern--Software-Engineering_R-26-19965 |
+| Adobe | AI & Architecture Intern | Not listed | Create account / sign in on Adobe's careers portal (Workday), then check Done and I'll fill and submit the form. | https://adobe.wd5.myworkdayjobs.com/external_experienced/job/San-Jose/XMLNAME-2027-Intern---AI---Architecture_R172998 |
+| Uline | Software Developer Intern | Not listed | Create account / sign in on Uline's careers portal (Workday), then check Done and I'll fill and submit the form. | https://uline.wd1.myworkdayjobs.com/en-US/Uline_Careers/job/Pleasant-Prairie-WI/Software-Development-Internship---Summer-2027_R268537 |
+| CVS Health | Software Engineer Intern - Platform & Applications | Not listed | Create account / sign in on CVS Health's careers portal (Workday), then check Done and I'll fill and submit the form. | https://cvshealth.wd1.myworkdayjobs.com/CVS_Health_Careers/job/AZ---Scottsdale/Innovation-Technology-Internship-Software-Engineering--Platform---Applications-Summer-2027-Undergrad_R1081193 |
+| CVS Health | Innovation & Technology Internship - Software Engineering: Data & Intelligence | Not listed | Create account / sign in on CVS Health's careers portal (Workday), then check Done and I'll fill and submit the form. | https://cvshealth.wd1.myworkdayjobs.com/CVS_Health_Careers/job/NY---New-York/Innovation---Technology-Internship--Software-Engineering--Data---Intelligence-Summer-2027-Undergrad_R1081114 |
+| Northrop Grumman | Systems Engineering Intern - AI Experience | Not listed | Create account / sign in on Northrop Grumman's careers portal (Workday), then check Done and I'll fill and submit the form. | https://ngc.wd1.myworkdayjobs.com/Northrop_Grumman_External_Site/job/United-States-Virginia-Dulles/XMLNAME-2027-Systems-Engineering-Internship--AI-Experience----Dulles-VA_R10257423 |
+| Leidos | AI/ML Intern | Not listed | Create account / sign in on Leidos's careers portal (Workday), then check Done and I'll fill and submit the form. | https://leidos.wd5.myworkdayjobs.com/External/job/Huntsville-AL/AI-ML-Intern_R-00195168 |
+| KION Group | Software Analytics Co-op | Not listed | Create account / sign in on KION Group's careers portal (Workday), then check Done and I'll fill and submit the form. | https://kiongroup.wd3.myworkdayjobs.com/en-US/KION_SCS/job/Grand-Rapids-MI-United-States/Software-Analytics-Co-op_JR-0096723 |
+| American Family Insurance Group | Business Intelligence Enablement Intern | Not listed | Create account / sign in on American Family Insurance Group's careers portal (Workday), then check Done and I'll fill and submit the form. | https://amfam.wd1.myworkdayjobs.com/AmFamGroupInternCareers/job/WI-Madison/Summer-2027-Intern---Business-Intelligence-Enablement_R39531 |
+| KLA Corporation | Software Engineer Intern - C++ - Linux | Not listed | Create account / sign in on KLA Corporation's careers portal (Workday), then check Done and I'll fill and submit the form. | https://kla.wd1.myworkdayjobs.com/UR/job/Milpitas-CA/Software-Engineer-Intern--C----Linux----Summer-2027_2641878 |
+| Citi | Technology Summer Analyst Intern - Production Support | Not listed | Create account / sign in on Citi's careers portal (Workday), then check Done and I'll fill and submit the form. Note: Citi's Technology Summer Analyst programs usually target rising juniors/seniors; check the class-year line before applying. | https://citi.wd5.myworkdayjobs.com/2/job/Tampa-Florida-United-States/Technology--Production-Support--Summer-Analyst--Tampa---USA--2027_261003298 |
+| Citi | Technology Summer Analyst Intern - Application Development | Not listed | Create account / sign in on Citi's careers portal (Workday), then check Done and I'll fill and submit the form. Note: Citi's Technology Summer Analyst programs usually target rising juniors/seniors; check the class-year line before applying. | https://citi.wd5.myworkdayjobs.com/2/job/Tampa-Florida-United-States/Technology--Application-Development--Summer-Analyst--Tampa---USA--2027_261004395 |
+| Citi | Technology Analyst Intern - Application Development | Not listed | Create account / sign in on Citi's careers portal (Workday), then check Done and I'll fill and submit the form. Note: Citi's Technology Summer Analyst programs usually target rising juniors/seniors; check the class-year line before applying. | https://citi.wd5.myworkdayjobs.com/2/job/Jacksonville-Florida-United-States/Technology--Application-Development--Summer-Analyst--Jacksonville---USA--2027_261004418 |
+| Carrier Global | Software Engineer Intern | Not listed | Create account / sign in on Carrier Global's careers portal (Workday), then check Done and I'll fill and submit the form. | https://carrier.wd5.myworkdayjobs.com/jobs/job/CAN01-Carrier-Syracuse-6304-Carrier-Parkway-East-Syracuse-NY-13057-USA/Software-Engineering-Intern---Summer_30220588 |
+| Sun Life | Data Science Intern | Not listed | Create account / sign in on Sun Life's careers portal (Workday), then check Done and I'll fill and submit the form. | https://sunlife.wd3.myworkdayjobs.com/en-US/Experienced-Jobs/job/Wellesley-Hills-Massachusetts/Data-Science-Intern---Summer-2027-Intern_JR00127666 |
+| Auto-Owners Insurance | Business Intelligence Developer Intern | Not listed | Create account / sign in on Auto-Owners Insurance's careers portal (Workday), then check Done and I'll fill and submit the form. | https://aoins.wd5.myworkdayjobs.com/AutoOwners/job/Lansing-MI/Business-Intelligence-Developer-Internship---Summer-2027_R_14772 |
+| Stoke Space | Summer 2027 Internship - Software (Kent, WA) | Not listed | Required essays (write all three in the box, labeled): (1) "What motivates you?" (2) "There are many valuable skills that aren't taught in the classroom or workplace. What have you learned outside of these environments that you think will make you..." (see link for the full prompt). (3) File upload: "In an essay of about 750 words, please answer the following prompt: What is the hardest thing you have done? What did you learn from it?" Also pick a team preference: Boltline Team / Vehicle Software / Information Technology / UX Design. I will answer: authorized Yes, sponsorship No, Henderson NV 89074, grad May 2030, available May-Aug 2027 Yes, GPA Not Applicable. | https://job-boards.greenhouse.io/stokespacetechnologies/jobs/6176786004 |
 
 ## Rounded, guessed, or judgment-call fields
 - Major: forms without 'Applied Mathematics & Statistics' got the closest option 'Mathematics' (Netflix, Affirm x2).
