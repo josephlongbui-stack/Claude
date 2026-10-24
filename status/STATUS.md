@@ -1,7 +1,7 @@
 # Summer 2027 internship status
-_Updated 2026-10-24 04:28_
+_Updated 2026-10-24 04:32_
 
-**Total submitted: 65** · Needs Joseph: 539 · Skipped: 252
+**Total submitted: 66** · Needs Joseph: 546 · Skipped: 258
 
 ## Submitted
 | Company | Role | Link | Date submitted | Resume used |
@@ -71,6 +71,7 @@ _Updated 2026-10-24 04:28_
 | Multiply Labs | Software Intern (SF) | https://jobs.lever.co/multiplylabs/8203fbb3-4d42-4f6a-ae64-f05c3dcf0e9b | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
 | Multiply Labs | Robotics Software Intern (SF) | https://jobs.lever.co/multiplylabs/acca98ab-c206-4f71-b7a5-6977e4828586 | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
 | Crest Industries | Developer Intern (Pineville, LA / remote) | https://jobs.lever.co/crestoperations/e012721c-e731-483d-a4e3-1a240c48bfbd | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
+| TensorWave | Software Engineering Intern (Las Vegas, NV) | https://jobs.ashbyhq.com/tensorwave/39091eeb-13fc-46a7-b7e5-0d4584ac53ab | 2026-10-24 | Bui_Joseph_Fall_2026_Resume.pdf |
 
 ## Skipped
 | Company | Role | Reason |
@@ -327,6 +328,12 @@ _Updated 2026-10-24 04:28_
 | CesiumAstro | Summer 2027 - Embedded Software Engineering Internship | [GitHub list] Company already at 3-role cap (per CSV note) |
 | Hermeus | Flight Software & GNC Intern - Spring/Summer 2027 | [GitHub list] Company already at 3-role cap (per CSV note) |
 | Hermeus | Software Engineering Intern (HIL) - Spring/Summer 2027 | [GitHub list] Company already at 3-role cap (per CSV note) |
+| AgZen | Software Engineering Co-op | [GitHub list] Runs Jan-Jun 2027; also requires a prior internship/co-op |
+| Assort Health | Software Engineering Internship (Jan - Apr 2027) | [GitHub list] Jan-Apr 2027 term |
+| Composio | Fullstack Engineering Internship, Product Team (Fall 2026) | [GitHub list] Fall 2026 term |
+| Heliux | Software Engineer (Internship, Spring 2027) | [GitHub list] Spring 2027 term |
+| TensorWave | Developer Community Engagement Intern | [GitHub list] Community/marketing role |
+| OpenArt AI | Early Adopter & Product Builder Intern, Creative AI | [GitHub list] Product/community role, not SWE |
 
 ## Needs Joseph
 | Company | Role | Deadline | What is needed | Link |
@@ -870,6 +877,13 @@ _Updated 2026-10-24 04:28_
 | ShopBack | Software Engineer Intern (San Francisco) | Not listed | ShopBack requires checking "Confirmation of Information Provided: I hereby confirm that all information provided to ShopBack Group... is true and accurate." I cannot tick attestations for you. Reply "OK to confirm ShopBack" and I will fill and submit, or apply yourself. Also asks "Which location are you currently based in?" (list is mostly Asia-Pacific; I will look for a U.S./Other option). Optional: future-opportunities contact box (I would leave unchecked). | https://jobs.lever.co/shopback-2/640ac3fb-dae5-4738-95b9-9cb80cc7ad15/apply |
 | ShopBack | Software Engineer Intern (New York) | Not listed | ShopBack requires checking "Confirmation of Information Provided: I hereby confirm that all information provided to ShopBack Group... is true and accurate." I cannot tick attestations for you. Reply "OK to confirm ShopBack" and I will fill and submit, or apply yourself. Also asks "Which location are you currently based in?" (list is mostly Asia-Pacific; I will look for a U.S./Other option). Optional: future-opportunities contact box (I would leave unchecked). | https://jobs.lever.co/shopback-2/e5f5e276-e7f7-43e0-a224-5259d242fe98/apply |
 | Toyota Research Institute | Human Aware Interactions and Learning Intern (Cambridge, MA) | Not listed | Required essay (1-3 sentences): "In 1-3 sentences, tell us about one thing TRI is working on that you find exciting?" Also requires selecting "I have read and understand the selection criteria" (needs your OK). I will answer: degree Bachelor's; eligible to work Yes; U.S. citizen/LPR Yes; national of sanctioned country No; how heard = Other (online internship list). | https://jobs.lever.co/tri/71e99c38-aa29-4414-956d-cc526644b9b7/apply |
+| Metalenz | Camera Software Intern (Boston) | Not listed | Required number field: "What is your most current GPA? (If recently graduated, provide your GPA)". You have no college GPA yet; tell me what to enter. I will answer authorized Yes, sponsorship No, onsite Boston Yes. | https://jobs.ashbyhq.com/metalenz/979c12dd-e71a-41b5-9c5f-a0d7204a22f6/application |
+| Megazone Cloud US | Cloud Operations Co-op 2027 (Rochester, NY) | Not listed | Required: "What are your salary requirements" (number), "Which co-op work term options are you available for?" (multi-select; you are free late May-Aug 2027), and "How many full-time, semester-long co-op rotations have you completed?" (0). Tell me the salary number (or skip this one). | https://jobs.ashbyhq.com/megazone/1d75a5d5-def9-43c0-9bf5-23e5bb65bf3f/application |
+| Phoebe | Software Engineering Intern (NYC) | Not listed | Essay (required, no limit stated): "What interests you about Phoebe and this Role?" | https://jobs.ashbyhq.com/phoebe-work/1ffe3e63-2163-447e-a8b0-1fff8b87e0ca/application |
+| Kastle | Software Engineer - Intern (SF) | Not listed | Essay (required): "Tell me about the most exciting project you've built (please type answer...)" (see link for full prompt). | https://jobs.ashbyhq.com/kastle/6f32db51-de45-472f-a9c8-d9419d3634ee/application |
+| Netic | Software Engineer (Agent Platform) - Intern - 2026-2027 | Not listed | Required: "What's the most interesting paper, blog post, or documentation you've [read recently]..." (essay; see link for exact wording), plus "When can you start a new role?" (date; posting says 2026-2027 so it may be a school-year role) and "How many years of industry experience do you have?" (I would put 0). SF office 5 days/week = Yes; sponsorship No. | https://jobs.ashbyhq.com/netic/b0ea7aab-8eea-4d31-96f9-278364180ae7/application |
+| Netic | Full-Stack Software Engineer (Product) - Intern - 2026-2027 | Not listed | Required: "What's the most interesting paper, blog post, or documentation you've [read recently]..." (essay; see link for exact wording), plus "When can you start a new role?" (date; posting says 2026-2027 so it may be a school-year role) and "How many years of industry experience do you have?" (I would put 0). SF office 5 days/week = Yes; sponsorship No. | https://jobs.ashbyhq.com/netic/f291394a-f3c5-4f46-9b87-77aea3d487ef/application |
+| Heliux | Software Engineer (Internship, Summer 2027) | Not listed | Required Yes/No: "Are you willing and able to work nights and weekends?" Only you can answer. Location = Henderson, NV. | https://jobs.ashbyhq.com/heliux/ff2b6f4b-00d0-4afe-b4f5-2dbf443409ef/application |
 
 ## Rounded, guessed, or judgment-call fields
 - Major: forms without 'Applied Mathematics & Statistics' got the closest option 'Mathematics' (Netflix, Affirm x2).
@@ -893,3 +907,4 @@ _Updated 2026-10-24 04:28_
 - ENFOS: "earliest available start date" required an exact date; entered 05/24/2027 for "late May 2027". "Willing to work in the office 5x a week" answered Yes based on "will relocate / work anywhere in the U.S.".
 - AiDash: the Greenhouse helper auto-checked a required data-processing consent box ('I agree to allow AiDASH, Inc. to store and process my data') on submit. Consent boxes now block submission and go to Needs Joseph instead.
 - Anduril 2027 SWE Intern: required 'top location preference' among 9 offices; chose Costa Mesa, CA (HQ, closest to Henderson, NV) since Joseph will work anywhere.
+- TensorWave: "Are you currently located in Las Vegas, NV?" answered No (Joseph is at JHU in Baltimore during the school year; home is Henderson, in the Las Vegas metro) and "willing to relocate for the internship" Yes.
