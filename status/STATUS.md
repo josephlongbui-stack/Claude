@@ -1,7 +1,7 @@
 # Summer 2027 internship status
-_Updated 2026-10-26 00:51_
+_Updated 2026-10-26 00:52_
 
-**Total submitted: 128** (confirmed: 127, unconfirmed: 1) · QUICK TAPS: 1 · Needs Joseph: 922 · Skipped: 599
+**Total submitted: 128** (confirmed: 127, unconfirmed: 1) · QUICK TAPS: 1 · Needs Joseph: 923 · Skipped: 600
 
 ## Submitted
 | Company | Role | Date submitted | Applied via | Method | Confirmation |
@@ -737,6 +737,7 @@ _Updated 2026-10-26 00:51_
 | Connecticut Innovations | Venture Debt Investment Intern - Summer 2027 | [LinkedIn] Must be based in or studying in Connecticut. |
 | Connecticut Innovations | Bioscience Investment Intern - Summer 2027 | [LinkedIn] Must be based in or studying in Connecticut. |
 | Wabtec Corporation | Summer 2027 Finance Internship | [LinkedIn] Requires business-related major and college GPA >= 3.5 (no college GPA yet). |
+| Russell Reynolds Associates | 2027 Summer Analyst | [LinkedIn] Requires 3+ completed college years; grad Winter 2027/Spring 2028. |
 
 ## Needs Joseph
 | Company | Role | Deadline | What is needed | Link |
@@ -1663,6 +1664,7 @@ _Updated 2026-10-26 00:51_
 | Enterprise Bank & Trust | Credit Intern - Summer 2027 | Not listed | LinkedIn Easy Apply (Workday-backed; Creve Coeur MO or Chandler AZ, on-site; open to current undergrads in finance/econ/related). Workday requires City + Description for EVERY work-experience entry pulled from your LinkedIn profile (incl. TEDxJHU Tech Team, LaunchStack, etc.). Give me city + 1-line description for each LinkedIn experience entry (or OK me to remove entries that aren't on your résumé from this application), and I'll submit. Same fix unblocks Clearwater. | https://www.linkedin.com/jobs/view/4479573648 |
 | Dexter | Finance Intern- Summer 2027 | Not listed | LinkedIn Easy Apply (ClearCompany; Elkhart, IN). Everything else fillable. Required question only you can answer: 'Are you at least 18 years of age?' (Yes/No). TIP: one answer to the 18+ question also unblocks Pilot Company and LLNL. Other required items I'll fill: prior Dexter employment No; graduation date 05/2030; GPA 3.985 labeled high school; certification checkbox + e-signature 'Joseph Bui' + today's date; right-to-work Yes; EEO declined. | https://www.linkedin.com/jobs/view/4451914492 |
 | MIRATECH | Finance Internship (Summer 2027) | Not listed | LinkedIn Easy Apply (isolved; Tulsa, OK, on-site). Everything else filled. Required, only you can answer: (1) salary expectations; (2) how comfortable you are communicating VERBALLY in the languages listed (English, Vietnamese); (3) how comfortable with WRITTEN communication in them (rating scale). | https://www.linkedin.com/jobs/view/4467826410 |
+| Russell Investments | Intern - Summer 2027 Undergraduate Internship Program (Asset Management) | Not listed | Workday account needed (russell.wd5.myworkdayjobs.com; posting https://www.linkedin.com/jobs/view/4480281100). Seattle, on-site, open to undergrads with no class-year limit; no sponsorship needed (you're a citizen). Create/sign in, tick Done, and I'll fill and submit. | https://russell.wd5.myworkdayjobs.com |
 
 ## Rounded, guessed, or judgment-call fields
 - Major: forms without 'Applied Mathematics & Statistics' got the closest option 'Mathematics' (Netflix, Affirm x2).
