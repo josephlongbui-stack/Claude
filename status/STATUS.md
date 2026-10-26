@@ -1,7 +1,7 @@
 # Summer 2027 internship status
-_Updated 2026-10-26 00:52_
+_Updated 2026-10-26 05:26_
 
-**Total submitted: 128** (confirmed: 127, unconfirmed: 1) · QUICK TAPS: 1 · Needs Joseph: 923 · Skipped: 600
+**Total submitted: 130** (confirmed: 129, unconfirmed: 1) · QUICK TAPS: 1 · Needs Joseph: 927 · Skipped: 609
 
 ## Submitted
 | Company | Role | Date submitted | Applied via | Method | Confirmation |
@@ -134,6 +134,8 @@ _Updated 2026-10-26 00:52_
 | Winsupply | Software Developer Intern | 2026-10-25 | SmartRecruiters (company ATS) - https://jobs.smartrecruiters.com/Winsupply1/3743990015014717 | Browser form (real click on Submit) | Confirmation page seen |
 | Corvid Technologies | Computer Science/Software Internship - Summer 2027 | 2026-10-25 | LinkedIn Easy Apply - https://www.linkedin.com/jobs/view/4462150526 | Browser form (real click on Submit) | Confirmation page seen |
 | Monarch Quantum | 2027 Monarch Quantum Summer Internship Program (general program) | 2026-10-25 | LinkedIn Easy Apply - https://www.linkedin.com/jobs/view/4478251205 | Browser form (real click on Submit) | Confirmation page seen |
+| Crane Currency | Co-Op and Internships for 2027 |  | LinkedIn Easy Apply | Browser form (real click on Submit) | Confirmation page seen (LinkedIn: Application submitted) |
+| DV Trading | Futures & Options Trading Analyst Intern - Summer 2027 | 2026-10-26 | Greenhouse (job-boards.greenhouse.io/dvtrading) | Browser form (real click on Submit) | Confirmation page seen |
 
 ## Skipped
 | Company | Role | Reason |
@@ -738,6 +740,15 @@ _Updated 2026-10-26 00:52_
 | Connecticut Innovations | Bioscience Investment Intern - Summer 2027 | [LinkedIn] Must be based in or studying in Connecticut. |
 | Wabtec Corporation | Summer 2027 Finance Internship | [LinkedIn] Requires business-related major and college GPA >= 3.5 (no college GPA yet). |
 | Russell Reynolds Associates | 2027 Summer Analyst | [LinkedIn] Requires 3+ completed college years; grad Winter 2027/Spring 2028. |
+| DV Trading | Quantitative Research Intern - Summer 2027 (DV Equities) | [LinkedIn] Expected graduation 2027 or 2028; Joseph graduates May 2030 |
+| DV Trading | Quantitative Trading Intern - Summer 2027 | [LinkedIn] Graduation by Summer 2027 or 2028; Joseph graduates May 2030 |
+| DV Trading | Client Platforms Engineer Intern - Summer 2027 | [LinkedIn] Graduate by Summer 2028; also company at 3-role cap |
+| Wing | Data Scientist Intern, Summer 2027 | [LinkedIn] Graduating Dec 2027-2028 required; Joseph graduates May 2030 |
+| Wing | Machine Learning Engineering Intern, Summer 2027 | [LinkedIn] MS/PhD only, graduating Dec 2027-Aug 2028 |
+| C3.ai | Data Science - Intern (Summer 2027) | [LinkedIn] Pursuing MS or PhD required |
+| Citi | Technology, Application Development, Summer Analyst 2027 | [LinkedIn] Graduation between Dec 2027 and May 2028 required |
+| Walmart | Summer 2027 Corporate Intern: Economist | [LinkedIn] Graduating Dec 2027-Aug 2028 required |
+| Peraton | Summer 2027 Cybersecurity Engineering Intern | [LinkedIn] Rising juniors/seniors only |
 
 ## Needs Joseph
 | Company | Role | Deadline | What is needed | Link |
@@ -1665,6 +1676,10 @@ _Updated 2026-10-26 00:52_
 | Dexter | Finance Intern- Summer 2027 | Not listed | LinkedIn Easy Apply (ClearCompany; Elkhart, IN). Everything else fillable. Required question only you can answer: 'Are you at least 18 years of age?' (Yes/No). TIP: one answer to the 18+ question also unblocks Pilot Company and LLNL. Other required items I'll fill: prior Dexter employment No; graduation date 05/2030; GPA 3.985 labeled high school; certification checkbox + e-signature 'Joseph Bui' + today's date; right-to-work Yes; EEO declined. | https://www.linkedin.com/jobs/view/4451914492 |
 | MIRATECH | Finance Internship (Summer 2027) | Not listed | LinkedIn Easy Apply (isolved; Tulsa, OK, on-site). Everything else filled. Required, only you can answer: (1) salary expectations; (2) how comfortable you are communicating VERBALLY in the languages listed (English, Vietnamese); (3) how comfortable with WRITTEN communication in them (rating scale). | https://www.linkedin.com/jobs/view/4467826410 |
 | Russell Investments | Intern - Summer 2027 Undergraduate Internship Program (Asset Management) | Not listed | Workday account needed (russell.wd5.myworkdayjobs.com; posting https://www.linkedin.com/jobs/view/4480281100). Seattle, on-site, open to undergrads with no class-year limit; no sponsorship needed (you're a citizen). Create/sign in, tick Done, and I'll fill and submit. | https://russell.wd5.myworkdayjobs.com |
+| Palantir | Deployment Strategist, Internship - US Government (Honolulu) | Not listed | Only Palantir internship without a 2027/2028 grad-year rule. Required essays: (1) What excites you about Palantir and why work here? (2) If you could solve any problem in your daily life, what and how? (3) 1-2 sentences on why support US Government work from Honolulu. Also: any offer deadlines / interview stage? Interest in clearance? Answer here and I will fill + submit. | https://jobs.lever.co/palantir/a49d4181-a289-435a-b581-7f5af0497c8e |
+| Palantir | Year at Palantir - Software Engineer, Internship | Not listed | Open to freshmen, but you must tick "I am looking to join Palantir for 1 year" (a year away from JHU), and start-date options only run Mar-Sep 2026. I did not apply because you said summer only. Want it anyway? (yes/no + start month) | https://jobs.lever.co/palantir/655f9937-a4ce-4e7d-80e2-a6659af07329 |
+| Spartan Capital | 2027 Spartan Capital Paid Internship Program | Not listed | LinkedIn Easy Apply (Jun 7-Aug 20 2027, Hazlet NJ onsite M-F 9-6, $21/hr, rotations incl. IT/finance). Required yes/no: (1) able to commute to Hazlet NJ M-F 9-6 (would mean relocating there)? (2) own reliable transportation to/from work? (3) fully commit to FT schedule? "Did you graduate?" I will answer No. Reply yes/no and I will submit. | https://www.linkedin.com/jobs/view/4472336214/ |
+| WisdomTree | Research Intern - Summer 2027 (quant research, hybrid NYC) | Not listed | Required: "What are your compensation expectations (desired base + bonus)?" Give a number or e.g. "Open / per the posted intern rate" and I will submit. Everything else is fillable. | https://jobs.lever.co/wisdomtree/220e4082-4102-4989-8dac-4d8a2172f04a/apply |
 
 ## Rounded, guessed, or judgment-call fields
 - Major: forms without 'Applied Mathematics & Statistics' got the closest option 'Mathematics' (Netflix, Affirm x2).
