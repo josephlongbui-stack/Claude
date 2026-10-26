@@ -1,7 +1,7 @@
 # Summer 2027 internship status
-_Updated 2026-10-25 20:02_
+_Updated 2026-10-25 20:03_
 
-**Total submitted: 92** · Needs Joseph: 940 · Skipped: 498
+**Total submitted: 92** · Needs Joseph: 940 · Skipped: 501
 
 ## Submitted
 | Company | Role | Link | Date submitted | Resume used |
@@ -600,6 +600,9 @@ _Updated 2026-10-25 20:02_
 | EquipmentShare | Intern: Engineering - Embedded (2 postings) | [GitHub list] Embedded hardware engineering intern |
 | Akuna Capital | Python Software Engineer Intern | [GitHub list] Akuna requires graduating by Aug 2028 |
 | Epic Games | Gameplay Programmer Intern | [GitHub list] Company already at 3-role cap (CSV note) |
+| Ayoka | Software Developer Intern - Spring 2027 | [Handshake] Spring 2027 term (Jan-May); Joseph is in school |
+| X-energy | Systems Engineering Internship - Summer 2027 | [Handshake] Requires industrial/systems engineering degree; systems-engineering role |
+| Anduril Industries | 2027 Software Engineer Intern (Handshake copy) | [Handshake] Anduril already at 3-role cap |
 
 ## Needs Joseph
 | Company | Role | Deadline | What is needed | Link |
