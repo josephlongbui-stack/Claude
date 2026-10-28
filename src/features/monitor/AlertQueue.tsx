@@ -3,7 +3,8 @@ import { BellOff } from 'lucide-react';
 import { useRecordsStore } from '@/store/records';
 import { useSimulationStore } from '@/store/simulation';
 import { AlertCard } from './AlertCard';
-import { EmptyState, Panel } from '@/components/ui';
+import { EmptyState, Notice, Panel } from '@/components/ui';
+import { useSettingsStore } from '@/store/settings';
 import { isOpen } from '@/domain/review/workflow';
 import type { Alert } from '@/domain/types';
 
@@ -17,8 +18,9 @@ export function AlertQueue({ rideId, onInspect }: { rideId: string; onInspect: (
     return showClosed ? [...open, ...closed] : open;
   }, [alerts, rideId, showClosed]);
   const openCount = list.filter(isOpen).length;
-  const sessionMs = useSimulationStore((s) => s.sessionMs);
-  void sessionMs;
+  const mode = useSettingsStore((s) => s.mode);
+  const selectAlert = useSimulationStore((s) => s.selectAlert);
+  void selectAlert;
 
   return (
     <Panel
@@ -35,6 +37,11 @@ export function AlertQueue({ rideId, onInspect }: { rideId: string; onInspect: (
       bodyClassName="p-2 overflow-y-auto"
       className="h-full"
     >
+      {mode === 'shadow' && (
+        <div className="mb-2">
+          <Notice tone="warn">Shadow mode: records are generated without any operator-facing readiness display. This list is the supervisor review view only; nothing here reaches the station operator.</Notice>
+        </div>
+      )}
       {list.length === 0 ? (
         <EmptyState icon={<BellOff size={20} />} title="No alerts for this ride" hint="Run a scenario or inject a condition from the uncertainty controls. Alerts appear here, on the seat map, in camera overlays and in the evidence log." />
       ) : (
