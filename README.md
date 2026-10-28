@@ -5,6 +5,10 @@
 
 RideOps AI is an interactive demonstrator for a B2B platform that would use fixed station cameras, optional read-only sensor adapters and operational analytics to help ride operators at amusement parks and waterparks identify potential boarding issues for human review, improve dispatch efficiency, reduce downtime and keep records of operator reviews. The product is designed to assist staff, never to replace certified ride safety systems or required human checks.
 
+## Hosted demo
+
+The repository includes a GitHub Actions workflow (`.github/workflows/deploy-pages.yml`) that builds the app and publishes it to GitHub Pages at **https://josephlongbui-stack.github.io/Claude/** on every push to the default branch or to the `claude/funny-pasteur-il4kig` branch. The workflow enables Pages automatically; if that step is refused, enable it once under *Settings → Pages → Source: GitHub Actions*. Deep links work on Pages because the build also ships `404.html` as a copy of `index.html`.
+
 ## Run it
 
 ```bash
