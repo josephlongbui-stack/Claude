@@ -9,11 +9,11 @@ export function Panel({ title, actions, children, className = '', bodyClassName 
     <section id={id} className={`panel flex flex-col min-h-0 ${className}`}>
       {title !== undefined && (
         <header className="panel-header shrink-0">
-          <span className="flex items-center gap-2">{title}</span>
-          {actions && <span className="flex items-center gap-1.5 normal-case tracking-normal font-normal text-graphite-200">{actions}</span>}
+          <span className="flex items-center gap-2 whitespace-nowrap shrink-0">{title}</span>
+          {actions && <span className="flex items-center gap-1.5 flex-wrap justify-end normal-case tracking-normal font-normal text-graphite-200 min-w-0">{actions}</span>}
         </header>
       )}
-      <div className={`min-h-0 flex-1 ${bodyClassName || 'p-3'}`}>{children}</div>
+      <div className={`min-h-0 flex-auto ${bodyClassName || 'p-3'}`}>{children}</div>
     </section>
   );
 }
@@ -53,8 +53,10 @@ export const SEAT_STATE_COLOR: Record<SeatState, string> = {
   unknown: '#a78bfa',
 };
 
-export function SeatStateBadge({ state }: { state: SeatState }) {
-  return <Badge tone={SEAT_STATE_TONE[state]}>{SEAT_STATE_LABEL[state]}</Badge>;
+export const SEAT_STATE_SHORT: Record<SeatState, string> = { empty: 'Empty', nominal: 'Nominal', review: 'Review', concern: 'Concern', unknown: 'Unknown' };
+
+export function SeatStateBadge({ state, compact = false }: { state: SeatState; compact?: boolean }) {
+  return <Badge tone={SEAT_STATE_TONE[state]} title={SEAT_STATE_LABEL[state]}>{compact ? SEAT_STATE_SHORT[state] : SEAT_STATE_LABEL[state]}</Badge>;
 }
 
 export function SeverityBadge({ severity }: { severity: Severity }) {

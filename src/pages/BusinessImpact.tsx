@@ -73,9 +73,9 @@ export default function BusinessImpact() {
                   <YAxis tickLine={false} axisLine={false} width={60} tickFormatter={(v: number) => `$${Math.round(v / 1000)}k`} />
                   <Tooltip formatter={(v) => money(Number(v))} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
                   <Legend />
-                  <Bar dataKey="value" name="Illustrative value" fill={C.teal} radius={[3, 3, 0, 0]} />
-                  <Bar dataKey="cost" name="Cost" fill={C.red} radius={[3, 3, 0, 0]} />
-                  <Bar dataKey="net" name="Net" fill={C.green} radius={[3, 3, 0, 0]} />
+                  <Bar isAnimationActive={false} dataKey="value" name="Illustrative value" fill={C.teal} radius={[3, 3, 0, 0]} />
+                  <Bar isAnimationActive={false} dataKey="cost" name="Cost" fill={C.red} radius={[3, 3, 0, 0]} />
+                  <Bar isAnimationActive={false} dataKey="net" name="Net" fill={C.green} radius={[3, 3, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </Panel>

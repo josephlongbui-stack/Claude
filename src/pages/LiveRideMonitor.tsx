@@ -67,7 +67,7 @@ export default function LiveRideMonitor() {
           </div>
           <ObservationTimeline />
         </div>
-        <div className="col-span-12 xl:col-span-5 grid grid-cols-2 gap-3 min-h-[420px]">
+        <div className="col-span-12 xl:col-span-5 grid grid-cols-2 gap-3 min-h-[420px] xl:h-[640px]">
           <Panel title={`${ride.geometry.kind === 'train' ? 'Train' : ride.geometry.unitLabel ?? 'Ride'} seat map`} className="col-span-1" bodyClassName="p-3 h-full">
             <SeatMap ride={ride} seats={seats} selectedSeatId={selectedSeatId} onSelect={(id) => selectSeat(id)} />
           </Panel>

@@ -122,7 +122,7 @@ export function SeatMap({ ride, seats, selectedSeatId, onSelect, compact = false
 
   return (
     <div className="flex flex-col gap-2 h-full">
-      <div className="flex-1 min-h-0 flex items-center justify-center">
+      <div className="flex-1 min-h-0 flex items-start justify-center">
         <svg viewBox={`0 0 ${layout.width} ${layout.height}`} className="max-h-full w-full" style={{ maxHeight: compact ? 220 : 420 }} role="group" aria-label={`${ride.name} seat map`}>
           {layout.decor}
           {layout.seats.map((p) => {

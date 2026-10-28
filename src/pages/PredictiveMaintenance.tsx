@@ -110,7 +110,7 @@ export default function PredictiveMaintenance() {
               <XAxis type="number" domain={[0, 100]} tickLine={false} axisLine={false} unit="%" />
               <YAxis type="category" dataKey="name" tickLine={false} axisLine={false} width={70} />
               <Tooltip cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-              <Bar dataKey="health" name="Health %" fill={C.teal} radius={[0, 3, 3, 0]} />
+              <Bar isAnimationActive={false} dataKey="health" name="Health %" fill={C.teal} radius={[0, 3, 3, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </Panel>
@@ -134,8 +134,8 @@ export default function PredictiveMaintenance() {
                   <XAxis dataKey="day" tickLine={false} axisLine={false} />
                   <YAxis tickLine={false} axisLine={false} width={34} unit={series.unit === 's' ? 's' : ''} />
                   <Tooltip />
-                  <Line dataKey="value" name={series.label} stroke={C.teal} dot={{ r: 2 }} />
-                  <Line dataKey="trend" name="Linear trend" stroke={C.amber} strokeDasharray="4 4" dot={false} />
+                  <Line isAnimationActive={false} dataKey="value" name={series.label} stroke={C.teal} dot={{ r: 2 }} />
+                  <Line isAnimationActive={false} dataKey="trend" name="Linear trend" stroke={C.amber} strokeDasharray="4 4" dot={false} />
                   <ReferenceLine y={series.threshold} stroke={C.red} strokeDasharray="3 3" label={{ value: 'threshold', fill: C.red, fontSize: 10, position: 'insideTopLeft' }} />
                 </LineChart>
               </ResponsiveContainer>

@@ -51,7 +51,7 @@ export function SlideAnalytics() {
             <XAxis dataKey="n" tickLine={false} axisLine={false} />
             <YAxis tickLine={false} axisLine={false} width={28} unit="s" />
             <Tooltip cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-            <Bar dataKey="sec" name="Interval (s)" fill={C.teal} radius={[3, 3, 0, 0]} />
+            <Bar isAnimationActive={false} dataKey="sec" name="Interval (s)" fill={C.teal} radius={[3, 3, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </Panel>
@@ -62,7 +62,7 @@ export function SlideAnalytics() {
             <XAxis dataKey="hour" tickLine={false} axisLine={false} />
             <YAxis tickLine={false} axisLine={false} width={30} />
             <Tooltip />
-            <Area dataKey="riders" name="Riders" stroke={C.teal} fill={C.teal} fillOpacity={0.15} />
+            <Area isAnimationActive={false} dataKey="riders" name="Riders" stroke={C.teal} fill={C.teal} fillOpacity={0.15} />
           </AreaChart>
         </ResponsiveContainer>
       </Panel>
@@ -73,8 +73,8 @@ export function SlideAnalytics() {
             <XAxis dataKey="t" tickLine={false} axisLine={false} />
             <YAxis tickLine={false} axisLine={false} width={24} allowDecimals={false} />
             <Tooltip />
-            <Line type="stepAfter" dataKey="len" name="Queue" stroke={C.amber} dot={false} connectNulls />
-            <Line type="stepAfter" dataKey="occ" name="Occupancy" stroke={C.violet} dot={false} connectNulls />
+            <Line isAnimationActive={false} type="stepAfter" dataKey="len" name="Queue" stroke={C.amber} dot={false} connectNulls />
+            <Line isAnimationActive={false} type="stepAfter" dataKey="occ" name="Occupancy" stroke={C.violet} dot={false} connectNulls />
           </LineChart>
         </ResponsiveContainer>
       </Panel>

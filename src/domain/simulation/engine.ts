@@ -106,6 +106,7 @@ export class SimulationEngine {
   private provider: SimulatedObservationProvider;
   private lastFrameMs = 0;
   private episodes = new Map<string, Set<AlertType>>();
+  private disagreeFrames = new Map<SeatId, number>();
   private sensorOverrides: Record<SeatId, SensorObservation> = {};
   private riderLabels: Record<string, string> = {};
 
@@ -149,6 +150,7 @@ export class SimulationEngine {
     }
     this.fusion = {};
     this.episodes.clear();
+    this.disagreeFrames.clear();
     this.sensorOverrides = {};
     this.slide = emptySlide();
     this.markers = [];
@@ -447,8 +449,9 @@ export class SimulationEngine {
     const ep = this.episode(next.seatId);
     const changed = next.state !== prev.state;
     if (changed && (next.state === 'nominal' || next.state === 'empty')) {
+      const hadEpisode = ep.size > 0;
       ep.clear();
-      if (prev.state === 'concern' || prev.state === 'review' || prev.state === 'unknown') {
+      if (hadEpisode && (prev.state === 'concern' || prev.state === 'review' || prev.state === 'unknown')) {
         this.sinks.logEvent({ type: 'observation', title: `${seatLabel(this.ride, next.seatId)} — observation cleared`, detail: `Seat state ${prev.state} → ${next.state} after ${this.getSettings().stabilizationFrames} consistent frames. Informational only.`, severity: 'info', rideId: this.ride.id, scenarioId: this.scenarioId(), atMs: this.sessionMs, cameraId: next.cameraId, target: { kind: 'seat', seatId: next.seatId }, confidence: next.confidence });
       }
       return;
@@ -486,8 +489,13 @@ export class SimulationEngine {
     const ep = this.episode(seat.seatId);
     if (f.agreement !== 'disagree') {
       ep.delete('sensor_discrepancy');
+      this.disagreeFrames.set(seat.seatId, 0);
       return;
     }
+    // Disagreement must persist for the stabilisation window before it is raised (same rule as seat states).
+    const n = (this.disagreeFrames.get(seat.seatId) ?? 0) + 1;
+    this.disagreeFrames.set(seat.seatId, n);
+    if (n < this.getSettings().stabilizationFrames) return;
     if (ep.has('sensor_discrepancy')) return;
     ep.add('sensor_discrepancy');
     const target: AlertTarget = { kind: 'seat', seatId: seat.seatId };

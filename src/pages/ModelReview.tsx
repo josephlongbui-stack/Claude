@@ -119,7 +119,7 @@ export default function ModelReview() {
                 <YAxis type="category" dataKey="name" tickLine={false} axisLine={false} width={140} />
                 <Tooltip cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
                 <Legend />
-                <Bar dataKey="agreement" name="Agreement %" fill={C.teal} radius={[0, 3, 3, 0]} />
+                <Bar isAnimationActive={false} dataKey="agreement" name="Agreement %" fill={C.teal} radius={[0, 3, 3, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </Panel>

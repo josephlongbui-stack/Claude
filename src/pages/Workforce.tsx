@@ -57,8 +57,8 @@ export default function Workforce() {
                 <YAxis type="category" dataKey="type" tickLine={false} axisLine={false} width={190} />
                 <Tooltip cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
                 <Legend />
-                <Bar dataKey="count" name="Alerts" fill={C.teal} radius={[0, 3, 3, 0]} />
-                <Bar dataKey="ack" name="Avg time to action (s)" fill={C.amber} radius={[0, 3, 3, 0]} />
+                <Bar isAnimationActive={false} dataKey="count" name="Alerts" fill={C.teal} radius={[0, 3, 3, 0]} />
+                <Bar isAnimationActive={false} dataKey="ack" name="Avg time to action (s)" fill={C.amber} radius={[0, 3, 3, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -71,9 +71,9 @@ export default function Workforce() {
               <YAxis tickLine={false} axisLine={false} width={30} />
               <Tooltip cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
               <Legend />
-              <Bar dataKey="completed" name="Reviews completed" fill={C.teal} radius={[3, 3, 0, 0]} />
-              <Bar dataKey="open" name="Open at shift end" fill={C.amber} radius={[3, 3, 0, 0]} />
-              <Bar dataKey="medianAck" name="Median ack (s)" fill={C.violet} radius={[3, 3, 0, 0]} />
+              <Bar isAnimationActive={false} dataKey="completed" name="Reviews completed" fill={C.teal} radius={[3, 3, 0, 0]} />
+              <Bar isAnimationActive={false} dataKey="open" name="Open at shift end" fill={C.amber} radius={[3, 3, 0, 0]} />
+              <Bar isAnimationActive={false} dataKey="medianAck" name="Median ack (s)" fill={C.violet} radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </Panel>

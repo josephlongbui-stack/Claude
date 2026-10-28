@@ -93,10 +93,10 @@ export default function DispatchAnalytics() {
               <YAxis tickLine={false} axisLine={false} width={30} unit="s" />
               <Tooltip cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
               <Legend />
-              <Bar dataKey="Unload" stackId="a" fill={C.slate} />
-              <Bar dataKey="Load" stackId="a" fill={C.teal} />
-              <Bar dataKey="Review" stackId="a" fill={C.violet} />
-              <Bar dataKey="Block wait" stackId="a" fill={C.amber} radius={[3, 3, 0, 0]} />
+              <Bar isAnimationActive={false} dataKey="Unload" stackId="a" fill={C.slate} />
+              <Bar isAnimationActive={false} dataKey="Load" stackId="a" fill={C.teal} />
+              <Bar isAnimationActive={false} dataKey="Review" stackId="a" fill={C.violet} />
+              <Bar isAnimationActive={false} dataKey="Block wait" stackId="a" fill={C.amber} radius={[3, 3, 0, 0]} />
               <ReferenceLine y={ride.baseline.minCycleSec} stroke={C.red} strokeDasharray="4 4" label={{ value: 'min cycle', fill: C.red, fontSize: 10, position: 'insideTopRight' }} />
             </BarChart>
           </ResponsiveContainer>
@@ -108,7 +108,7 @@ export default function DispatchAnalytics() {
               <XAxis dataKey="bin" tickLine={false} axisLine={false} />
               <YAxis tickLine={false} axisLine={false} width={24} />
               <Tooltip cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-              <Bar dataKey="count" name="Dispatches" fill={C.teal} radius={[3, 3, 0, 0]} />
+              <Bar isAnimationActive={false} dataKey="count" name="Dispatches" fill={C.teal} radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </Panel>
@@ -121,8 +121,8 @@ export default function DispatchAnalytics() {
               <YAxis yAxisId="r" orientation="right" tickLine={false} axisLine={false} width={30} unit="%" domain={[0, 100]} />
               <Tooltip />
               <Legend />
-              <Area yAxisId="l" dataKey="riders" name="Riders / h" stroke={C.teal} fill={C.teal} fillOpacity={0.15} />
-              <Line yAxisId="r" dataKey="utilisation" name="Utilisation %" stroke={C.amber} dot={false} />
+              <Area isAnimationActive={false} yAxisId="l" dataKey="riders" name="Riders / h" stroke={C.teal} fill={C.teal} fillOpacity={0.15} />
+              <Line isAnimationActive={false} yAxisId="r" dataKey="utilisation" name="Utilisation %" stroke={C.amber} dot={false} />
             </AreaChart>
           </ResponsiveContainer>
         </Panel>
@@ -170,8 +170,8 @@ export default function DispatchAnalytics() {
                   <YAxis tickLine={false} axisLine={false} width={36} />
                   <Tooltip cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
                   <Legend />
-                  <Bar dataKey="capacity" name="Hourly capacity" fill={C.slate} radius={[3, 3, 0, 0]} />
-                  <Bar dataKey="riders" name="Throughput" fill={C.teal} radius={[3, 3, 0, 0]} />
+                  <Bar isAnimationActive={false} dataKey="capacity" name="Hourly capacity" fill={C.slate} radius={[3, 3, 0, 0]} />
+                  <Bar isAnimationActive={false} dataKey="riders" name="Throughput" fill={C.teal} radius={[3, 3, 0, 0]} />
                   <ReferenceLine y={demand} stroke={C.violet} strokeDasharray="4 4" label={{ value: 'demand', fill: C.violet, fontSize: 10, position: 'insideTopRight' }} />
                 </BarChart>
               </ResponsiveContainer>
@@ -184,7 +184,7 @@ export default function DispatchAnalytics() {
                   <XAxis type="number" tickLine={false} axisLine={false} />
                   <YAxis type="category" dataKey="name" tickLine={false} axisLine={false} width={110} />
                   <Tooltip cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-                  <Bar dataKey="value" name="Δ riders / h" fill={C.green} radius={[0, 3, 3, 0]} />
+                  <Bar isAnimationActive={false} dataKey="value" name="Δ riders / h" fill={C.green} radius={[0, 3, 3, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -211,8 +211,8 @@ export default function DispatchAnalytics() {
                 <YAxis tickLine={false} axisLine={false} width={30} domain={[0, 1]} tickFormatter={(v: number) => `${Math.round(v * 100)}%`} />
                 <Tooltip formatter={(v) => `${Math.round(Number(v) * 100)}%`} />
                 <Legend />
-                <Line type="monotone" dataKey="stationReady" name="Station readiness (projected)" stroke={C.teal} dot={false} />
-                <Line type="monotone" dataKey="blockReady" name="Block availability (projected)" stroke={C.amber} dot={false} />
+                <Line isAnimationActive={false} type="monotone" dataKey="stationReady" name="Station readiness (projected)" stroke={C.teal} dot={false} />
+                <Line isAnimationActive={false} type="monotone" dataKey="blockReady" name="Block availability (projected)" stroke={C.amber} dot={false} />
                 <ReferenceLine x={Math.round(pacing.alignedAtSec / 5) * 5} stroke={C.green} strokeDasharray="4 4" label={{ value: 'aligned', fill: C.green, fontSize: 10 }} />
               </LineChart>
             </ResponsiveContainer>

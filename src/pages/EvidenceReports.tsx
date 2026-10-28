@@ -171,7 +171,7 @@ export default function EvidenceReports() {
                     <tr key={e.id} className={tampered === e.id ? 'bg-red-950/30' : ''} title={`${e.detail}\nEvidence: ${e.evidenceRef}`}>
                       <td className="mono">{e.id}</td>
                       <td className="mono text-graphite-300">{simClock(e.simMs)}</td>
-                      <td>{getRide(e.rideId).name}</td>
+                      <td className="nowrap">{getRide(e.rideId).name}</td>
                       <td className="mono">{e.cameraId ?? '—'}</td>
                       <td className="mono">{targetText(e)}</td>
                       <td><Badge tone="slate">{e.type.replace(/_/g, ' ')}</Badge></td>

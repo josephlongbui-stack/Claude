@@ -71,7 +71,7 @@ export default function SafetyReview() {
                   <option key={s} value={s}>{STATUS_LABEL[s]}</option>
                 ))}
               </select>
-              <select className="select !w-auto !py-0.5 !text-[11px]" value={type} onChange={(e) => setType(e.target.value as AlertType | 'all')} aria-label="Filter by type">
+              <select className="select !w-auto max-w-[180px] !py-0.5 !text-[11px]" value={type} onChange={(e) => setType(e.target.value as AlertType | 'all')} aria-label="Filter by type">
                 <option value="all">All types</option>
                 {ALL_ALERT_TYPES.map((t) => (
                   <option key={t} value={t}>{ALERT_TYPE_LABEL[t]}</option>
@@ -102,7 +102,7 @@ export default function SafetyReview() {
                     <tr key={a.id} className={`cursor-pointer ${selected?.id === a.id ? 'selected' : ''}`} onClick={() => selectAlert(a.id)}>
                       <td className="mono">{a.id}</td>
                       <td className="mono text-graphite-300">{simClock(a.createdMs)}</td>
-                      <td>{getRide(a.rideId).name}</td>
+                      <td className="nowrap">{getRide(a.rideId).name}</td>
                       <td>{alertTargetLabel(a)}</td>
                       <td>{ALERT_TYPE_LABEL[a.type]}</td>
                       <td><SeverityBadge severity={a.severity} /></td>

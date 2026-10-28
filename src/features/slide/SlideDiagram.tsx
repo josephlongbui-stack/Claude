@@ -10,7 +10,7 @@ export function SlideDiagram() {
   const at = (p: number): [number, number] => pts[Math.round(Math.min(1, Math.max(0, p)) * 40)];
   const occupiedExit = Boolean(slide.exitZone.riderId);
   return (
-    <svg viewBox="0 0 600 270" className="w-full" role="img" aria-label="Water slide schematic">
+    <svg viewBox="0 0 600 270" className="w-full mx-auto" style={{ maxHeight: 300 }} role="img" aria-label="Water slide schematic">
       <defs>
         <linearGradient id="flume" x1="0" x2="1">
           <stop offset="0" stopColor="#0e7490" />
@@ -28,7 +28,7 @@ export function SlideDiagram() {
       <path d={pathD} stroke="#22d3ee" strokeWidth="1" fill="none" strokeOpacity="0.4" strokeDasharray="4 4" />
       {/* run-out */}
       <rect x="500" y="226" width="90" height="22" rx="6" fill={occupiedExit ? (slide.exitZone.prolonged ? '#7f1d1d' : '#92400e') : '#164e63'} stroke={occupiedExit ? (slide.exitZone.prolonged ? '#ef4444' : '#f59e0b') : '#0e7490'} />
-      <text x="545" y="262" fontSize="9" fill={occupiedExit ? (slide.exitZone.prolonged ? '#fca5a5' : '#fcd34d') : '#8794a5'} textAnchor="middle">
+      <text x="592" y="262" fontSize="9" fill={occupiedExit ? (slide.exitZone.prolonged ? '#fca5a5' : '#fcd34d') : '#8794a5'} textAnchor="end">
         EXIT ZONE · {occupiedExit ? (slide.exitZone.prolonged ? 'REVIEW REQUIRED' : 'occupied') : 'clear'}
       </text>
       {/* queue */}
@@ -54,7 +54,7 @@ export function SlideDiagram() {
         );
       })}
       {occupiedExit && <circle cx="545" cy="237" r={6} fill={slide.exitZone.prolonged ? '#ef4444' : '#f59e0b'} stroke="#07090d" />}
-      <text x="300" y="262" fontSize="9" fill="#5b6878" textAnchor="middle">Informational schematic — no clearance signal or release control exists in this demo</text>
+      <text x="592" y="14" fontSize="8.5" fill="#5b6878" textAnchor="end">Informational schematic — no clearance signal or release control exists in this demo</text>
     </svg>
   );
 }

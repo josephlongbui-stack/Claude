@@ -52,6 +52,25 @@ export function CalibrationCanvas({ ride, cam, regions, selectedSeat, onRegion, 
     ctx.fillStyle = palette.rail;
     ctx.fillRect(0, 334, W, 3);
     const base = defaultRegions(ride, cam);
+    // car bodies behind each row of seats, far rows first
+    const byRow = new Map<number, CalibrationRegion[]>();
+    for (const [id, r] of Object.entries(base)) {
+      const row = parseSeatId(id).row;
+      byRow.set(row, [...(byRow.get(row) ?? []), r]);
+    }
+    for (const [row, rs] of [...byRow.entries()].sort((a, b) => a[1][0].w - b[1][0].w)) {
+      const minX = Math.min(...rs.map((r) => r.x * W));
+      const maxX = Math.max(...rs.map((r) => (r.x + r.w) * W));
+      const top = rs[0].y * H + rs[0].h * H - (rs[0].h * H) / 1.62 + ((rs[0].h * H) / 1.62) * 0.55;
+      const sc = (rs[0].w * W - 6) / 100;
+      ctx.fillStyle = palette.carBody;
+      ctx.strokeStyle = palette.carEdge;
+      ctx.beginPath();
+      ctx.roundRect(minX - 14 * sc, top, maxX - minX + 28 * sc, ((rs[0].h * H) / 1.62) * 0.62, 6 * sc);
+      ctx.fill();
+      ctx.stroke();
+      tag(ctx, `${ride.geometry.rowLabel.toUpperCase()} ${row}`, minX - 10 * sc, top + ((rs[0].h * H) / 1.62) * 0.62 - 15, { color: 'rgba(221,227,234,0.55)', bg: 'rgba(0,0,0,0.35)', font: `${Math.max(8, 9 * sc)}px ui-monospace, Menlo, monospace` });
+    }
     for (const r of Object.values(base)) {
       const x = r.x * W + 3;
       const w = r.w * W - 6;

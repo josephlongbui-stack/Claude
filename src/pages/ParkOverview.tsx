@@ -114,8 +114,8 @@ export default function ParkOverview() {
               <YAxis yAxisId="r" orientation="right" tickLine={false} axisLine={false} width={34} />
               <Tooltip />
               <Legend />
-              <Area yAxisId="l" dataKey="occupancy" name="Park occupancy" stroke={C.violet} fill={C.violet} fillOpacity={0.12} />
-              <Line yAxisId="r" dataKey="riders" name="Riders / 15 min" stroke={C.teal} dot={false} />
+              <Area isAnimationActive={false} yAxisId="l" dataKey="occupancy" name="Park occupancy" stroke={C.violet} fill={C.violet} fillOpacity={0.12} />
+              <Line isAnimationActive={false} yAxisId="r" dataKey="riders" name="Riders / 15 min" stroke={C.teal} dot={false} />
             </AreaChart>
           </ResponsiveContainer>
         </Panel>
@@ -130,8 +130,8 @@ export default function ParkOverview() {
               <YAxis yAxisId="r" orientation="right" tickLine={false} axisLine={false} width={34} domain={[0, 100]} />
               <Tooltip cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
               <Legend />
-              <Bar yAxisId="l" dataKey="Riders / h" fill={C.teal} radius={[3, 3, 0, 0]} />
-              <Bar yAxisId="r" dataKey="Load factor %" fill={C.amber} radius={[3, 3, 0, 0]} />
+              <Bar isAnimationActive={false} yAxisId="l" dataKey="Riders / h" fill={C.teal} radius={[3, 3, 0, 0]} />
+              <Bar isAnimationActive={false} yAxisId="r" dataKey="Load factor %" fill={C.amber} radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </Panel>

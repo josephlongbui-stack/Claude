@@ -56,9 +56,9 @@ export function SeatInspector({ onFocusCamera }: { onFocusCamera?: (cameraId: st
       className="h-full"
       bodyClassName="p-3 overflow-y-auto"
     >
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
         <SeatStateBadge state={seat.state} />
-        <span className="text-[10.5px] text-graphite-400 mono">{seat.frames} frames · {seat.stableFrames} stable</span>
+        <span className="text-[10.5px] text-graphite-400 mono whitespace-nowrap">{seat.frames} frames · {seat.stableFrames} stable</span>
       </div>
       {seat.state !== seat.candidate && (
         <div className="text-[10.5px] text-signal-amber mb-2">Candidate state “{seat.candidate}” pending stabilisation ({seat.stableFrames} frame{seat.stableFrames === 1 ? '' : 's'}).</div>
@@ -99,10 +99,10 @@ export function SeatInspector({ onFocusCamera }: { onFocusCamera?: (cameraId: st
       <div className="text-[10.5px] uppercase tracking-wider text-graphite-300 font-semibold mb-1">Observation history</div>
       <ol className="text-[11px] mb-3 flex flex-col gap-0.5">
         {[...seat.history].reverse().map((h, i) => (
-          <li key={i} className="flex gap-2">
+          <li key={i} className="flex gap-2 items-center min-w-0">
             <span className="mono text-graphite-400 w-12 shrink-0">{simClock(h.atMs)}</span>
-            <SeatStateBadge state={h.state} />
-            <span className="text-graphite-300 truncate">{h.note}</span>
+            <span className="shrink-0"><SeatStateBadge state={h.state} compact /></span>
+            <span className="text-graphite-300 truncate min-w-0 flex-1">{h.note}</span>
           </li>
         ))}
       </ol>

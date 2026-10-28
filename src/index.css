@@ -144,6 +144,7 @@ input[type="range"] {
   vertical-align: middle;
 }
 .tbl tbody tr:hover { background: var(--color-graphite-800); }
+.tbl td.mono, .tbl td .badge, .tbl td.nowrap { white-space: nowrap; }
 .tbl tbody tr.selected { background: rgba(34, 211, 238, 0.08); }
 
 .badge {
@@ -197,3 +198,5 @@ input[type="range"] {
 .recharts-tooltip-label { color: #b4bfcc; }
 .recharts-cartesian-axis-tick text { fill: #8794a5; font-size: 10px; }
 .recharts-legend-item-text { color: #b4bfcc !important; font-size: 11px; }
+
+.recharts-line-curve { stroke-width: 1.6px; }
