@@ -9,7 +9,7 @@ RideOps AI is an interactive demonstrator for a B2B platform that would use fixe
 
 `npm run build:single` packages the whole demo into one self-contained HTML file (CSS and JS inlined, in-memory routing), suitable for hosts that serve a single page such as a claude.ai artifact. Inside the claude.ai viewer, exports go through the viewer's download confirmation; everywhere else they are normal browser downloads.
 
-The repository includes a GitHub Actions workflow (`.github/workflows/deploy-pages.yml`) that builds the app and publishes it to GitHub Pages at **https://josephlongbui-stack.github.io/Claude/** on every push to the default branch or to the `claude/funny-pasteur-il4kig` branch. The workflow enables Pages automatically; if that step is refused, enable it once under *Settings → Pages → Source: GitHub Actions*. Deep links work on Pages because the build also ships `404.html` as a copy of `index.html`.
+The GitHub Actions workflow (`.github/workflows/deploy-pages.yml`) runs lint, unit tests and the production build on every pull request. On pushes to the default branch it also publishes the app to GitHub Pages at **https://josephlongbui-stack.github.io/Claude/**. Pages must be enabled once under *Settings → Pages → Source: GitHub Actions*. Deep links work on Pages because the build also ships `404.html` as a copy of `index.html`.
 
 ## Run it
 

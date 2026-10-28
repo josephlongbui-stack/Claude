@@ -1,23 +1,17 @@
-name: Build and deploy demo to GitHub Pages
+name: CI and Pages deploy
 
 on:
+  pull_request:
   push:
     branches:
       - claude/gracious-rubin-4drocj
-      - claude/funny-pasteur-il4kig
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: true
 
 jobs:
-  build:
+  ci:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,23 +23,38 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
-        env:
-          BASE_PATH: /Claude/
-      # GitHub Pages serves 404.html for unknown paths; serving the SPA there keeps deep links working.
-      - run: cp dist/index.html dist/404.html
-      - uses: actions/configure-pages@v5
-        with:
-          enablement: true
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
 
+  # Deploys only from the default branch: the github-pages environment rejects other branches by default.
   deploy:
-    needs: build
+    needs: ci
+    if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          BASE_PATH: /Claude/
+      # GitHub Pages serves 404.html for unknown paths; serving the SPA there keeps deep links working.
+      - run: cp dist/index.html dist/404.html
+      # Fails with a clear message until Pages is enabled (Settings → Pages → Source: GitHub Actions).
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
       - id: deployment
         uses: actions/deploy-pages@v4
