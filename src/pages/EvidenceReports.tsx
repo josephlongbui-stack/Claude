@@ -47,8 +47,15 @@ export default function EvidenceReports() {
       .reverse();
   }, [events, ride, severity, status, type, from, to, q]);
 
-  const exportJson = (): void => downloadText(`rideops-events-${Date.now()}.json`, eventsToJson(filtered, { filters: { ride, severity, status, type, from, to, q }, anchorHash }), 'application/json');
-  const exportCsv = (): void => downloadText(`rideops-events-${Date.now()}.csv`, eventsToCsv(filtered), 'text/csv');
+  const [exportNote, setExportNote] = useState<string | null>(null);
+  const offer = (filename: string, text: string, mime: string): void => {
+    setExportNote(null);
+    void downloadText(filename, text, mime).then((r) => {
+      if (r === 'unavailable') setExportNote('File downloads are not available in this view. Open the demo in a browser tab to export.');
+    });
+  };
+  const exportJson = (): void => offer(`rideops-events-${Date.now()}.json`, eventsToJson(filtered, { filters: { ride, severity, status, type, from, to, q }, anchorHash }), 'application/json');
+  const exportCsv = (): void => offer(`rideops-events-${Date.now()}.csv`, eventsToCsv(filtered), 'text/csv');
   const exportReport = (): void => {
     const byType = Object.fromEntries(EVENT_TYPES.map((t) => [t, events.filter((e) => e.type === t).length]));
     const report = {
@@ -60,7 +67,7 @@ export default function EvidenceReports() {
       alertsByStatus: Object.fromEntries((Object.keys(STATUS_LABEL) as AlertStatus[]).map((s) => [s, alerts.filter((a) => a.status === s).length])),
       chain: { records: events.length, anchorHash, headHash: events[events.length - 1]?.hash ?? null },
     };
-    downloadText(`rideops-report-${Date.now()}.json`, JSON.stringify(report, null, 2), 'application/json');
+    offer(`rideops-report-${Date.now()}.json`, JSON.stringify(report, null, 2), 'application/json');
   };
 
   const runVerify = async (): Promise<void> => {
@@ -145,6 +152,11 @@ export default function EvidenceReports() {
               to <input type="time" step="1" className="input !w-28 !py-0.5 !text-[11px]" value={to} onChange={(e) => setTo(e.target.value)} aria-label="To time" />
             </label>
           </div>
+          {exportNote && (
+            <div className="p-2 border-b border-graphite-700">
+              <Notice tone="warn">{exportNote}</Notice>
+            </div>
+          )}
           {filtered.length === 0 ? (
             <EmptyState title="No events match" hint="Adjust the filters or run a scenario to generate records." />
           ) : (

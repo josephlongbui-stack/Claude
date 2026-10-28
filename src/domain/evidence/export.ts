@@ -38,8 +38,37 @@ export function eventsToCsv(records: EventRecord[]): string {
   return ['# SIMULATION — synthetic records only. Not certified for ride safety or dispatch control.', header, ...rows].join('\n');
 }
 
-export function downloadText(filename: string, text: string, mime = 'text/plain'): void {
-  if (typeof document === 'undefined') return;
+interface DownloadsNamespace {
+  save(request: { filename: string; data: string }): Promise<{ status: string }>;
+}
+
+interface ClaudeHost {
+  use?: (name: 'downloads') => Promise<DownloadsNamespace | null>;
+}
+
+export type DownloadOutcome = 'saved' | 'declined' | 'unavailable' | 'browser';
+
+/**
+ * Offers a generated text file to the viewer. Inside the claude.ai artifact viewer, plain
+ * downloads are blocked, so the viewer's `downloads` capability is used (it asks the viewer to
+ * confirm). Everywhere else (local dev, GitHub Pages) it falls back to a normal browser download.
+ */
+export async function downloadText(filename: string, text: string, mime = 'text/plain'): Promise<DownloadOutcome> {
+  if (typeof document === 'undefined') return 'unavailable';
+  const host = (window as unknown as { claude?: ClaudeHost }).claude;
+  if (host?.use) {
+    const downloads = await host.use('downloads').catch(() => null);
+    if (downloads) {
+      try {
+        await downloads.save({ filename, data: text });
+        return 'saved';
+      } catch (err) {
+        const code = (err as { code?: string })?.code;
+        return code === 'declined' || code === 'rate_limited' ? 'declined' : 'unavailable';
+      }
+    }
+    return 'unavailable';
+  }
   const blob = new Blob([text], { type: mime });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -49,4 +78,5 @@ export function downloadText(filename: string, text: string, mime = 'text/plain'
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+  return 'browser';
 }

@@ -41,7 +41,9 @@ export default function ModelReview() {
     setNote('');
   };
 
-  const exportLabels = (): void => downloadText(`rideops-label-corrections-${Date.now()}.json`, JSON.stringify({ disclaimer: 'Synthetic review labels — demonstration only', corrections }, null, 2), 'application/json');
+  const exportLabels = (): void => {
+    void downloadText(`rideops-label-corrections-${Date.now()}.json`, JSON.stringify({ disclaimer: 'Synthetic review labels — demonstration only', corrections }, null, 2), 'application/json');
+  };
 
   return (
     <div className="flex flex-col gap-3">
