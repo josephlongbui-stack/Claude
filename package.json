@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "RideOps AI — simulation-based ride operations intelligence demo (not certified for ride safety or dispatch control)",
+  "description": "RideOps AI \u2014 simulation-based ride operations intelligence demo (not certified for ride safety or dispatch control)",
   "scripts": {
     "dev": "vite",
     "build": "tsc -p tsconfig.app.json --noEmit && vite build",
@@ -12,7 +12,8 @@
     "lint": "eslint src e2e",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "build:single": "node scripts/build-single-file.mjs"
   },
   "dependencies": {
     "lucide-react": "^1.62.0",

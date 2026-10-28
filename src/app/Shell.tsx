@@ -41,8 +41,8 @@ export function Shell() {
 
   return (
     <div className="h-full flex bg-graphite-950 text-graphite-100">
-      <aside className="w-[212px] shrink-0 border-r border-graphite-700 bg-graphite-900 flex flex-col">
-        <div className="px-4 py-3 border-b border-graphite-700 flex items-center gap-2">
+      <aside className="w-[52px] lg:w-[212px] shrink-0 border-r border-graphite-700 bg-graphite-900 flex flex-col">
+        <div className="px-3 lg:px-4 py-3 border-b border-graphite-700 flex items-center gap-2">
           <div className="w-7 h-7 rounded bg-graphite-800 border border-graphite-600 flex items-center justify-center">
             <svg viewBox="0 0 32 32" width="18" height="18" aria-hidden>
               <path d="M6 20c4-10 16-10 20 0" stroke="#22d3ee" strokeWidth="2.5" fill="none" strokeLinecap="round" />
@@ -50,7 +50,7 @@ export function Shell() {
               <rect x="8" y="22" width="16" height="3" rx="1.5" fill="#64748b" />
             </svg>
           </div>
-          <div className="leading-tight">
+          <div className="leading-tight hidden lg:block">
             <div className="text-[13px] font-semibold tracking-tight">RideOps AI</div>
             <div className="text-[10px] text-graphite-300 uppercase tracking-wider">Operations Intelligence</div>
           </div>
@@ -58,18 +58,18 @@ export function Shell() {
         <nav className="flex-1 overflow-y-auto py-2" aria-label="Primary">
           {groups.map((g) => (
             <div key={g} className="mb-2">
-              <div className="px-4 pt-2 pb-1 text-[10px] uppercase tracking-wider text-graphite-400 font-semibold">{g}</div>
+              <div className="px-4 pt-2 pb-1 text-[10px] uppercase tracking-wider text-graphite-400 font-semibold hidden lg:block">{g}</div>
               {NAV_ITEMS.filter((n) => n.group === g).map((item) => (
-                <NavLink key={item.to} to={item.to} end={item.to === '/'} className={({ isActive }) => `flex items-center gap-2.5 px-4 py-[6px] text-[12.5px] border-l-2 transition-colors ${isActive ? 'border-signal-teal text-graphite-100 bg-graphite-800' : 'border-transparent text-graphite-300 hover:text-graphite-100 hover:bg-graphite-850'}`}>
+                <NavLink key={item.to} to={item.to} end={item.to === '/'} title={item.label} className={({ isActive }) => `flex items-center gap-2.5 px-4 py-[6px] text-[12.5px] border-l-2 transition-colors ${isActive ? 'border-signal-teal text-graphite-100 bg-graphite-800' : 'border-transparent text-graphite-300 hover:text-graphite-100 hover:bg-graphite-850'}`}>
                   <item.icon size={15} className="shrink-0" />
-                  <span>{item.label}</span>
-                  {item.to === '/safety-review' && openAlerts > 0 && <span className="ml-auto badge badge-amber !py-0">{openAlerts}</span>}
+                  <span className="hidden lg:inline">{item.label}</span>
+                  {item.to === '/safety-review' && openAlerts > 0 && <span className="ml-auto badge badge-amber !py-0 hidden lg:inline-flex">{openAlerts}</span>}
                 </NavLink>
               ))}
             </div>
           ))}
         </nav>
-        <div className="px-4 py-3 border-t border-graphite-700 text-[10.5px] text-graphite-400 leading-snug">
+        <div className="px-4 py-3 border-t border-graphite-700 text-[10.5px] text-graphite-400 leading-snug hidden lg:block">
           Demo build · synthetic data only. No ride-controller connectivity exists in this software.
         </div>
       </aside>
