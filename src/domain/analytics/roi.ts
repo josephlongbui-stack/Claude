@@ -1,30 +1,26 @@
-/** Illustrative ROI arithmetic. Every output is derived from the inputs shown — no external statistics. */
+/**
+ * Illustrative ROI arithmetic. Every output is derived from the inputs shown — no external statistics.
+ * Value comes only from extra rider capacity that demand actually uses.
+ */
 export interface RoiInputs {
   annualSubscription: number;
   installationCost: number;
   attractions: number;
   operatingDays: number;
   operatingHours: number;
-  secondsSavedPerCycle: number;
   baselineDwellSec: number;
+  secondsSavedPerCycle: number;
+  seatsPerDispatch: number;
   loadFactor: number;
-  trainCapacity: number;
-  laborCostPerHour: number;
-  staffHoursSavedPerDay: number;
-  valuePerRecoveredRider: number;
   demandCaptureRate: number;
+  valuePerRecoveredRider: number;
 }
 
 export interface RoiResult {
-  annualSoftwareCost: number;
+  annualCost: number;
   firstYearCost: number;
-  cyclesPerDayBaseline: number;
-  cyclesPerDayAssisted: number;
   extraCyclesPerDay: number;
-  recoveredRidersPerDay: number;
   recoveredRidersPerYear: number;
-  capacityValue: number;
-  laborSavings: number;
   annualValue: number;
   netFirstYear: number;
   paybackMonths: number | null;
@@ -32,46 +28,33 @@ export interface RoiResult {
 }
 
 const money = (v: number): string => `$${Math.round(v).toLocaleString('en-US')}`;
+const int = (v: number): string => Math.round(v).toLocaleString('en-US');
 
 export function computeRoi(i: RoiInputs): RoiResult {
   const secondsPerDay = i.operatingHours * 3600;
-  const cyclesPerDayBaseline = i.baselineDwellSec > 0 ? secondsPerDay / i.baselineDwellSec : 0;
-  const assistedDwell = Math.max(1, i.baselineDwellSec - i.secondsSavedPerCycle);
-  const cyclesPerDayAssisted = secondsPerDay / assistedDwell;
-  const extraCyclesPerDay = Math.max(0, cyclesPerDayAssisted - cyclesPerDayBaseline);
-  const recoveredRidersPerDay = extraCyclesPerDay * i.trainCapacity * i.loadFactor * i.demandCaptureRate;
-  const recoveredRidersPerYear = recoveredRidersPerDay * i.operatingDays * i.attractions;
-  const capacityValue = recoveredRidersPerYear * i.valuePerRecoveredRider;
-  const laborSavings = i.staffHoursSavedPerDay * i.laborCostPerHour * i.operatingDays * i.attractions;
-  const annualValue = capacityValue + laborSavings;
-  const annualSoftwareCost = i.annualSubscription;
+  const baselineCycles = i.baselineDwellSec > 0 ? secondsPerDay / i.baselineDwellSec : 0;
+  const assistedCycles = secondsPerDay / Math.max(1, i.baselineDwellSec - i.secondsSavedPerCycle);
+  const extraCyclesPerDay = Math.max(0, assistedCycles - baselineCycles);
+  const ridersPerDay = extraCyclesPerDay * i.seatsPerDispatch * i.loadFactor * i.demandCaptureRate;
+  const recoveredRidersPerYear = ridersPerDay * i.operatingDays * i.attractions;
+  const annualValue = recoveredRidersPerYear * i.valuePerRecoveredRider;
   const firstYearCost = i.annualSubscription + i.installationCost;
-  const netFirstYear = annualValue - firstYearCost;
-  const monthlyValue = annualValue / 12;
-  const paybackMonths = monthlyValue > 0 ? firstYearCost / monthlyValue : null;
+  const paybackMonths = annualValue > 0 ? firstYearCost / (annualValue / 12) : null;
   return {
-    annualSoftwareCost,
+    annualCost: i.annualSubscription,
     firstYearCost,
-    cyclesPerDayBaseline,
-    cyclesPerDayAssisted,
     extraCyclesPerDay,
-    recoveredRidersPerDay,
     recoveredRidersPerYear,
-    capacityValue,
-    laborSavings,
     annualValue,
-    netFirstYear,
+    netFirstYear: annualValue - firstYearCost,
     paybackMonths,
     steps: [
-      { label: 'Baseline cycles / day / attraction', formula: `${i.operatingHours}h × 3600 ÷ ${i.baselineDwellSec}s`, value: cyclesPerDayBaseline.toFixed(1) },
-      { label: 'Assisted cycles / day / attraction', formula: `${i.operatingHours}h × 3600 ÷ (${i.baselineDwellSec} − ${i.secondsSavedPerCycle})s`, value: cyclesPerDayAssisted.toFixed(1) },
-      { label: 'Recovered riders / day / attraction', formula: `${extraCyclesPerDay.toFixed(1)} extra cycles × ${i.trainCapacity} seats × ${(i.loadFactor * 100).toFixed(0)}% × ${(i.demandCaptureRate * 100).toFixed(0)}% demand capture`, value: recoveredRidersPerDay.toFixed(0) },
-      { label: 'Recovered riders / year', formula: `${recoveredRidersPerDay.toFixed(0)} × ${i.operatingDays} days × ${i.attractions} attractions`, value: Math.round(recoveredRidersPerYear).toLocaleString('en-US') },
-      { label: 'Recovered capacity value', formula: `${Math.round(recoveredRidersPerYear).toLocaleString('en-US')} × $${i.valuePerRecoveredRider}`, value: money(capacityValue) },
-      { label: 'Operating (labor) savings', formula: `${i.staffHoursSavedPerDay}h × $${i.laborCostPerHour} × ${i.operatingDays} × ${i.attractions}`, value: money(laborSavings) },
-      { label: 'Illustrative annual value', formula: 'capacity value + labor savings', value: money(annualValue) },
-      { label: 'First-year cost', formula: `$${i.annualSubscription.toLocaleString('en-US')} subscription + $${i.installationCost.toLocaleString('en-US')} install`, value: money(firstYearCost) },
-      { label: 'Payback period', formula: 'first-year cost ÷ (annual value ÷ 12)', value: paybackMonths === null ? 'n/a' : `${paybackMonths.toFixed(1)} months` },
+      { label: 'Extra dispatches per day, per ride', formula: `${i.operatingHours} h × 3600 ÷ (${i.baselineDwellSec} − ${i.secondsSavedPerCycle}) s − ${i.operatingHours} h × 3600 ÷ ${i.baselineDwellSec} s`, value: extraCyclesPerDay.toFixed(1) },
+      { label: 'Extra riders per day, per ride', formula: `${extraCyclesPerDay.toFixed(1)} × ${i.seatsPerDispatch} seats × ${Math.round(i.loadFactor * 100)}% full × ${Math.round(i.demandCaptureRate * 100)}% used`, value: int(ridersPerDay) },
+      { label: 'Extra riders per year', formula: `${int(ridersPerDay)} × ${i.operatingDays} days × ${i.attractions} rides`, value: int(recoveredRidersPerYear) },
+      { label: 'Value per year', formula: `${int(recoveredRidersPerYear)} × $${i.valuePerRecoveredRider}`, value: money(annualValue) },
+      { label: 'First-year cost', formula: `${money(i.annualSubscription)} subscription + ${money(i.installationCost)} install`, value: money(firstYearCost) },
+      { label: 'Payback', formula: 'first-year cost ÷ monthly value', value: paybackMonths === null ? 'n/a' : `${paybackMonths.toFixed(1)} months` },
     ],
   };
 }
@@ -82,12 +65,10 @@ export const DEFAULT_ROI: RoiInputs = {
   attractions: 4,
   operatingDays: 220,
   operatingHours: 10,
-  secondsSavedPerCycle: 15,
   baselineDwellSec: 120,
+  secondsSavedPerCycle: 15,
+  seatsPerDispatch: 24,
   loadFactor: 0.85,
-  trainCapacity: 24,
-  laborCostPerHour: 24,
-  staffHoursSavedPerDay: 1.5,
-  valuePerRecoveredRider: 1.1,
   demandCaptureRate: 0.35,
+  valuePerRecoveredRider: 1.1,
 };

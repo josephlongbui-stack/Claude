@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { AlertTriangle, Info } from 'lucide-react';
 import type { AlertStatus, SeatState, Severity } from '@/domain/types';
 import { SEAT_STATE_LABEL } from '@/domain/observation/evaluator';
-import { STATUS_LABEL } from '@/domain/review/workflow';
+import { SEVERITY_LABEL, STATUS_LABEL } from '@/domain/review/workflow';
 
 export function Panel({ title, actions, children, className = '', bodyClassName = '', id }: { title?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string; bodyClassName?: string; id?: string }) {
   return (
@@ -61,7 +61,7 @@ export function SeatStateBadge({ state, compact = false }: { state: SeatState; c
 
 export function SeverityBadge({ severity }: { severity: Severity }) {
   const tone = severity === 'concern' ? 'red' : severity === 'review' ? 'amber' : 'teal';
-  const label = severity === 'concern' ? 'Simulated concern' : severity === 'review' ? 'Review required' : 'Info';
+  const label = SEVERITY_LABEL[severity];
   return <Badge tone={tone}>{label}</Badge>;
 }
 

@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { compareScenarios, computeThroughput, histogram } from '../analytics/dispatch';
+import { compareScenarios, computeThroughput } from '../analytics/dispatch';
 import { computeRoi, DEFAULT_ROI } from '../analytics/roi';
-import { forecastPacing } from '../analytics/pacing';
-import { getRide } from '../rides/configs';
 
 describe('dispatch math', () => {
   it('uses max(station dwell, min cycle) as the effective interval', () => {
@@ -33,31 +31,20 @@ describe('dispatch math', () => {
     expect(cmp.fillEffect).toBeGreaterThan(0);
     expect(cmp.dispatchEffect + cmp.fillEffect + cmp.interaction).toBeCloseTo(cmp.deltaHourly, 6);
   });
-  it('histograms intervals into bins', () => {
-    const h = histogram([100, 105, 118, 121, 140], 10);
-    expect(h.reduce((a, b) => a + b.count, 0)).toBe(5);
-  });
 });
 
 describe('ROI arithmetic', () => {
   it('is explainable from its inputs and finds payback', () => {
     const r = computeRoi(DEFAULT_ROI);
-    expect(r.annualSoftwareCost).toBe(150000);
+    expect(r.annualCost).toBe(150000);
     expect(r.firstYearCost).toBe(210000);
-    expect(r.annualValue).toBeCloseTo(r.capacityValue + r.laborSavings, 6);
-    expect(r.paybackMonths).not.toBeNull();
-    expect(r.steps.length).toBeGreaterThan(5);
+    expect(r.annualValue).toBeGreaterThan(0);
+    expect(r.paybackMonths).toBeCloseTo(r.firstYearCost / (r.annualValue / 12), 6);
+    expect(r.steps.length).toBe(6);
   });
-  it('yields no recovered capacity when no time is saved', () => {
+  it('yields no value when no time is saved', () => {
     const r = computeRoi({ ...DEFAULT_ROI, secondsSavedPerCycle: 0 });
     expect(r.recoveredRidersPerYear).toBe(0);
-  });
-});
-
-describe('pacing forecast', () => {
-  it('identifies the block as the constraint when it clears after the station', () => {
-    const f = forecastPacing(getRide('orbit'), { elapsedSec: 0, dwellSec: 100, blockClearSec: 150 });
-    expect(f.limiting).toBe('block');
-    expect(f.alignedAtSec).toBe(150);
+    expect(r.paybackMonths).toBeNull();
   });
 });

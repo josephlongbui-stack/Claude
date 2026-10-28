@@ -22,7 +22,7 @@ export function SlideDiagram() {
       <text x="45" y="255" fontSize="9" fill="#8794a5" textAnchor="middle">TOWER</text>
       {/* platform */}
       <rect x="20" y="36" width="60" height="6" fill="#3d4959" />
-      <text x="50" y="28" fontSize="9" fill="#b4bfcc" textAnchor="middle">START PLATFORM</text>
+      <text x="20" y="14" fontSize="9" fill="#b4bfcc">START PLATFORM</text>
       {/* flume */}
       <path d={pathD} stroke="url(#flume)" strokeWidth="14" fill="none" strokeLinecap="round" />
       <path d={pathD} stroke="#22d3ee" strokeWidth="1" fill="none" strokeOpacity="0.4" strokeDasharray="4 4" />
@@ -40,7 +40,7 @@ export function SlideDiagram() {
       {slide.platformRider && (
         <g>
           <circle cx="66" cy="30" r="6" fill={slide.entryReview === 'recorded' ? '#4ade80' : '#f59e0b'} />
-          <text x="66" y="16" fontSize="8" fill="#dde3ea" textAnchor="middle">{slide.entryReview === 'recorded' ? 'entry recorded' : slide.entryReview === 'pending' ? 'entry review' : 'at platform'}</text>
+          <text x="78" y="27" fontSize="8" fill="#dde3ea">{slide.entryReview === 'recorded' ? 'start checked' : slide.entryReview === 'pending' ? 'checking start position' : 'at the top'}</text>
         </g>
       )}
       {/* in-flume riders */}
@@ -54,7 +54,7 @@ export function SlideDiagram() {
         );
       })}
       {occupiedExit && <circle cx="545" cy="237" r={6} fill={slide.exitZone.prolonged ? '#ef4444' : '#f59e0b'} stroke="#07090d" />}
-      <text x="592" y="14" fontSize="8.5" fill="#5b6878" textAnchor="end">Informational schematic — no clearance signal or release control exists in this demo</text>
+      <text x="592" y="14" fontSize="8.5" fill="#5b6878" textAnchor="end">Schematic only. There is no clearance or release signal in this demo.</text>
     </svg>
   );
 }

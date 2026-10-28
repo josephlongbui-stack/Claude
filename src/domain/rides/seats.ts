@@ -32,10 +32,6 @@ export function seatLabel(ride: RideConfiguration, id: SeatId): string {
     const rowInUnit = ((row - 1) % g.rowsPerUnit) + 1;
     return `${g.unitLabel} ${unit} · ${g.rowLabel} ${rowInUnit} · Seat ${seat}`;
   }
-  if (g.mirrored) {
-    const side = seat <= g.seatsPerRow / 2 ? 'L' : 'R';
-    return `${g.rowLabel} ${row} · Seat ${seat} (${side})`;
-  }
   return `${g.rowLabel} ${row} · Seat ${seat}`;
 }
 

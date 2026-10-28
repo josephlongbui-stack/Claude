@@ -80,45 +80,6 @@ export function compareScenarios(baseline: ThroughputInputs, assisted: Throughpu
   };
 }
 
-export interface DwellBreakdown {
-  unloadSec: number;
-  loadSec: number;
-  reviewSec: number;
-  blockWaitSec: number;
-}
-
-export function dwellTotal(d: DwellBreakdown): number {
-  return d.unloadSec + d.loadSec + d.reviewSec;
-}
-
-export function histogram(values: number[], binSize: number, min?: number, max?: number): { bin: string; from: number; to: number; count: number }[] {
-  if (!values.length) return [];
-  const lo = min ?? Math.floor(Math.min(...values) / binSize) * binSize;
-  const hi = max ?? Math.ceil((Math.max(...values) + 1) / binSize) * binSize;
-  const bins: { bin: string; from: number; to: number; count: number }[] = [];
-  for (let from = lo; from < hi; from += binSize) {
-    bins.push({ bin: `${from}–${from + binSize}`, from, to: from + binSize, count: 0 });
-  }
-  for (const v of values) {
-    const idx = Math.min(bins.length - 1, Math.max(0, Math.floor((v - lo) / binSize)));
-    if (bins[idx]) bins[idx].count += 1;
-  }
-  return bins;
-}
-
 export function mean(values: number[]): number {
   return values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
-}
-
-export function stddev(values: number[]): number {
-  if (values.length < 2) return 0;
-  const m = mean(values);
-  return Math.sqrt(values.reduce((acc, v) => acc + (v - m) ** 2, 0) / (values.length - 1));
-}
-
-export function percentile(values: number[], p: number): number {
-  if (!values.length) return 0;
-  const sorted = [...values].sort((a, b) => a - b);
-  const idx = Math.min(sorted.length - 1, Math.max(0, Math.round((p / 100) * (sorted.length - 1))));
-  return sorted[idx];
 }

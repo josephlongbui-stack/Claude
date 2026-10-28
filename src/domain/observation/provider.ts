@@ -29,13 +29,10 @@ export class SimulatedObservationProvider implements ObservationProvider {
     const cam = this.deps.getCamera(cameraId);
     const rng = this.deps.rng;
 
-    if (cam?.offline) {
-      return { seatId, cameraId, atMs, occupancy: 'unknown', restraint: 'unknown', posture: 'unknown', looseObject: 'unknown', confidence: 0, occluded: true };
-    }
-
     let confidence = truth.baseConfidence + rng.gaussian(0, 0.018);
-    if (cam?.degraded) confidence -= 0.16;
     if (cam) confidence -= cam.noise * 0.25;
+    // A blocked view gives the detector almost nothing to go on.
+    if (truth.occluded) confidence = 0.15 + rng.gaussian(0, 0.03);
     confidence = clamp(confidence, 0.02, 0.99);
 
     // Occasional single-frame detector flicker — never on consecutive frames, so stabilisation absorbs it.

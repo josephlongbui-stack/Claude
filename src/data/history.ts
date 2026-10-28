@@ -67,71 +67,17 @@ export function hourlyBuckets(records: DispatchRecord[]): { hour: string; riders
   });
 }
 
-export interface ParkTrendPoint { time: string; occupancy: number; riders: number; reviews: number }
+export interface ParkTrendPoint { time: string; occupancy: number; riders: number }
 
-export function parkOccupancyTrend(parkId: string): ParkTrendPoint[] {
-  const rng = new SeededRandom(`park:${parkId}`);
+export function parkOccupancyTrend(): ParkTrendPoint[] {
+  const rng = new SeededRandom('park');
   const points: ParkTrendPoint[] = [];
-  const rides = RIDES.filter((r) => r.parkId === parkId);
+  const rides = RIDES;
   for (let m = DAY_START_HOUR * 60; m <= 14 * 60 + 15; m += 15) {
     const frac = (m / 60 - DAY_START_HOUR) / (DAY_END_HOUR - DAY_START_HOUR);
     const occ = Math.round(1800 + 9000 * Math.sin(Math.PI * Math.min(1, frac * 1.15)) + rng.gaussian(0, 200));
     const riders = Math.round(rides.reduce((a, r) => a + r.baseline.demandPerHour, 0) * 0.25 * (0.5 + 0.6 * Math.sin(Math.PI * Math.min(1, frac * 1.1))) + rng.gaussian(0, 20));
-    points.push({ time: `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`, occupancy: Math.max(0, occ), riders: Math.max(0, riders), reviews: rng.int(0, 4) });
+    points.push({ time: `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`, occupancy: Math.max(0, occ), riders: Math.max(0, riders) });
   }
   return points;
 }
-
-export interface ShiftStats {
-  shift: string;
-  rideId: string;
-  reviewsCompleted: number;
-  reviewsOpen: number;
-  medianAckSec: number;
-  p90AckSec: number;
-  avgDwellSec: number;
-  slowGateEvents: number;
-  bottleneck: string;
-}
-
-export function shiftStats(): ShiftStats[] {
-  const rng = new SeededRandom('shifts');
-  const out: ShiftStats[] = [];
-  const shifts = ['Early (10:00–14:00)', 'Mid (14:00–18:00)', 'Late (18:00–close)'];
-  for (const ride of RIDES.filter((r) => r.status !== 'closed')) {
-    shifts.forEach((shift, i) => {
-      const med = Math.round(rng.range(14, 40) + i * 4);
-      out.push({
-        shift,
-        rideId: ride.id,
-        reviewsCompleted: rng.int(8, 30),
-        reviewsOpen: rng.int(0, 3),
-        medianAckSec: med,
-        p90AckSec: Math.round(med * rng.range(1.8, 2.6)),
-        avgDwellSec: Math.round(ride.baseline.stationDwellSec * rng.range(0.92, 1.15)),
-        slowGateEvents: rng.int(0, 3),
-        bottleneck: rng.pick(['Loading (parties)', 'Restraint review', 'Unloading', 'Gate timing', 'None observed']),
-      });
-    });
-  }
-  return out;
-}
-
-export interface TrainingTopic { topic: string; relevance: number; rationale: string }
-
-export const COACHING_TOPICS: TrainingTopic[] = [
-  { topic: 'Loose-article pre-boarding reminders', relevance: 0.82, rationale: 'Loose-article flags cluster at the gates before boarding; a pre-boarding announcement reduces review volume.' },
-  { topic: 'Occlusion awareness — where to stand during checks', relevance: 0.74, rationale: 'Operator position during restraint checks caused most "unknown" seats on rows 5–6.' },
-  { topic: 'Party batching at the gates', relevance: 0.68, rationale: 'Empty seats per dispatch are higher on the early shift; batching practice aligns with Smart Boarding suggestions.' },
-  { topic: 'Sensor-disagreement SOP walkthrough', relevance: 0.61, rationale: 'Acknowledgement time on sensor-disagreement alerts is ~2x other alert types.' },
-  { topic: 'Accessible boarding flow', relevance: 0.52, rationale: 'Accessible boarding adds dwell when the transfer row is not pre-cleared.' },
-];
-
-export interface CertificationRow { role: string; certified: number; dueSoon: number; expired: number }
-
-export const CERTIFICATIONS: CertificationRow[] = [
-  { role: 'Ride operator — coaster', certified: 18, dueSoon: 3, expired: 0 },
-  { role: 'Ride operator — water', certified: 11, dueSoon: 2, expired: 1 },
-  { role: 'Lead / supervisor', certified: 6, dueSoon: 1, expired: 0 },
-  { role: 'Maintenance technician', certified: 5, dueSoon: 0, expired: 0 },
-];

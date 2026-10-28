@@ -30,20 +30,15 @@ export function addNote(alert: Alert, note: ReviewNote): Alert {
 }
 
 export const ALERT_TYPE_LABEL: Record<AlertType, string> = {
-  belt_position: 'Potential belt / lap-bar position concern',
-  restraint_mismatch: 'Possible restraint mismatch',
-  loose_article: 'Loose article',
-  posture: 'Unusual seated posture',
-  occlusion: 'Camera occlusion',
+  belt_position: 'Restraint position',
+  restraint_mismatch: 'Harness position',
+  loose_article: 'Loose object',
+  posture: 'Unusual posture',
+  occlusion: 'Camera blocked',
   low_confidence: 'Low confidence',
   slow_gate: 'Slow gate',
-  sensor_discrepancy: 'Simulated sensor discrepancy',
+  sensor_discrepancy: 'Sensor disagreement',
   exit_zone_occupied: 'Exit zone occupied',
-  entry_position: 'Entry position review',
-  spacing: 'Boat spacing',
-  policy_review: 'Policy review flag',
-  camera_degraded: 'Camera degradation',
-  cycle_variability: 'Cycle variability',
 };
 
 export const STATUS_LABEL: Record<AlertStatus, string> = {
@@ -55,8 +50,8 @@ export const STATUS_LABEL: Record<AlertStatus, string> = {
 
 export const SEVERITY_LABEL: Record<Severity, string> = {
   info: 'Info',
-  review: 'Review required',
-  concern: 'Simulated concern',
+  review: 'Needs review',
+  concern: 'Possible issue',
 };
 
 export function isOpen(alert: Alert): boolean {

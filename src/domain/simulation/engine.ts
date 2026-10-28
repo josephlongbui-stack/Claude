@@ -31,6 +31,7 @@ import { NOMINAL_SEAT } from './scenarios';
 
 export const FRAME_MS = 250;
 export const FLUME_MS = 13000;
+export const SLOW_GATE_MS = 5000;
 
 export interface AlertDraft extends ScriptedAlert {
   rideId: string;
@@ -65,9 +66,6 @@ export interface EngineSinks {
   logEvent(draft: EventDraftInput): void;
   autoReview(match: AutoReviewMatch, outcome: 'acknowledged' | 'reviewed' | 'false_alarm', note: string, atMs: number): void;
   recordDispatch(record: Omit<DispatchRecord, 'id' | 'ts'>): void;
-  surfaceTicket(ticketId: string): void;
-  optimizeBoarding(): void;
-  navigate(route: string): void;
   hasOpenAlert(rideId: string, target: AlertTarget, type: AlertType): boolean;
 }
 
@@ -103,15 +101,16 @@ export class SimulationEngine {
   private script: ScenarioScript | null = null;
   private cursor = 0;
   private rng = new SeededRandom(1);
-  private provider: SimulatedObservationProvider;
+  private provider!: SimulatedObservationProvider;
   private lastFrameMs = 0;
+  /** Session clock at the moment the scenario started; the session clock is always this plus `simMs`. */
+  private sessionBase = 0;
   private episodes = new Map<string, Set<AlertType>>();
   private disagreeFrames = new Map<SeatId, number>();
   private sensorOverrides: Record<SeatId, SensorObservation> = {};
   private riderLabels: Record<string, string> = {};
 
   simMs = 0;
-  sessionMs = 0;
   phase: StationPhase = 'idle';
   phaseStartedMs = 0;
   seats: Record<SeatId, EvaluatedSeat> = {};
@@ -129,29 +128,38 @@ export class SimulationEngine {
     this.ride = ride;
     this.sinks = sinks;
     this.getSettings = getSettings;
+    this.resetProvider();
+    this.initRide();
+  }
+
+  get sessionMs(): number {
+    return this.sessionBase + this.simMs;
+  }
+
+  private resetProvider(): void {
     this.provider = new SimulatedObservationProvider({
       getScripted: (id) => this.scripted[id] ?? NOMINAL_SEAT,
       getCamera: (id) => this.cameras[id],
       rng: this.rng,
     });
-    this.initRide();
   }
 
   private initRide(): void {
     this.scripted = {};
     this.seats = {};
     for (const id of allSeats(this.ride.geometry)) {
-      this.scripted[id] = { ...NOMINAL_SEAT, riderVariant: (Number(id.replace(/\D/g, '')) % 4) };
+      this.scripted[id] = { ...NOMINAL_SEAT, riderVariant: Number(id.replace(/\D/g, '')) % 4 };
       this.seats[id] = createEvaluatedSeat(id, cameraForSeat(this.ride, id), 0);
     }
     this.cameras = {};
-    for (const cam of this.ride.cameras) {
-      this.cameras[cam.id] = { id: cam.id, degraded: false, offline: false, noise: cam.mode === 'infrared' ? 0.15 : 0.04, latencyMs: 38 + (cam.id.charCodeAt(cam.id.length - 1) % 7) * 3 };
-    }
+    this.ride.cameras.forEach((cam, i) => {
+      this.cameras[cam.id] = { id: cam.id, noise: cam.mode === 'infrared' ? 0.15 : 0.04, latencyMs: 38 + i * 3 };
+    });
     this.fusion = {};
     this.episodes.clear();
     this.disagreeFrames.clear();
     this.sensorOverrides = {};
+    this.riderLabels = {};
     this.slide = emptySlide();
     this.markers = [];
     this.gates = [];
@@ -167,25 +175,17 @@ export class SimulationEngine {
     this.script = script;
     this.cursor = 0;
     this.simMs = 0;
-    this.sessionMs = sessionMs;
+    this.sessionBase = sessionMs;
     this.rng = new SeededRandom(`${this.ride.id}:${script.id}`);
-    this.provider = new SimulatedObservationProvider({
-      getScripted: (id) => this.scripted[id] ?? NOMINAL_SEAT,
-      getCamera: (id) => this.cameras[id],
-      rng: this.rng,
-    });
+    this.resetProvider();
     this.initRide();
-  }
-
-  get scenario(): ScenarioScript | null {
-    return this.script;
   }
 
   get durationMs(): number {
     return this.script?.durationMs ?? 0;
   }
 
-  /** Advance the simulation by `dtMs` of simulated time, deterministically. */
+  /** Advance the simulation by `dtMs` of simulated time, deterministically (frames on a fixed grid). */
   advance(dtMs: number): void {
     if (!this.script || this.finished) return;
     const target = Math.min(this.simMs + dtMs, this.script.durationMs);
@@ -196,7 +196,6 @@ export class SimulationEngine {
       this.frame(this.lastFrameMs);
     }
     this.applyStepsUpTo(target);
-    this.sessionMs += target - this.simMs;
     this.simMs = target;
     this.updateSlideMotion();
     if (this.simMs >= this.script.durationMs) this.finished = true;
@@ -212,7 +211,7 @@ export class SimulationEngine {
     this.finished = true;
   }
 
-  /** Apply an ad-hoc action immediately (used by the uncertainty / sensor injection controls). */
+  /** Apply an ad-hoc action immediately (used by the "try a condition" controls). */
   applyNow(action: ScenarioAction): void {
     this.apply(action, this.simMs);
   }
@@ -223,8 +222,6 @@ export class SimulationEngine {
     while (this.cursor < steps.length && steps[this.cursor].atMs <= ms) {
       const step = steps[this.cursor];
       this.cursor += 1;
-      // keep session clock aligned with the step time
-      this.sessionMs += Math.max(0, step.atMs - this.simMs);
       this.simMs = Math.max(this.simMs, step.atMs);
       this.apply(step.action, step.atMs);
     }
@@ -236,22 +233,20 @@ export class SimulationEngine {
 
   private apply(action: ScenarioAction, atMs: number): void {
     const rideId = this.ride.id;
+    const scenarioId = this.scenarioId();
     switch (action.kind) {
-      case 'phase': {
+      case 'phase':
         this.phase = action.phase;
         this.phaseStartedMs = atMs;
         this.markers = [...this.markers, { atMs, label: action.label, phase: action.phase }];
-        this.sinks.logEvent({ type: 'phase', title: action.label, detail: `Station phase → ${action.phase}`, severity: 'info', rideId, scenarioId: this.scenarioId(), atMs: this.sessionMs });
+        this.sinks.logEvent({ type: 'phase', title: action.label, detail: `Station phase: ${action.phase}`, severity: 'info', rideId, scenarioId, atMs: this.sessionMs });
         break;
-      }
-      case 'seat': {
+      case 'seat':
         this.scripted[action.seatId] = { ...(this.scripted[action.seatId] ?? NOMINAL_SEAT), ...action.patch };
         break;
-      }
-      case 'seats': {
+      case 'seats':
         for (const id of action.seatIds) this.scripted[id] = { ...(this.scripted[id] ?? NOMINAL_SEAT), ...action.patch };
         break;
-      }
       case 'camera': {
         const prev = this.cameras[action.cameraId];
         if (prev) this.cameras[action.cameraId] = { ...prev, ...action.patch };
@@ -259,70 +254,49 @@ export class SimulationEngine {
       }
       case 'sensor': {
         const sensorId = this.ride.sensors.find((s) => s.perSeat)?.id ?? 'SEN-RESTRAINT';
-        this.sensorOverrides[action.seatId] = { sensorId, seatId: action.seatId, atMs, reading: action.reading, status: action.status ?? 'online', confidence: action.confidence ?? 0.8 };
-        this.sinks.logEvent({ type: 'sensor', title: `Sensor record updated — ${seatLabel(this.ride, action.seatId)}`, detail: `Fictional ${sensorId} reports "${action.reading.replace('_', ' ')}" (${action.status ?? 'online'}).`, severity: 'info', rideId, scenarioId: this.scenarioId(), atMs: this.sessionMs, target: { kind: 'seat', seatId: action.seatId }, sensor: { sensorId, reading: action.reading, status: action.status ?? 'online' } });
+        const status = action.status ?? 'online';
+        this.sensorOverrides[action.seatId] = { sensorId, seatId: action.seatId, atMs, reading: action.reading, status, confidence: action.confidence ?? 0.8 };
+        this.sinks.logEvent({ type: 'sensor', title: `Sensor reading — ${seatLabel(this.ride, action.seatId)}`, detail: `Fictional ${sensorId} reports "${action.reading.replace('_', ' ')}" (${status}).`, severity: 'info', rideId, scenarioId, atMs: this.sessionMs, target: { kind: 'seat', seatId: action.seatId }, sensor: { sensorId, reading: action.reading, status } });
         break;
       }
-      case 'alert': {
-        this.sinks.raiseAlert({ ...action.alert, rideId, scenarioId: this.scenarioId(), atMs: this.sessionMs });
-        break;
-      }
-      case 'auto_review': {
+      case 'auto_review':
         this.sinks.autoReview({ rideId, seatId: action.seatId, zone: action.zone, type: action.type }, action.outcome, action.note, this.sessionMs);
         break;
-      }
-      case 'event': {
-        this.sinks.logEvent({ type: action.type, title: action.title, detail: action.detail, severity: action.severity ?? 'info', rideId, scenarioId: this.scenarioId(), atMs: this.sessionMs });
-        break;
-      }
-      case 'narration': {
+      case 'narration':
         this.narration = { title: action.title, text: action.text, atMs };
         break;
-      }
       case 'gate': {
         this.gates = [...this.gates, { gateId: action.gateId, atMs, openDurationMs: action.openDurationMs }];
-        const slow = action.openDurationMs > 5000;
-        this.sinks.logEvent({ type: 'observation', title: `${action.gateId} opened in ${(action.openDurationMs / 1000).toFixed(1)}s`, detail: slow ? 'Opening duration exceeds the 5.0s demonstration threshold.' : 'Within typical range.', severity: slow ? 'review' : 'info', rideId, scenarioId: this.scenarioId(), atMs: this.sessionMs, target: { kind: 'equipment', equipmentId: action.gateId }, cameraId: this.ride.cameras.find((c) => c.view === 'gates')?.id });
+        const slow = action.openDurationMs > SLOW_GATE_MS;
+        const gateCam = this.ride.cameras.find((c) => c.view === 'gates')?.id ?? this.ride.cameras[0].id;
+        this.sinks.logEvent({ type: 'observation', title: `${action.gateId} opened in ${(action.openDurationMs / 1000).toFixed(1)} s`, detail: slow ? 'Slower than the 5 s limit used in this demo.' : 'Normal.', severity: slow ? 'review' : 'info', rideId, scenarioId, atMs: this.sessionMs, target: { kind: 'equipment', equipmentId: action.gateId }, cameraId: gateCam });
         if (slow) {
-          this.sinks.raiseAlert({ type: 'slow_gate', severity: 'review', cameraId: this.ride.cameras.find((c) => c.view === 'gates')?.id ?? this.ride.cameras[0].id, target: { kind: 'equipment', equipmentId: action.gateId }, title: `Slow gate — ${action.gateId}`, detail: `${action.gateId} took ${(action.openDurationMs / 1000).toFixed(1)}s to open against a 2.1s typical. Loading delayed; equipment observation recorded for maintenance analytics.`, confidence: 0.93, rideId, scenarioId: this.scenarioId(), atMs: this.sessionMs });
+          this.sinks.raiseAlert({ type: 'slow_gate', severity: 'review', cameraId: gateCam, target: { kind: 'equipment', equipmentId: action.gateId }, title: `Slow gate — ${action.gateId}`, detail: `${action.gateId} took ${(action.openDurationMs / 1000).toFixed(1)} s to open (normally about 2 s). Loading started late.`, confidence: 0.93, rideId, scenarioId, atMs: this.sessionMs });
         }
         break;
       }
       case 'dispatch': {
         const capacity = this.ride.baseline.capacity;
         const intervalSec = Math.max(action.dwellSec, this.ride.baseline.minCycleSec) + action.blockWaitSec;
-        this.sinks.recordDispatch({ atMs: this.sessionMs, rideId, dwellSec: action.dwellSec, unloadSec: action.unloadSec, loadSec: action.loadSec, reviewSec: action.reviewSec, blockWaitSec: action.blockWaitSec, intervalSec, riders: action.riders, capacity, loadFactor: action.riders / capacity, emptySeats: capacity - action.riders, scenarioId: this.scenarioId() });
+        this.sinks.recordDispatch({ atMs: this.sessionMs, rideId, dwellSec: action.dwellSec, unloadSec: action.unloadSec, loadSec: action.loadSec, reviewSec: action.reviewSec, blockWaitSec: action.blockWaitSec, intervalSec, riders: action.riders, capacity, loadFactor: action.riders / capacity, emptySeats: capacity - action.riders, scenarioId });
         break;
       }
-      case 'slide': {
+      case 'slide':
         this.applySlide(action.op, atMs);
         break;
-      }
-      case 'navigate': {
-        this.sinks.navigate(action.route);
-        break;
-      }
-      case 'maintenance': {
-        this.sinks.surfaceTicket(action.ticketId);
-        break;
-      }
-      case 'boarding': {
-        this.sinks.optimizeBoarding();
-        break;
-      }
-      case 'end': {
+      case 'end':
         this.finished = true;
         break;
-      }
       default:
         break;
     }
   }
 
   private applySlide(op: SlideOp, atMs: number): void {
-    const sl = this.slide;
+    const sl = { ...this.slide };
     const rideId = this.ride.id;
-    const sid = this.scenarioId();
+    const scenarioId = this.scenarioId();
+    const name = (id: string | undefined): string => (id ? this.riderLabels[id] ?? id : 'rider');
     switch (op.op) {
       case 'queue_add': {
         sl.riderCounter += 1;
@@ -341,25 +315,20 @@ export class SimulationEngine {
         sl.queueHistory = [...sl.queueHistory, { atMs, length: sl.queue.length }];
         break;
       }
-      case 'entry_review': {
+      case 'entry_review':
         sl.entryReview = op.state;
         if (op.state === 'recorded' && sl.platformRider) {
-          this.sinks.logEvent({ type: 'slide_entry', title: `Entry position reviewed — ${this.riderLabels[sl.platformRider] ?? sl.platformRider}`, detail: 'Attendant recorded the start-position check at the platform (simulation).', severity: 'info', rideId, scenarioId: sid, atMs: this.sessionMs, cameraId: 'CAM-A', target: { kind: 'zone', zone: 'ENTRY-PLATFORM' } });
+          this.sinks.logEvent({ type: 'slide_entry', title: `Start position checked — ${name(sl.platformRider)}`, detail: 'Attendant recorded the start-position check.', severity: 'info', rideId, scenarioId, atMs: this.sessionMs, cameraId: 'CAM-A', target: { kind: 'zone', zone: 'ENTRY-PLATFORM' } });
         }
         break;
-      }
       case 'depart': {
         if (!sl.platformRider) break;
         const id = sl.platformRider;
-        sl.inFlume = [...sl.inFlume, { id, label: this.riderLabels[id] ?? id, progress: 0, enteredMs: atMs, variant: sl.riderCounter % 3 }];
+        sl.inFlume = [...sl.inFlume, { id, label: name(id), progress: 0, enteredMs: atMs }];
         sl.platformRider = undefined;
         sl.entryReview = 'none';
         sl.departures = [...sl.departures, atMs];
-        this.sinks.logEvent({ type: 'slide_departure', title: `Departure recorded — ${this.riderLabels[id] ?? id}`, detail: 'Simulated departure event. No release signal exists in this demo.', severity: 'info', rideId, scenarioId: sid, atMs: this.sessionMs, cameraId: 'CAM-A', target: { kind: 'zone', zone: 'ENTRY-PLATFORM' } });
-        break;
-      }
-      case 'advance': {
-        sl.inFlume = sl.inFlume.map((r) => ({ ...r, progress: op.progress }));
+        this.sinks.logEvent({ type: 'slide_departure', title: `Departure recorded — ${name(id)}`, detail: 'Record only. There is no release signal in this demo.', severity: 'info', rideId, scenarioId, atMs: this.sessionMs, cameraId: 'CAM-A', target: { kind: 'zone', zone: 'ENTRY-PLATFORM' } });
         break;
       }
       case 'exit_enter': {
@@ -369,22 +338,21 @@ export class SimulationEngine {
         sl.exitZone = { riderId: first.id, sinceMs: atMs, prolonged: false };
         break;
       }
-      case 'exit_prolonged': {
+      case 'exit_prolonged':
         sl.exitZone = { ...sl.exitZone, prolonged: true };
-        this.sinks.raiseAlert({ type: 'exit_zone_occupied', severity: 'review', cameraId: 'CAM-B', target: { kind: 'zone', zone: 'EXIT-ZONE' }, title: 'Exit-zone occupancy persists', detail: 'Splash-zone occupancy has persisted beyond the 6s demonstration threshold. Human review required. No signal is sent to the slide.', confidence: 0.88, rideId, scenarioId: sid, atMs: this.sessionMs });
+        this.sinks.raiseAlert({ type: 'exit_zone_occupied', severity: 'review', cameraId: 'CAM-B', target: { kind: 'zone', zone: 'EXIT-ZONE' }, title: 'Rider still in the exit zone', detail: 'The exit zone has been occupied for longer than 6 s. Please check. Nothing is sent to the slide.', confidence: 0.88, rideId, scenarioId, atMs: this.sessionMs });
         break;
-      }
       case 'exit_clear': {
         const rid = sl.exitZone.riderId;
         sl.exitZone = { prolonged: false };
         sl.exits = [...sl.exits, atMs];
-        this.sinks.logEvent({ type: 'slide_exit', title: `Exit recorded — ${rid ? this.riderLabels[rid] ?? rid : 'rider'}`, detail: 'Exit-zone occupancy cleared (simulation).', severity: 'info', rideId, scenarioId: sid, atMs: this.sessionMs, cameraId: 'CAM-B', target: { kind: 'zone', zone: 'EXIT-ZONE' } });
+        this.sinks.logEvent({ type: 'slide_exit', title: `Exit recorded — ${name(rid)}`, detail: 'Exit zone clear.', severity: 'info', rideId, scenarioId, atMs: this.sessionMs, cameraId: 'CAM-B', target: { kind: 'zone', zone: 'EXIT-ZONE' } });
         break;
       }
       default:
         break;
     }
-    this.slide = { ...sl };
+    this.slide = sl;
   }
 
   private updateSlideMotion(): void {
@@ -394,13 +362,13 @@ export class SimulationEngine {
   }
 
   private sensorFor(seatId: SeatId, atMs: number): SensorObservation | undefined {
-    const perSeat = this.ride.sensors.find((s) => s.perSeat && (s.kind === 'restraint_position' || s.kind === 'harness_lock'));
+    const perSeat = this.ride.sensors.find((s) => s.perSeat);
     if (!perSeat) return undefined;
     const override = this.sensorOverrides[seatId];
     if (override) return override;
     const truth = this.scripted[seatId];
-    const reading: SensorObservation['reading'] = truth.occupancy !== 'occupied' || truth.restraint === 'not_applicable' ? 'not_engaged' : truth.restraint === 'concern' ? 'not_engaged' : 'engaged';
-    return { sensorId: perSeat.id, seatId, atMs, reading, status: 'online', confidence: 0.84 };
+    const engaged = truth.occupancy === 'occupied' && truth.restraint !== 'not_applicable' && truth.restraint !== 'concern';
+    return { sensorId: perSeat.id, seatId, atMs, reading: engaged ? 'engaged' : 'not_engaged', status: 'online', confidence: 0.84 };
   }
 
   get sensors(): Record<SeatId, SensorObservation> {
@@ -419,8 +387,7 @@ export class SimulationEngine {
     const nextFusion: Record<SeatId, FusionResult> = {};
     for (const id of Object.keys(this.seats)) {
       const prev = this.seats[id];
-      const cameraId = cameraForSeat(this.ride, id);
-      const sample = this.provider.sample(id, cameraId, atMs);
+      const sample = this.provider.sample(id, cameraForSeat(this.ride, id), atMs);
       const next = evaluateSeat(prev, sample, settings);
       nextSeats[id] = next;
       this.onSeatEvaluated(prev, next);
@@ -451,12 +418,13 @@ export class SimulationEngine {
     if (changed && (next.state === 'nominal' || next.state === 'empty')) {
       const hadEpisode = ep.size > 0;
       ep.clear();
-      if (hadEpisode && (prev.state === 'concern' || prev.state === 'review' || prev.state === 'unknown')) {
-        this.sinks.logEvent({ type: 'observation', title: `${seatLabel(this.ride, next.seatId)} — observation cleared`, detail: `Seat state ${prev.state} → ${next.state} after ${this.getSettings().stabilizationFrames} consistent frames. Informational only.`, severity: 'info', rideId: this.ride.id, scenarioId: this.scenarioId(), atMs: this.sessionMs, cameraId: next.cameraId, target: { kind: 'seat', seatId: next.seatId }, confidence: next.confidence });
+      if (hadEpisode) {
+        this.sinks.logEvent({ type: 'observation', title: `${seatLabel(this.ride, next.seatId)} — cleared`, detail: `Seat went from ${prev.state} to ${next.state} after ${this.getSettings().stabilizationFrames} consistent frames.`, severity: 'info', rideId: this.ride.id, scenarioId: this.scenarioId(), atMs: this.sessionMs, cameraId: next.cameraId, target: { kind: 'seat', seatId: next.seatId }, confidence: next.confidence });
       }
       return;
     }
     if (next.state === 'nominal' || next.state === 'empty') return;
+    // Every seat starts Unknown; only raise an "unknown" alert when it stays that way well past the start.
     if (!changed && next.state === 'unknown' && next.frames < this.getSettings().stabilizationFrames * 3) return;
     for (const a of this.deriveAlerts(next)) {
       if (ep.has(a.type)) continue;
@@ -469,19 +437,20 @@ export class SimulationEngine {
 
   private deriveAlerts(seat: EvaluatedSeat): { type: AlertType; severity: Severity; title: string; detail: string }[] {
     const label = seatLabel(this.ride, seat.seatId);
-    const out: { type: AlertType; severity: Severity; title: string; detail: string }[] = [];
     const pct = `${Math.round(seat.confidence * 100)}%`;
-    const restraintType: AlertType = this.ride.restraint === 'ots_harness' || this.ride.restraint === 'flying_vest' ? 'restraint_mismatch' : 'belt_position';
+    const restraint = this.ride.restraintLabel.toLowerCase();
+    const restraintType: AlertType = this.ride.restraint === 'ots_harness' ? 'restraint_mismatch' : 'belt_position';
+    const out: { type: AlertType; severity: Severity; title: string; detail: string }[] = [];
     if (seat.state === 'unknown') {
-      if (seat.occluded) out.push({ type: 'occlusion', severity: 'review', title: `Camera occlusion — ${label}`, detail: `${seat.cameraId} view of ${label} is obstructed. Observation unavailable; seat reported as Unknown — review required. No nominal state is assumed.` });
-      else out.push({ type: 'low_confidence', severity: 'review', title: `Low confidence — ${label}`, detail: `${seat.cameraId} confidence ${pct} is below the configured threshold. Seat reported as Unknown — review required.` });
+      if (seat.occluded) out.push({ type: 'occlusion', severity: 'review', title: `Camera blocked — ${label}`, detail: `${seat.cameraId} can't see this seat, so it is shown as Unknown. Please check it by eye.` });
+      else out.push({ type: 'low_confidence', severity: 'review', title: `Low confidence — ${label}`, detail: `${seat.cameraId} is only ${pct} sure, below the threshold, so the seat is shown as Unknown. Please check it by eye.` });
       return out;
     }
-    if (seat.restraint === 'concern') out.push({ type: restraintType, severity: 'concern', title: `Potential ${this.ride.restraintLabel.toLowerCase()} position concern — ${label}`, detail: `Simulated camera observation (${seat.cameraId}, ${pct}): ${this.ride.restraintLabel.toLowerCase()} position differs from the expected envelope. Human review required; this is not a safety determination.` });
-    if (seat.restraint === 'review' || (seat.restraint === 'unknown' && seat.state === 'review')) out.push({ type: restraintType, severity: 'review', title: `Restraint observation requires review — ${label}`, detail: `Simulated camera observation (${seat.cameraId}, ${pct}) could not confirm the ${this.ride.restraintLabel.toLowerCase()} position. Human review required.` });
-    if (seat.looseObject === 'detected') out.push({ type: 'loose_article', severity: 'concern', title: `Loose article — ${label}`, detail: `Simulated detection (${seat.cameraId}, ${pct}): hand-held object (phone-like) in the staged frame. Staff check requested.` });
-    else if (seat.looseObject === 'possible') out.push({ type: 'loose_article', severity: 'review', title: `Possible loose article — ${label}`, detail: `Simulated detection (${seat.cameraId}, ${pct}): possible hand-held object. Staff check requested.` });
-    if (seat.posture === 'unusual') out.push({ type: 'posture', severity: 'review', title: `Unusual seated posture — ${label}`, detail: `Simulated pose observation (${seat.cameraId}, ${pct}) outside the expected seated envelope. Human review required.` });
+    if (seat.restraint === 'concern') out.push({ type: restraintType, severity: 'concern', title: `Possible ${restraint} issue — ${label}`, detail: `${seat.cameraId} (${pct}) sees the ${restraint} out of its usual position. A person needs to check; this is not a safety decision.` });
+    if (seat.restraint === 'review' || (seat.restraint === 'unknown' && seat.state === 'review')) out.push({ type: restraintType, severity: 'review', title: `Can't confirm ${restraint} — ${label}`, detail: `${seat.cameraId} (${pct}) could not confirm the ${restraint} position. Please check.` });
+    if (seat.looseObject === 'detected') out.push({ type: 'loose_article', severity: 'concern', title: `Loose object — ${label}`, detail: `${seat.cameraId} (${pct}) sees something in the rider's hand. Please check.` });
+    else if (seat.looseObject === 'possible') out.push({ type: 'loose_article', severity: 'review', title: `Possible loose object — ${label}`, detail: `${seat.cameraId} (${pct}) may see something in the rider's hand. Please check.` });
+    if (seat.posture === 'unusual') out.push({ type: 'posture', severity: 'review', title: `Unusual posture — ${label}`, detail: `${seat.cameraId} (${pct}) sees the rider outside the usual seated position. Please check.` });
     return out;
   }
 
@@ -495,13 +464,12 @@ export class SimulationEngine {
     // Disagreement must persist for the stabilisation window before it is raised (same rule as seat states).
     const n = (this.disagreeFrames.get(seat.seatId) ?? 0) + 1;
     this.disagreeFrames.set(seat.seatId, n);
-    if (n < this.getSettings().stabilizationFrames) return;
-    if (ep.has('sensor_discrepancy')) return;
+    if (n < this.getSettings().stabilizationFrames || ep.has('sensor_discrepancy')) return;
     ep.add('sensor_discrepancy');
     const target: AlertTarget = { kind: 'seat', seatId: seat.seatId };
     if (this.sinks.hasOpenAlert(this.ride.id, target, 'sensor_discrepancy')) return;
     const label = seatLabel(this.ride, seat.seatId);
-    this.sinks.raiseAlert({ type: 'sensor_discrepancy', severity: 'review', cameraId: seat.cameraId, target, title: `Sensor disagreement — ${label}`, detail: `Camera observation reads "${seat.restraint}" (${Math.round(seat.confidence * 100)}%) while fictional ${sensor.sensorId} reports "${sensor.reading.replace('_', ' ')}". Human review required before any action.`, confidence: seat.confidence, sensor: { sensorId: sensor.sensorId, reading: sensor.reading, status: sensor.status }, rideId: this.ride.id, scenarioId: this.scenarioId(), atMs: this.sessionMs });
+    this.sinks.raiseAlert({ type: 'sensor_discrepancy', severity: 'review', cameraId: seat.cameraId, target, title: `Camera and sensor disagree — ${label}`, detail: `The camera reads ${seat.state === 'nominal' ? 'the restraint as down' : 'a possible restraint issue'} (${Math.round(seat.confidence * 100)}%), but fictional ${sensor.sensorId} says "${sensor.reading.replace('_', ' ')}". Please check by hand.`, confidence: seat.confidence, sensor: { sensorId: sensor.sensorId, reading: sensor.reading, status: sensor.status }, rideId: this.ride.id, scenarioId: this.scenarioId(), atMs: this.sessionMs });
   }
 
   snapshot(): EngineSnapshot {

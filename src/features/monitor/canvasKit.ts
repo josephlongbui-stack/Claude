@@ -1,3 +1,5 @@
+import type { RestraintType } from '@/domain/types';
+
 /** Canvas 2D helpers for the simulated camera views. Everything drawn here is schematic. */
 
 export interface Palette {
@@ -32,15 +34,6 @@ export const VISIBLE_PALETTE: Palette = {
   text: '#dde3ea',
   hud: 'rgba(221,227,234,0.9)',
   ir: false,
-};
-
-export const EVENING_PALETTE: Palette = {
-  ...VISIBLE_PALETTE,
-  bg: '#080b10',
-  floor: '#141a23',
-  floorEdge: '#222b38',
-  riderSkin: ['#7d6e62', '#6f6258', '#857568', '#63574d'],
-  riderShirt: ['#2f5268', '#6a4430', '#3b5a40', '#4f446f'],
 };
 
 export const IR_PALETTE: Palette = {
@@ -230,7 +223,7 @@ export function drawPose(ctx: CanvasRenderingContext2D, p: PosePoints, color: st
 export interface SeatDrawOpts {
   palette: Palette;
   scale: number;
-  restraint: 'lap_bar' | 'ots_harness' | 'flying_vest' | 'lap_bar_belt' | 'none_slide' | 'lap_belt';
+  restraint: RestraintType;
   restraintState: 'nominal' | 'review' | 'concern' | 'unknown' | 'not_applicable';
   occupied: boolean;
 }
@@ -259,7 +252,7 @@ export function drawRestraint(ctx: CanvasRenderingContext2D, x: number, y: numbe
   ctx.strokeStyle = concern ? '#ef4444' : p.restraint;
   ctx.lineWidth = 4 * s;
   ctx.lineCap = 'round';
-  if (o.restraint === 'ots_harness' || o.restraint === 'flying_vest') {
+  if (o.restraint === 'ots_harness') {
     // two shoulder straps meeting at the lap
     const raise = notApplicable ? -22 * s : concern ? -9 * s : 0;
     ctx.beginPath();
@@ -281,7 +274,7 @@ export function drawRestraint(ctx: CanvasRenderingContext2D, x: number, y: numbe
     ctx.moveTo(x + 2 * s, lapY + raise);
     ctx.lineTo(x + w - 2 * s, lapY + raise + (concern ? -7 * s : 0));
     ctx.stroke();
-    if (o.restraint === 'lap_bar_belt' || o.restraint === 'lap_belt') {
+    if (o.restraint === 'lap_belt') {
       ctx.strokeStyle = concern ? '#ef4444' : '#b98f4e';
       ctx.lineWidth = 2 * s;
       ctx.beginPath();

@@ -40,9 +40,6 @@ function recorder(): Recorder {
     recordDispatch(rec) {
       r.dispatches.push(rec.dwellSec);
     },
-    surfaceTicket() {},
-    optimizeBoarding() {},
-    navigate() {},
     hasOpenAlert(_ride, target, type: AlertType) {
       const key = (t: AlertTarget): string => (t.kind === 'seat' ? t.seatId : t.kind === 'zone' ? t.zone : t.equipmentId);
       return r.alerts.some((a) => a.type === type && key(a.target) === key(target) && (a.status === 'open' || a.status === 'acknowledged'));
@@ -102,12 +99,47 @@ describe('scenario engine', () => {
     expect(rec.alerts.some((a) => a.type === 'slow_gate')).toBe(true);
     expect(rec.dispatches[0]).toBeGreaterThan(120);
   });
-  it('scenario H drives the slide through entry, departure, prolonged exit and review', () => {
-    const { rec, engine } = run('typhoon', 'H');
+  it('scenario G drives the slide through entry, departure, a held exit and review', () => {
+    const { rec, engine } = run('typhoon', 'G');
     expect(rec.events.some((e) => e.type === 'slide_departure')).toBe(true);
     expect(rec.events.some((e) => e.type === 'slide_exit')).toBe(true);
     expect(rec.alerts.some((a) => a.type === 'exit_zone_occupied')).toBe(true);
-    expect(engine.slide.exits.length).toBeGreaterThanOrEqual(2);
+    expect(rec.reviews.some((r) => r.endsWith(':reviewed'))).toBe(true);
+    expect(engine.slide.exits.length).toBe(3);
+  });
+  it('scenario G holds the next rider at the top while the exit zone is occupied', () => {
+    const rec = recorder();
+    const ride = getRide('typhoon');
+    const engine = new SimulationEngine(ride, () => DEFAULT_EVALUATOR_SETTINGS, rec);
+    engine.loadScenario(buildScenario('G', ride), 0);
+    let sawHold = false;
+    while (!engine.finished) {
+      engine.advance(250);
+      if (engine.slide.exitZone.prolonged) {
+        sawHold = true;
+        expect(engine.slide.departures.length).toBe(1);
+        expect(engine.slide.platformRider).toBeDefined();
+      }
+    }
+    expect(sawHold).toBe(true);
+  });
+  it('scenario H on the dark ride reports the low-visibility seat as unknown', () => {
+    const rec = recorder();
+    const ride = getRide('phantom');
+    const engine = new SimulationEngine(ride, () => DEFAULT_EVALUATOR_SETTINGS, rec);
+    engine.loadScenario(buildScenario('H', ride), 0);
+    engine.advanceTo(34000);
+    expect(engine.seats[ride.stagedSeats.occluded].state).toBe('unknown');
+    expect(rec.alerts.some((a) => a.type === 'low_confidence')).toBe(true);
+  });
+  it('keeps the session clock in step with simulation time', () => {
+    const rec = recorder();
+    const ride = getRide('vortex');
+    const engine = new SimulationEngine(ride, () => DEFAULT_EVALUATOR_SETTINGS, rec);
+    engine.loadScenario(buildScenario('A', ride), 5000);
+    while (!engine.finished) engine.advance(16);
+    expect(engine.sessionMs).toBe(5000 + engine.simMs);
+    expect(engine.simMs).toBe(engine.durationMs);
   });
   it('is deterministic: two runs produce identical seat states, alerts and events', () => {
     const a = run('vortex', 'B', 97);
@@ -138,16 +170,15 @@ describe('scenario engine', () => {
       }
     }
   });
-  it('changing ride configuration changes geometry, cameras and checklist', () => {
+  it('changing ride configuration changes geometry, cameras and scenarios', () => {
     const vortex = getRide('vortex');
     const vertigo = getRide('vertigo');
     expect(allSeats(vortex.geometry)).toHaveLength(24);
     expect(allSeats(vertigo.geometry)).toHaveLength(16);
     expect(vertigo.geometry.kind).toBe('radial');
-    expect(vortex.checklist.map((c) => c.id)).toContain('lap_bar_position');
-    expect(vertigo.checklist.map((c) => c.id)).toContain('harness_position');
     expect(getRide('phantom').cameras.every((c) => c.mode === 'infrared')).toBe(true);
-    expect(getRide('raptor').geometry.mirrored).toBe(true);
+    expect(vortex.scenarios.map((p) => p.id)).toEqual(['A', 'B', 'C', 'D', 'E', 'F']);
+    expect(getRide('typhoon').scenarios.map((p) => p.id)).toContain('G');
   });
   it('ad-hoc injections take effect immediately', () => {
     const rec = recorder();

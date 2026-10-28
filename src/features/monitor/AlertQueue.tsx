@@ -1,14 +1,12 @@
 import { useMemo, useState } from 'react';
 import { BellOff } from 'lucide-react';
 import { useRecordsStore } from '@/store/records';
-import { useSimulationStore } from '@/store/simulation';
 import { AlertCard } from './AlertCard';
-import { EmptyState, Notice, Panel } from '@/components/ui';
-import { useSettingsStore } from '@/store/settings';
+import { EmptyState, Panel } from '@/components/ui';
 import { isOpen } from '@/domain/review/workflow';
 import type { Alert } from '@/domain/types';
 
-export function AlertQueue({ rideId, onInspect }: { rideId: string; onInspect: (a: Alert) => void }) {
+export function AlertQueue({ rideId, onInspect }: { rideId: string; onInspect?: (a: Alert) => void }) {
   const alerts = useRecordsStore((s) => s.alerts);
   const [showClosed, setShowClosed] = useState(false);
   const list = useMemo(() => {
@@ -18,15 +16,12 @@ export function AlertQueue({ rideId, onInspect }: { rideId: string; onInspect: (
     return showClosed ? [...open, ...closed] : open;
   }, [alerts, rideId, showClosed]);
   const openCount = list.filter(isOpen).length;
-  const mode = useSettingsStore((s) => s.mode);
-  const selectAlert = useSimulationStore((s) => s.selectAlert);
-  void selectAlert;
 
   return (
     <Panel
       title={
         <>
-          Alerts & human review <span className="badge badge-amber ml-1">{openCount} open</span>
+          Needs review <span className="badge badge-amber ml-1">{openCount} open</span>
         </>
       }
       actions={
@@ -37,13 +32,8 @@ export function AlertQueue({ rideId, onInspect }: { rideId: string; onInspect: (
       bodyClassName="p-2 overflow-y-auto"
       className="h-full"
     >
-      {mode === 'shadow' && (
-        <div className="mb-2">
-          <Notice tone="warn">Shadow mode: records are generated without any operator-facing readiness display. This list is the supervisor review view only; nothing here reaches the station operator.</Notice>
-        </div>
-      )}
       {list.length === 0 ? (
-        <EmptyState icon={<BellOff size={20} />} title="No alerts for this ride" hint="Run a scenario or inject a condition from the uncertainty controls. Alerts appear here, on the seat map, in camera overlays and in the evidence log." />
+        <EmptyState icon={<BellOff size={20} />} title="Nothing to review" hint="Flags from the cameras appear here, on the seat map and in the review log." />
       ) : (
         <div className="flex flex-col gap-2">
           {list.map((a) => (

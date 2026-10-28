@@ -1,5 +1,7 @@
 # RideOps AI — Implementation Plan
 
+> **Superseded.** This was the first, broader plan. The product was later cut back to six screens and four rides; see the README and `docs/ARCHITECTURE.md` for what exists now.
+
 _Status: approved-by-default for an autonomous build session. Written before any application code._
 
 ## 0. Repository context (what was actually found)

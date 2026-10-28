@@ -1,15 +1,9 @@
-# RideOps AI — Ride Safety & Operations Intelligence (Simulation MVP)
+# RideOps AI — ride operations demo (simulation)
 
 > **SIMULATION — NOT CERTIFIED FOR RIDE SAFETY OR DISPATCH CONTROL.**
-> Every camera image, detection, confidence score, restraint observation, sensor reading, equipment measurement, staffing metric and financial figure in this application is synthetic and generated from seeded scripts. Nothing here connects to a ride controller, sends a dispatch command, or certifies a rider as safe. Green means "no issue flagged in simulation", amber means "human review required", red means "simulated concern". No status authorises real-world dispatch.
+> Every camera image, detection, sensor reading and number in this app is synthetic. Nothing connects to a ride, sends a dispatch command, or certifies a rider as safe. Green means "no issue flagged in simulation", amber means "a person needs to review", red means "possible issue". No status authorises dispatch.
 
-RideOps AI is an interactive demonstrator for a B2B platform that would use fixed station cameras, optional read-only sensor adapters and operational analytics to help ride operators at amusement parks and waterparks identify potential boarding issues for human review, improve dispatch efficiency, reduce downtime and keep records of operator reviews. The product is designed to assist staff, never to replace certified ride safety systems or required human checks.
-
-## Hosted demo
-
-`npm run build:single` packages the whole demo into one self-contained HTML file (CSS and JS inlined, in-memory routing), suitable for hosts that serve a single page such as a claude.ai artifact. Inside the claude.ai viewer, exports go through the viewer's download confirmation; everywhere else they are normal browser downloads.
-
-The GitHub Actions workflow (`.github/workflows/deploy-pages.yml`) runs lint, unit tests and the production build on every pull request. On pushes to the default branch it also publishes the app to GitHub Pages at **https://josephlongbui-stack.github.io/Claude/**. Pages must be enabled once under *Settings → Pages → Source: GitHub Actions*. Deep links work on Pages because the build also ships `404.html` as a copy of `index.html`.
+RideOps AI is a demo of one idea: station cameras watch each seat during loading, flag anything that looks wrong for a person to check, keep a tamper-evident record of what that person decided, and show the park what faster, fuller dispatches would be worth.
 
 ## Run it
 
@@ -18,66 +12,49 @@ npm install
 npm run dev
 ```
 
-Open <http://localhost:5173>. No API keys, databases, cloud services or GPU are required; the demo runs entirely in the browser and keeps demo state in `localStorage`.
-
-Other scripts:
+Then open <http://localhost:5173>. No API keys, servers or GPU are needed. Every page load starts a fresh, deterministic demo.
 
 | Command | What it does |
 |---|---|
-| `npm run build` | Typecheck + production build into `dist/` |
-| `npm run preview` | Serve the production build |
-| `npm test` | Vitest unit tests for the domain logic (evaluator, fusion, review workflow, hash chain, dispatch math, boarding allocator, scenario engine) |
-| `npm run test:e2e` | Playwright end-to-end flows (starts the dev server itself) |
-| `npm run lint` | ESLint (TypeScript + React hooks) |
+| `npm run build` | Typecheck and production build into `dist/` |
+| `npm run build:single` | One self-contained HTML file (for hosts that serve a single page, such as a claude.ai artifact) |
+| `npm test` | Unit tests for the domain logic |
+| `npm run test:e2e` | Browser tests of the main flows (starts the dev server itself) |
+| `npm run lint` | ESLint |
 
-## Five-minute demonstration walkthrough
+## The six screens
 
-1. **Park Overview** — fleet tiles, attraction table, occupancy trend. Click **Vortex Run** to open its monitor.
-2. **Live Ride Monitor** — press **Start Guided Demo** in the top bar. Scenario A runs a normal cycle on the 24-seat train: watch the four camera views, the seat map and the observation timeline move together.
-3. Scenario B stages a restraint-position observation on Row 4 Seat 2: the overlay, seat map, alert queue and event log all flag it, and the scripted operator records a review. Click the seat to open the inspector.
-4. Scenario C (loose object) and D (occluded camera → *Unknown — review required*) show that nothing is ever assumed nominal. Use the **Conservative uncertainty handling** panel to inject occlusion or low confidence yourself.
-5. Scenario E injects a fictional sensor record that disagrees with the camera; the **Simulated sensor fusion** panel routes it to human review.
-6. Scenario F records a slow gate; open **Dispatch Analytics** to see the longer cycle, the baseline-vs-assisted simulator and the pacing agent.
-7. Scenario G jumps to **Smart Boarding**: click **Generate Better Assignment** and drag a party onto a row.
-8. Scenario H opens the **Water Slide Monitor**: two synchronized cameras, slide schematic, a staged exit-zone occupancy and the review that closes it.
-9. Scenario I switches to the infrared dark ride; Scenario J surfaces the Gate B maintenance ticket in **Predictive Maintenance**, where you can inspect the trend and close the ticket.
-10. Finish in **Evidence & Reports**: filter the hash-chained log, verify the chain, tamper with a record to see detection, and export JSON/CSV. **Reset Demo** restores the starting state and the guided demo replays identically.
+- **Overview**: the four rides in the fictional park, riders per hour, and what is waiting for review.
+- **Live Monitor**: four camera views, the seat map, the station cycle, flags waiting for review, and a "Try it" panel to stage a condition yourself.
+- **Water Slide**: entrance and exit cameras, where each rider is, and an exit-zone review.
+- **Review Log**: every flag and the human decision on it, plus the hash-chained event log with export and a tamper check.
+- **Operations**: dispatch timing with a "what if loading were faster?" projection, boarding (packing groups into rows), and maintenance trends.
+- **Business Case**: payback worked out step by step from editable assumptions.
 
-## What is real software and what is simulated
+## Five-minute walkthrough
 
-**Genuinely implemented:** routing and shell, the deterministic scenario engine, the conservative observation evaluator (confidence thresholds, multi-frame stabilisation, occlusion → unknown, no affirmative state on insufficient data), the simulated-sensor fusion rules, the human review workflow and state machine, the SHA-256 hash-chained event log with verification and tamper demonstration (Web Crypto), client-side JSON/CSV export, the boarding allocator, dispatch/throughput math with block-limited behaviour, the pacing forecast, maintenance trend fitting, ROI arithmetic, the calibration region editor with saved presets, reviewer label storage, and all eleven ride configurations.
+1. Press **Start guided demo** at the top right. It runs seven short scenarios and moves between screens on its own.
+2. Scenario A is a normal cycle on the 24-seat coaster. Every seat starts as Unknown and only turns green once several camera frames agree.
+3. Scenarios B and C flag a restraint and a phone. Click the red seat to see what the camera saw and the review buttons.
+4. Scenario D blocks a camera, and the seat shows as Unknown instead of being assumed fine. Scenario E has the camera and a fictional sensor disagree, so a person checks.
+5. Scenario G switches to the water slide, where a rider stays too long in the exit and the next rider is held at the top.
+6. Scenario H is the dark ride in infrared, where low visibility again produces Unknown, not green.
+7. Finish in **Review Log** (verify the chain, then tamper with a record to see it caught), **Operations** and **Business Case**.
 
-**Simulated:** every camera frame (schematic Canvas renderings of scripted observations), every detection box, confidence score, pose marker, restraint/posture/loose-object observation, every sensor reading, equipment health score and anomaly, every shift/training metric, and the model-evaluation metrics. The synthetic operating day used by the analytics pages is generated from a seeded random source.
+## What is real and what is simulated
 
-See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the simulation architecture, the future-integration diagram and what remains unimplemented.
+**Real software:** the deterministic scenario engine, the conservative seat evaluator (confidence threshold, multi-frame stabilisation, blocked or unclear seats become Unknown), the camera/sensor comparison rules, the review workflow, SHA-256 hash chaining with verification (Web Crypto), JSON/CSV export, the boarding allocator, dispatch and payback arithmetic, and the maintenance trend fit.
 
-## Repository layout
+**Simulated:** every camera frame (schematic Canvas drawings of scripted observations), every detection and confidence score, every sensor reading, the synthetic operating day behind the analytics, and the 14 days of equipment readings.
 
-```
-src/
-  app/            shell, sidebar navigation, routes
-  components/     UI primitives, demo controls, simulation banner
-  domain/
-    types.ts      shared domain types (all simulation)
-    rides/        RideConfiguration model, seat helpers, 11 attractions, 2 parks
-    simulation/   seeded RNG, clock, scenario scripts A–L, SimulationEngine
-    observation/  ObservationProvider seam, simulated provider, evaluator, fusion
-    review/       alert state machine
-    evidence/     hash chain (SHA-256), exports
-    analytics/    dispatch, boarding, pacing, maintenance, ROI
-    __tests__/    Vitest suites
-  store/          Zustand stores (simulation, records, settings, boarding, maintenance, training)
-  features/       monitor (cameras, seat map, inspector, alerts…), slide, config
-  pages/          one component per sidebar entry
-  data/           synthetic datasets (history, maintenance, training samples)
-e2e/              Playwright flows
-docs/             plan and architecture notes
-```
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for how it fits together and where a real vision service would plug in.
 
-## Validation required before any real pilot
+## Hosted demo
 
-Engineering: a separately engineered and validated computer-vision service behind the `ObservationProvider` seam, real camera calibration, latency and availability measurements, edge-node hardening, data retention and privacy controls, and a full test programme on recorded station footage with ground truth.
+The GitHub Actions workflow (`.github/workflows/deploy-pages.yml`) runs lint, unit tests and the build on every pull request. On pushes to the default branch it also publishes the app to GitHub Pages at **https://josephlongbui-stack.github.io/Claude/**, once Pages is enabled under *Settings → Pages → Source: GitHub Actions*.
 
-Safety: a hazard analysis establishing that the system is advisory only, documented operating procedures proving no operational dependency, shadow-mode evidence over a representative period, and review by the park's safety and engineering leads. The restraint-observation methods used here are generic illustrations and would need an original, validated design.
+## Before any real pilot
 
-Legal and commercial: privacy impact assessment for station cameras, no facial recognition or identity tracking, employee-analytics agreements that keep indicators aggregate and training-oriented, regulatory review per jurisdiction, and honest contractual language that excludes any safety certification claim.
+- **Engineering:** a separately built and validated vision service behind the observation interface, real calibration, measured latency and uptime, and testing on recorded station footage with ground truth.
+- **Safety:** a hazard analysis showing the system is advisory only, unchanged operating procedures with no dependency on it, shadow-mode evidence over a long period, and sign-off from the park's safety and engineering leads.
+- **Legal:** a privacy assessment for station cameras, no facial recognition or identity tracking, and contracts that make no safety-certification claim.

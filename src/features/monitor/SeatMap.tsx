@@ -37,58 +37,22 @@ export function layoutSeatMap(ride: RideConfiguration): { seats: SeatPos[]; widt
     );
     return { seats, width: 260, height: 260, decor };
   }
-  if (g.kind === 'gondolas') {
-    const n = g.rows;
-    const cx = 150;
-    const cy = 140;
-    const R = 92;
-    ids.forEach((id) => {
-      const { row, seat } = parseSeatId(id);
-      const a = ((row - 1) / n) * Math.PI * 2 - Math.PI / 2;
-      const gx = cx + Math.cos(a) * R;
-      const gy = cy + Math.sin(a) * R;
-      const col = (seat - 1) % 2;
-      const r = Math.floor((seat - 1) / 2);
-      seats.push({ id, x: gx - 22 + col * 23, y: gy - 20 + r * 21, w: 21, h: 19 });
-    });
-    const decor = (
-      <>
-        {Array.from({ length: n }, (_, i) => {
-          const a = (i / n) * Math.PI * 2 - Math.PI / 2;
-          return <line key={i} x1={cx} y1={cy} x2={cx + Math.cos(a) * (R - 30)} y2={cy + Math.sin(a) * (R - 30)} stroke="#2c3645" strokeWidth={3} />;
-        })}
-        <circle cx={cx} cy={cy} r={12} fill="#2c3645" />
-        {Array.from({ length: n }, (_, i) => {
-          const a = (i / n) * Math.PI * 2 - Math.PI / 2;
-          return (
-            <text key={`t${i}`} x={cx + Math.cos(a) * (R + 38)} y={cy + Math.sin(a) * (R + 38) + 3} textAnchor="middle" fontSize={8.5} fill="#8794a5">
-              G{i + 1}
-            </text>
-          );
-        })}
-      </>
-    );
-    return { seats, width: 300, height: 290, decor };
-  }
-  // train / vehicles / boats: rows stacked, optional mirrored gap
+  // train / vehicles: rows stacked front to back
   const seatW = 34;
   const seatH = 26;
   const gapX = 6;
   const rowGap = g.rowsPerUnit ? 10 : 8;
-  const mirrorGap = g.mirrored ? 26 : 0;
-  const rowW = g.seatsPerRow * seatW + (g.seatsPerRow - 1) * gapX + mirrorGap;
+  const rowW = g.seatsPerRow * seatW + (g.seatsPerRow - 1) * gapX;
   const x0 = 30;
   const y0 = 24;
   ids.forEach((id) => {
     const { row, seat } = parseSeatId(id);
     const unitExtra = g.rowsPerUnit ? Math.floor((row - 1) / g.rowsPerUnit) * 14 : 0;
-    const mirrorShift = g.mirrored && seat > g.seatsPerRow / 2 ? mirrorGap : 0;
-    seats.push({ id, x: x0 + (seat - 1) * (seatW + gapX) + mirrorShift, y: y0 + (row - 1) * (seatH + rowGap) + unitExtra, w: seatW, h: seatH });
+    seats.push({ id, x: x0 + (seat - 1) * (seatW + gapX), y: y0 + (row - 1) * (seatH + rowGap) + unitExtra, w: seatW, h: seatH });
   });
   const totalH = y0 + g.rows * (seatH + rowGap) + (g.rowsPerUnit ? Math.ceil(g.rows / g.rowsPerUnit) * 14 : 0) + 10;
   const decor = (
     <>
-      {g.mirrored && <rect x={x0 + (g.seatsPerRow / 2) * (seatW + gapX) - gapX + 4} y={y0 - 10} width={mirrorGap - 8} height={totalH - y0 - 4} fill="#1a212d" stroke="#2c3645" rx={3} />}
       {g.rowsPerUnit
         ? Array.from({ length: Math.ceil(g.rows / g.rowsPerUnit) }, (_, u) => (
             <g key={u}>
@@ -105,7 +69,7 @@ export function layoutSeatMap(ride: RideConfiguration): { seats: SeatPos[]; widt
         </text>
       ))}
       <text x={x0 + rowW / 2} y={12} textAnchor="middle" fontSize={8.5} fill="#8794a5" letterSpacing={1}>
-        ▲ {g.facing === 'inward' ? 'FACING INWARD' : 'FRONT OF ' + (g.unitLabel ?? 'TRAIN').toUpperCase()}
+        ▲ FRONT
       </text>
     </>
   );
@@ -123,7 +87,7 @@ export function SeatMap({ ride, seats, selectedSeatId, onSelect, compact = false
   return (
     <div className="flex flex-col gap-2 h-full">
       <div className="flex-1 min-h-0 flex items-start justify-center">
-        <svg viewBox={`0 0 ${layout.width} ${layout.height}`} className="max-h-full w-full" style={{ maxHeight: compact ? 220 : 420 }} role="group" aria-label={`${ride.name} seat map`}>
+        <svg viewBox={`0 0 ${layout.width} ${layout.height}`} className="w-full" style={{ maxHeight: compact ? 200 : 280 }} role="group" aria-label={`${ride.name} seat map`}>
           {layout.decor}
           {layout.seats.map((p) => {
             const ev = seats[p.id];

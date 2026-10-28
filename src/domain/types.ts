@@ -9,47 +9,23 @@
 // Rides
 // ---------------------------------------------------------------------------
 
-export type RideType =
-  | 'lap_bar_coaster'
-  | 'ots_coaster'
-  | 'flying_coaster'
-  | 'wing_coaster'
-  | 'spinning_coaster'
-  | 'dark_ride'
-  | 'water_slide'
-  | 'water_coaster'
-  | 'drop_tower'
-  | 'flat_ride'
-  | 'family_ride';
-
-export type RestraintType =
-  | 'lap_bar'
-  | 'ots_harness'
-  | 'flying_vest'
-  | 'lap_bar_belt'
-  | 'none_slide'
-  | 'lap_belt';
-
+export type RideType = 'coaster' | 'dark_ride' | 'drop_tower' | 'water_slide';
+export type RestraintType = 'lap_bar' | 'ots_harness' | 'lap_belt' | 'none';
 export type SeatId = string; // "R4S2" — row 4, seat 2 (1-based)
-
-export type GeometryKind = 'train' | 'radial' | 'gondolas' | 'vehicles' | 'boats' | 'slide';
+export type GeometryKind = 'train' | 'vehicles' | 'radial' | 'slide';
 
 export interface RideGeometry {
   kind: GeometryKind;
-  /** Number of rows (train), gondolas (gondolas), vehicle-rows (vehicles), boat rows (boats). */
   rows: number;
   seatsPerRow: number;
-  /** Wing coaster: seats 1–2 hang left of the track, 3–4 right. */
-  mirrored?: boolean;
-  /** Label for the row unit: "Row", "Car", "Gondola", "Vehicle". */
+  /** Label for a row: "Row" or "Seat" (radial). */
   rowLabel: string;
-  /** For vehicles/boats: rows grouped into units of this size. */
+  /** For vehicles: rows grouped into units of this size. */
   rowsPerUnit?: number;
   unitLabel?: string;
-  facing?: 'forward' | 'inward' | 'outward';
 }
 
-export type CameraView = 'front' | 'middle' | 'rear' | 'gates' | 'entrance' | 'exit' | 'overhead' | 'side';
+export type CameraView = 'front' | 'middle' | 'rear' | 'gates' | 'side' | 'entrance' | 'exit';
 export type CameraMode = 'visible' | 'infrared';
 
 export interface CameraConfig {
@@ -58,34 +34,19 @@ export interface CameraConfig {
   view: CameraView;
   coverage: SeatId[];
   mode: CameraMode;
-  /** Placement diagram coordinates (0–100 station space) and bearing in degrees. */
-  placement: { x: number; y: number; angle: number; fov: number };
 }
-
-export type CheckCategory = 'restraint' | 'position' | 'object' | 'zone' | 'policy' | 'camera' | 'equipment';
-
-export interface ObservationCheck {
-  id: string;
-  label: string;
-  description: string;
-  category: CheckCategory;
-}
-
-export type SensorKind = 'restraint_position' | 'seat_occupancy' | 'gate_state' | 'zone_presence' | 'harness_lock';
 
 export interface SyntheticSensorConfig {
   id: string;
   label: string;
-  kind: SensorKind;
   perSeat: boolean;
 }
 
-export type ScenarioId = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L';
+export type ScenarioId = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H';
 
 export interface ScenarioPreset {
   id: ScenarioId;
   label: string;
-  description: string;
 }
 
 export interface RideBaseline {
@@ -93,39 +54,26 @@ export interface RideBaseline {
   minCycleSec: number;
   loadFactor: number;
   demandPerHour: number;
-  /** Seats per dispatch unit (train / boat / cycle). */
+  /** Seats per dispatch. */
   capacity: number;
 }
 
 export interface RideConfiguration {
   id: string;
-  parkId: string;
   name: string;
   type: RideType;
   typeLabel: string;
   restraint: RestraintType;
   restraintLabel: string;
-  description: string;
   geometry: RideGeometry;
   cameras: CameraConfig[];
-  checklist: ObservationCheck[];
   sensors: SyntheticSensorConfig[];
   scenarios: ScenarioPreset[];
-  visual: { style: 'standard' | 'infrared' | 'water'; accent: string };
   baseline: RideBaseline;
-  /** Seats the scenario generator uses for staged concerns, in priority order. */
+  /** Seats the scenarios use for staged conditions. */
   stagedSeats: { concern: SeatId; occluded: SeatId; looseObject: SeatId; sensor: SeatId };
-  /** Fictional operating status for the park overview. */
-  status: 'operating' | 'delayed' | 'maintenance' | 'closed';
-  metrics: string[];
-}
-
-export interface Park {
-  id: string;
-  name: string;
-  kind: 'theme' | 'water';
-  location: string;
-  rideIds: string[];
+  /** Fictional operating status for the overview. */
+  status: 'operating' | 'delayed';
 }
 
 // ---------------------------------------------------------------------------
@@ -197,8 +145,6 @@ export interface EvaluatorSettings {
   stabilizationFrames: number;
   /** Frames required before a seat may move to a MORE conservative state. */
   escalationFrames: number;
-  /** Frames in the sliding window. */
-  windowFrames: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -243,12 +189,7 @@ export type AlertType =
   | 'low_confidence'
   | 'slow_gate'
   | 'sensor_discrepancy'
-  | 'exit_zone_occupied'
-  | 'entry_position'
-  | 'spacing'
-  | 'policy_review'
-  | 'camera_degraded'
-  | 'cycle_variability';
+  | 'exit_zone_occupied';
 
 export type Severity = 'info' | 'review' | 'concern';
 export type AlertStatus = 'open' | 'acknowledged' | 'reviewed' | 'false_alarm';
@@ -303,11 +244,7 @@ export type EventType =
   | 'sensor'
   | 'slide_entry'
   | 'slide_departure'
-  | 'slide_exit'
-  | 'maintenance'
-  | 'boarding'
-  | 'system'
-  | 'training_label';
+  | 'slide_exit';
 
 export interface EventRecord {
   id: string;
@@ -337,24 +274,12 @@ export interface EventRecord {
 // Station / scenario runtime
 // ---------------------------------------------------------------------------
 
-export type StationPhase =
-  | 'idle'
-  | 'arriving'
-  | 'unloading'
-  | 'boarding'
-  | 'observing'
-  | 'review'
-  | 'ready'
-  | 'dispatch'
-  | 'departing'
-  | 'block_wait';
+export type StationPhase = 'idle' | 'arriving' | 'unloading' | 'boarding' | 'observing' | 'review' | 'ready' | 'dispatch' | 'departing';
 
 export interface CameraRuntime {
   id: string;
   /** Normalised occlusion rectangle inside the frame, if any. */
   occlusion?: { x: number; y: number; w: number; h: number; label: string };
-  degraded: boolean;
-  offline: boolean;
   noise: number;
   latencyMs: number;
 }
@@ -365,7 +290,6 @@ export interface SlideRider {
   /** 0 = platform, 1 = exit; progress along the flume. */
   progress: number;
   enteredMs: number;
-  variant: number;
 }
 
 export interface SlideState {
@@ -426,16 +350,11 @@ export type ScenarioAction =
   | { kind: 'seats'; seatIds: SeatId[]; patch: Partial<ScriptedSeat> }
   | { kind: 'camera'; cameraId: string; patch: Partial<CameraRuntime> }
   | { kind: 'sensor'; seatId: SeatId; reading: SensorReading; status?: SensorStatus; confidence?: number }
-  | { kind: 'alert'; alert: ScriptedAlert }
   | { kind: 'auto_review'; seatId?: SeatId; zone?: string; type: AlertType; outcome: 'acknowledged' | 'reviewed' | 'false_alarm'; note: string }
-  | { kind: 'event'; type: EventType; title: string; detail: string; severity?: Severity }
   | { kind: 'narration'; title: string; text: string }
   | { kind: 'gate'; gateId: string; openDurationMs: number }
   | { kind: 'dispatch'; riders: number; dwellSec: number; unloadSec: number; loadSec: number; reviewSec: number; blockWaitSec: number }
   | { kind: 'slide'; op: SlideOp }
-  | { kind: 'navigate'; route: string }
-  | { kind: 'maintenance'; ticketId: string; op: 'surface' }
-  | { kind: 'boarding'; op: 'optimize' }
   | { kind: 'end' };
 
 export type SlideOp =
@@ -443,7 +362,6 @@ export type SlideOp =
   | { op: 'to_platform' }
   | { op: 'entry_review'; state: 'pending' | 'recorded' }
   | { op: 'depart' }
-  | { op: 'advance'; progress: number }
   | { op: 'exit_enter' }
   | { op: 'exit_prolonged' }
   | { op: 'exit_clear' };
@@ -473,5 +391,3 @@ export interface ScenarioScript {
   route: string;
   steps: ScenarioStep[];
 }
-
-export type DemoMode = 'shadow' | 'assisted';

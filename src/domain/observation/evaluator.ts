@@ -14,7 +14,6 @@ export const DEFAULT_EVALUATOR_SETTINGS: EvaluatorSettings = {
   confidenceThreshold: 0.7,
   stabilizationFrames: 4,
   escalationFrames: 2,
-  windowFrames: 6,
 };
 
 /** Higher rank = more conservative. Equal ranks are treated as lateral moves. */

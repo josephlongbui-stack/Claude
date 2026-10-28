@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { subscribeFrame } from '@/store/simulation';
 import type { EngineSnapshot } from '@/domain/simulation/engine';
-import { useSettingsStore } from '@/store/settings';
 import { simClock, simDate } from '@/domain/simulation/clock';
 import { VISIBLE_PALETTE, drawBracketBox, drawDashedBox, drawHud, drawRider, drawWater, easeOut, postProcess, roundRect, tag } from '@/features/monitor/canvasKit';
 
@@ -10,7 +9,6 @@ const H = 360;
 
 export function SlideCameraView({ view }: { view: 'entrance' | 'exit' }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const privacy = useSettingsStore((s) => s.privacySilhouettes);
   const camId = view === 'entrance' ? 'CAM-A' : 'CAM-B';
 
   useEffect(() => {
@@ -71,21 +69,21 @@ export function SlideCameraView({ view }: { view: 'entrance' | 'exit' }) {
       drawDashedBox(ctx, 40, 120, 250, 118, 'rgba(34,211,238,0.35)');
       tag(ctx, `QUEUE ZONE · ${slide.queue.length} waiting`, 44, 124, { color: '#67e8f9' });
       slide.queue.slice(0, 5).forEach((id, i) => {
-        drawRider(ctx, 90 + i * 42, 236 - (i % 2) * 6, { variant: Number(id.replace(/\D/g, '')) % 4, alpha: 1, palette, silhouette: privacy, scale: 0.62 });
+        drawRider(ctx, 90 + i * 42, 236 - (i % 2) * 6, { variant: Number(id.replace(/\D/g, '')) % 4, alpha: 1, palette, silhouette: true, scale: 0.62 });
       });
       // entry zone + platform rider
       drawDashedBox(ctx, 380, 110, 200, 130, slide.platformRider ? 'rgba(245,158,11,0.6)' : 'rgba(34,211,238,0.35)');
       tag(ctx, `ENTRY ZONE · ${slide.platformRider ? 'occupied' : 'clear'}`, 384, 114, { color: slide.platformRider ? '#fcd34d' : '#67e8f9' });
       if (slide.platformRider) {
         const variant = Number(slide.platformRider.replace(/\D/g, '')) % 4;
-        const pose = drawRider(ctx, 470, 232, { variant, alpha: 1, palette, silhouette: privacy, scale: 0.85, leaning: false });
+        const pose = drawRider(ctx, 470, 232, { variant, alpha: 1, palette, silhouette: true, scale: 0.85, leaning: false });
         drawBracketBox(ctx, 440, 160, 62, 76, slide.entryReview === 'recorded' ? '#4ade80' : '#f59e0b', 1.4);
         tag(ctx, `rider · position: seated-start`, 440, 238, { color: slide.entryReview === 'recorded' ? '#86efac' : '#fcd34d', font: '9px ui-monospace, Menlo, monospace' });
         tag(ctx, `conf 91%`, 440, 251, { color: '#dde3ea', font: '9px ui-monospace, Menlo, monospace' });
         void pose;
       }
       // attendant
-      drawRider(ctx, 600, 236, { variant: 2, alpha: 1, palette, silhouette: privacy, scale: 0.72 });
+      drawRider(ctx, 600, 236, { variant: 2, alpha: 1, palette, silhouette: true, scale: 0.72 });
       tag(ctx, 'ATTENDANT', 575, 242, { color: 'rgba(221,227,234,0.8)', font: '9px ui-monospace, Menlo, monospace' });
       const review = slide.entryReview === 'recorded' ? 'ENTRY REVIEW: recorded' : slide.entryReview === 'pending' ? 'ENTRY REVIEW: pending' : 'ENTRY REVIEW: —';
       tag(ctx, review, 384, 270, { color: slide.entryReview === 'recorded' ? '#86efac' : slide.entryReview === 'pending' ? '#fcd34d' : 'rgba(221,227,234,0.6)', bg: 'rgba(0,0,0,0.6)' });
@@ -120,7 +118,7 @@ export function SlideCameraView({ view }: { view: 'entrance' | 'exit' }) {
       if (occupied) {
         const p = easeOut(sinceMs / 1600);
         const x = 140 + p * 340;
-        const pose = drawRider(ctx, x, 236, { variant: 1, alpha: 1, palette, silhouette: privacy, scale: 0.8, leaning: true });
+        const pose = drawRider(ctx, x, 236, { variant: 1, alpha: 1, palette, silhouette: true, scale: 0.8, leaning: true });
         void pose;
         drawBracketBox(ctx, x - 30, 170, 60, 70, color, slide.exitZone.prolonged ? 2 : 1.3);
         tag(ctx, `rider · exit zone ${(sinceMs / 1000).toFixed(1)}s`, x - 30, 242, { color: slide.exitZone.prolonged ? '#fca5a5' : '#fcd34d', font: '9px ui-monospace, Menlo, monospace' });
@@ -134,11 +132,11 @@ export function SlideCameraView({ view }: { view: 'entrance' | 'exit' }) {
       tag(ctx, `exits recorded: ${slide.exits.length}`, 44, 318, { color: 'rgba(221,227,234,0.7)', font: '9px ui-monospace, Menlo, monospace' });
     }
 
-    postProcess(ctx, W, H, { noise: runtime?.noise ?? 0.05, ir: false, t: simMs, degraded: Boolean(runtime?.degraded) });
-    drawHud(ctx, W, H, { cameraId: camId, label: view === 'entrance' ? 'Slide entrance' : 'Slide exit', clock, latencyMs: runtime?.latencyMs ?? 42, mode: 'visible · outdoor', privacy: privacy ? 'PRIVACY: silhouettes' : 'PRIVACY: off', offline: false, palette });
+    postProcess(ctx, W, H, { noise: runtime?.noise ?? 0.05, ir: false, t: simMs, degraded: false });
+    drawHud(ctx, W, H, { cameraId: camId, label: view === 'entrance' ? 'Slide entrance' : 'Slide exit', clock, latencyMs: runtime?.latencyMs ?? 42, mode: 'visible', privacy: 'silhouettes only', offline: false, palette });
     };
     return subscribeFrame(draw);
-  }, [privacy, view, camId]);
+  }, [view, camId]);
 
   return (
     <div className="relative rounded border border-graphite-700 bg-black overflow-hidden">
