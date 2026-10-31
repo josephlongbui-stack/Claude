@@ -123,7 +123,7 @@ export function OrderTicket({ executorName, status, quote, signedIn, cash, block
 
   return (
     <Shell compact={compact} executorName={executorName} head={<Tabs tabs={[{ id: 'buy', label: 'Buy' }, { id: 'sell', label: 'Sell' }]} value={action} onChange={switchAction} label="Buy or sell" />}>
-      <form class="ticket-form" onSubmit={submit} data-testid="ticket" aria-label="Order ticket">
+      <form class="ticket-form" onSubmit={submit} data-testid="ticket" aria-label={`Order ticket for ${executorName}`}>
         <div class="ticket-sides" role="group" aria-label="Side">
           <button type="button" class={`btn side yes ${side === 'yes' ? 'solid' : ''}`} aria-pressed={side === 'yes'} onClick={() => pick('yes')} data-testid="side-yes">
             Yes <span class="px">{(action === 'buy' ? quote.yesAsk : quote.yesBid) === null ? '—' : `${action === 'buy' ? quote.yesAsk : quote.yesBid}¢`}</span>

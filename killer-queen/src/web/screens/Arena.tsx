@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { api } from '../api.js';
 import type { Ctx } from '../main.js';
-import { AgentRow, Button, Countdown, EmptyState, PageHead, Panel, Skeleton, StatusPill, Table, Tabs, Td, TitleCell, chanceOf, count, taskStatus, type MarketSummary } from '../ui/index.js';
+import { AgentRow, Button, Countdown, EmptyState, FetchError, PageHead, Panel, Skeleton, StatusPill, Table, Tabs, Td, TitleCell, chanceOf, count, taskStatus, type MarketSummary } from '../ui/index.js';
 import { when } from '../ui/PacketView.js';
 
 type Filter = 'soon' | 'traded' | 'new' | 'progress' | 'settled';
@@ -20,7 +20,7 @@ const repoName = (r: string) => r.replace(/^(https?:\/\/)?github\.com\//, '');
 
 export function Arena({ ctx }: { ctx: Ctx }) {
   const [entries, setEntries] = useState<Entry[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<any | null>(null);
   const [filter, setFilter] = useState<Filter>('soon');
   const load = () =>
     api<{ tasks: Entry[] }>('GET', '/api/tasks')
@@ -28,7 +28,7 @@ export function Arena({ ctx }: { ctx: Ctx }) {
         setEntries(r.tasks);
         setError(null);
       })
-      .catch((e) => setError(e.error ?? 'The exchange did not answer.'));
+      .catch((e) => setError(e));
   useEffect(() => {
     void load();
   }, [ctx.tick]);
@@ -42,7 +42,7 @@ export function Arena({ ctx }: { ctx: Ctx }) {
     </div>
   );
 
-  if (error) return <EmptyState kind="error" title="The exchange did not answer" hint={error} retry={() => void load()} />;
+  if (error) return <FetchError error={error} retry={() => void load()} />;
   if (!entries)
     return (
       <>
@@ -112,7 +112,7 @@ export function Arena({ ctx }: { ctx: Ctx }) {
               { key: 'change', label: 'Change', align: 'right' },
               { key: 'volume', label: 'Volume', align: 'right', hideSm: true },
               { key: 'closes', label: settledTab ? 'Result' : filter === 'progress' ? 'Status' : 'Closes', hideSm: true },
-              { key: 'quick', label: '' },
+              { key: 'quick', label: '', sr: 'Trade' },
             ]}
           >
             {shown.map((e) => {

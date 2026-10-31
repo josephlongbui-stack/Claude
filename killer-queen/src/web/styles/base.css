@@ -25,6 +25,7 @@ pre { margin: 0; white-space: pre-wrap; word-break: break-word; }
 .t-body { font-size: var(--t-body); line-height: var(--t-body-lh); }
 .t-h3 { font-size: var(--t-h3); line-height: var(--t-h3-lh); font-weight: 600; }
 .t-h2 { font-size: var(--t-h2); line-height: var(--t-h2-lh); font-weight: 600; letter-spacing: var(--tracking-tight); }
+.t-h1 { font-size: var(--t-h1); line-height: var(--t-h1-lh); font-weight: 600; letter-spacing: var(--tracking-tight); }
 .num-m { font-family: var(--font-cond); font-weight: 600; font-size: var(--t-num-m); line-height: var(--t-num-m-lh); }
 .num-l { font-family: var(--font-cond); font-weight: 600; font-size: var(--t-num-l); line-height: var(--t-num-l-lh); letter-spacing: var(--tracking-tight); }
 .num-xl { font-family: var(--font-cond); font-weight: 600; font-size: var(--t-num-xl); line-height: var(--t-num-xl-lh); letter-spacing: var(--tracking-tight); }

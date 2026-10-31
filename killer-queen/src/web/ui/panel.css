@@ -4,11 +4,13 @@
 .panel-aside { font-size: var(--t-dense); line-height: var(--t-dense-lh); color: var(--ink-3); margin-left: auto; }
 .panel-body { padding: var(--sp-4); }
 .panel-body.tight { padding: var(--sp-3) var(--sp-4); }
-.section-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-3); margin: var(--sp-6) 0 var(--sp-2); }
+.section-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-3); margin: var(--sp-6) 0 var(--sp-2); flex-wrap: wrap; }
+.section-head h2 { font-size: var(--t-h3); line-height: var(--t-h3-lh); font-weight: 600; letter-spacing: 0; }
 .section-head:first-child { margin-top: 0; }
 .section-aside { font-size: var(--t-dense); line-height: var(--t-dense-lh); color: var(--ink-3); white-space: nowrap; }
 .page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-4); margin-bottom: var(--sp-4); flex-wrap: wrap; }
 .page-head-main { min-width: 0; flex: 1 1 auto; }
+.page-title { font-size: var(--t-h2); line-height: var(--t-h2-lh); font-weight: 600; letter-spacing: var(--tracking-tight); }
 .page-sub { color: var(--ink-2); margin-top: var(--sp-1); max-width: var(--measure); }
 .page-head-aside { flex: none; display: flex; align-items: center; gap: var(--sp-2); }
-@media (max-width: 720px) { .page-head h2 { font-size: var(--t-h3); line-height: var(--t-h3-lh); } .section-aside { white-space: normal; text-align: right; } }
+@media (max-width: 720px) { .page-head .page-title { font-size: var(--t-h3); line-height: var(--t-h3-lh); } .section-aside { white-space: normal; text-align: right; } }

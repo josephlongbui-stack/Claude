@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'preact/hooks';
 import { api } from '../api.js';
 import type { Ctx } from '../main.js';
-import { Avatar, EmptyState, Money, PageHead, Panel, Skeleton, Table, Tabs, Td, Tr, count } from '../ui/index.js';
+import { Avatar, EmptyState, FetchError, Money, PageHead, Panel, Skeleton, Table, Tabs, Td, Tr, count } from '../ui/index.js';
 
 export function Leaderboard({ ctx }: { ctx: Ctx }) {
   const [rows, setRows] = useState<any[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<any | null>(null);
   const [by, setBy] = useState<'profit' | 'accuracy'>('profit');
   const load = () =>
     api<{ leaderboard: any[] }>('GET', '/api/leaderboard')
@@ -13,11 +13,11 @@ export function Leaderboard({ ctx }: { ctx: Ctx }) {
         setRows(r.leaderboard);
         setError(null);
       })
-      .catch((e) => setError(e.error ?? 'The exchange did not answer.'));
+      .catch((e) => setError(e));
   useEffect(() => {
     void load();
   }, [ctx.tick]);
-  if (error) return <EmptyState kind="error" title="The exchange did not answer" hint={error} retry={() => void load()} />;
+  if (error) return <FetchError error={error} retry={() => void load()} />;
   const sorted = rows ? (by === 'profit' ? rows : rows.filter((r) => r.brier !== null).sort((a, b) => a.rankByAccuracy - b.rankByAccuracy)) : null;
   return (
     <>
@@ -28,7 +28,7 @@ export function Leaderboard({ ctx }: { ctx: Ctx }) {
         ) : sorted.length === 0 ? (
           <EmptyState title={by === 'profit' ? 'Nobody has traded yet' : 'No settled positions to score yet'} hint={by === 'profit' ? 'The first trade puts a name here.' : 'Accuracy needs markets that settled on a test result.'} />
         ) : (
-          <Table caption={`Traders ranked by ${by}`} testId="leaderboard" columns={[{ key: 'r', label: '#', width: 'narrow' }, { key: 'n', label: 'Trader' }, { key: 'o', label: 'Organization', hideSm: true }, { key: 'p', label: 'Profit', align: 'right' }, { key: 'z', label: 'Realized', align: 'right', hideSm: true }, { key: 'b', label: 'Brier', align: 'right' }, { key: 'h', label: 'Right', align: 'right', hideSm: true }]}>
+          <Table caption={`Traders ranked by ${by}`} testId="leaderboard" columns={[{ key: 'r', label: '#', width: 'narrow' }, { key: 'n', label: 'Trader' }, { key: 'o', label: 'Organization', hideSm: true }, { key: 'p', label: 'Profit', align: 'right' }, { key: 'z', label: 'Realized', align: 'right', hideSm: true }, { key: 'b', label: 'Brier', align: 'right', hideXs: true }, { key: 'h', label: 'Right', align: 'right', hideSm: true }]}>
             {sorted.map((r) => (
               <Tr key={r.id} class={ctx.me?.id === r.id ? 'me' : ''}>
                 <Td align="right" class="ink-3">
@@ -51,7 +51,9 @@ export function Leaderboard({ ctx }: { ctx: Ctx }) {
                 <Td align="right" hideSm>
                   <Money cents={r.realized} signed />
                 </Td>
-                <Td align="right">{r.brier === null ? <span class="ink-3">—</span> : r.brier.toFixed(3)}</Td>
+                <Td align="right" hideXs>
+                  {r.brier === null ? <span class="ink-3">—</span> : r.brier.toFixed(3)}
+                </Td>
                 <Td align="right" hideSm>
                   {r.scored ? `${count(r.hits)} of ${count(r.scored)}` : '—'}
                 </Td>

@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { api } from '../api.js';
 import { useTitle, type Ctx } from '../main.js';
-import { BookLadder, Button, ChangeCell, Countdown, EmptyState, Icon, IconButton, Money, OrderTicket, PacketView, Panel, PanelBody, PanelHead, PriceCell, PriceChart, SettlementPanel, Skeleton, StatusPill, Tabs, ThesisList, TradeList, dollars, marketStatus, toast, type OrderInput } from '../ui/index.js';
+import { BookLadder, Button, ChangeCell, Countdown, EmptyState, FetchError, Icon, IconButton, Money, OrderTicket, PacketView, Panel, PanelBody, PanelHead, PriceCell, PriceChart, SettlementPanel, Skeleton, StatusPill, Tabs, ThesisList, TradeList, dollars, marketStatus, toast, type OrderInput } from '../ui/index.js';
 import { when } from '../ui/PacketView.js';
 
 export function Market({ ctx, id }: { ctx: Ctx; id: string }) {
   const [v, setV] = useState<any | null>(null);
   const [task, setTask] = useState<any | null>(null);
   const [pf, setPf] = useState<any | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<any | null>(null);
   const [tab, setTab] = useState<'theses' | 'trades'>('theses');
   const [sheet, setSheet] = useState<null | 'yes' | 'no'>(null);
   // The one animation runs only when this viewer saw the market move from unsettled to settled.
@@ -22,13 +22,17 @@ export function Market({ ctx, id }: { ctx: Ctx; id: string }) {
         setError(null);
         return api('GET', `/api/tasks/${encodeURIComponent(x.market.taskId)}`).then(setTask).catch(() => undefined);
       })
-      .catch((e) => setError(e.status === 404 ? 'not_found' : (e.error ?? 'The exchange did not answer.')));
+      .catch((e) => setError(e.status === 404 ? 'not_found' : e));
   const loadPf = () => (ctx.me ? api('GET', '/api/portfolio').then(setPf).catch(() => setPf(null)) : Promise.resolve(setPf(null)));
   useEffect(() => {
     void load();
     void loadPf();
   }, [id, ctx.tick, ctx.me?.id]);
   useTitle(v ? `${v.packet.executor.name} on ${v.packet.title}` : null);
+  useEffect(() => {
+    seenUnsettled.current = false;
+    setAnimateSettle(false);
+  }, [id]);
   useEffect(() => {
     if (!v) return;
     if (v.market.status !== 'settled') seenUnsettled.current = true;
@@ -38,8 +42,8 @@ export function Market({ ctx, id }: { ctx: Ctx; id: string }) {
     }
   }, [v?.market.status]);
 
-  if (error === 'not_found') return <EmptyState title="There is no market at this address" hint="It may have been removed, or the link is wrong." action={{ href: '#/', label: 'Go to the Arena' }} />;
-  if (error) return <EmptyState kind="error" title="The exchange did not answer" hint={error} retry={() => void load()} />;
+  if (error === 'not_found') return <EmptyState page title="There is no market at this address" hint="It may have been removed, or the link is wrong." action={{ href: '#/', label: 'Go to the Arena' }} />;
+  if (error) return <FetchError error={error} retry={() => void load()} />;
   if (!v)
     return (
       <div class="market">
@@ -242,11 +246,14 @@ export function Market({ ctx, id }: { ctx: Ctx; id: string }) {
 
   return (
     <>
+      <h1 class="sr-only">
+        {name} on {p.title}
+      </h1>
       <p class="crumb t-dense ink-2">
         <a href={`#/task/${encodeURIComponent(m.taskId)}`}>{p.title}</a>
       </p>
       <div class="market" data-testid="market-status" data-status={m.status}>
-        <aside class="col-packet">
+        <aside class="col-packet" aria-label="Packet">
           <PacketView packet={p} status={st} closedLabel={m.status === 'settled' ? 'Settled' : m.status === 'open' || m.status === 'pending' ? 'Trading closes' : 'Trading closed'} />
         </aside>
         <div class="col-centre">
@@ -273,7 +280,7 @@ export function Market({ ctx, id }: { ctx: Ctx; id: string }) {
             {tab === 'theses' ? <ThesisList theses={v.theses} canPost={!!me && open && !blocked} onPost={post} onReport={me ? report : undefined} /> : <TradeList fills={v.trades} />}
           </div>
         </div>
-        <aside class="col-ticket">
+        <aside class="col-ticket" aria-label="Trade">
           <OrderTicket executorName={name} status={m.status} quote={ticketQuote} signedIn={!!me} cash={me?.cash} blockedReason={blocked} initialSide={side} onSubmit={place} />
         </aside>
         {(pos || closed || myOrders.length > 0) && <div class="col-yours">{yourSide}</div>}

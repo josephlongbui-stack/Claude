@@ -17,3 +17,4 @@
 .title-cell .sub { margin-top: var(--tick); color: var(--ink-3); font-size: var(--t-dense); line-height: var(--t-dense-lh); }
 .title-cell .sub.mono { font-family: var(--font-mono); }
 @media (max-width: 720px) { .table .hide-sm { display: none; } .table .w-task { width: auto; } }
+@media (max-width: 360px) { .table .hide-xs { display: none; } .table th, .table td { padding-left: var(--sp-2); padding-right: var(--sp-2); } }

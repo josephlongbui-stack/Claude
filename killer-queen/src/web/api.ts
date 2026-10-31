@@ -28,7 +28,13 @@ export async function api<T = any>(method: string, path: string, body?: unknown)
   const key = getKey();
   if (key) headers.authorization = `Bearer ${key}`;
   if (body !== undefined) headers['content-type'] = 'application/json';
-  const res = await fetch(path, { method, headers, body: body !== undefined ? JSON.stringify(body) : undefined });
+  let res: Response;
+  try {
+    res = await fetch(path, { method, headers, body: body !== undefined ? JSON.stringify(body) : undefined });
+  } catch {
+    const err: ApiError = { error: 'The exchange could not be reached.', code: 'offline', status: 0 };
+    throw err;
+  }
   const text = await res.text();
   let json: any = null;
   try {

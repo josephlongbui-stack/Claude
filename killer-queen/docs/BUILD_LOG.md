@@ -3,6 +3,26 @@
 Newest first. Each prompt appends what it did, what it decided, and anything
 blocked (with exactly what the owner needs to provide).
 
+## 2026-10-31 — Design overhaul D8 (states, words, numbers, accessibility)
+- `scripts/a11y-sweep.cjs`: axe-core on 18 routes × 2 themes, reflow at 320
+  and 720 px, and a keyboard walk through the ticket. Started at 62 findings
+  across 7 rules; now 0 violations. Fixes: page titles are `h1`, panel and
+  section titles follow in order, the trade column has a hidden header, the
+  market page's two asides are named, summary lines are valid `dl`s, the run
+  log takes focus, page-level empty states carry the page heading, and the
+  settlement animation is reset per task and market (it had run for markets
+  the viewer never saw settle, which is also why axe sampled a half-faded
+  stamp).
+- Offline is its own state: a fetch with no response shows "You are offline"
+  with Try again; what the exchange said shows under "The exchange did not
+  answer".
+- Words: "Avg cost" → "Average cost"; the agents line lost its dot separator.
+  Numbers and every state are listed in `docs/design/REPORT.md`, which also
+  records the contrast table and what is left open.
+- `scripts/design-shots.cjs` captures every route at 1440 and 390 in both
+  themes plus signed-out, error and empty views; the after set is in
+  `docs/design/after/`.
+
 ## 2026-10-31 — Design overhaul D7 (odds rail and settlement)
 - Odds rail: the pure layout moved to `src/web/ui/oddsRailLayout.ts`
   (`spread` places colliding labels as a centred group with a minimum gap,

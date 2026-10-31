@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'preact/hooks';
 import { api } from '../api.js';
 import type { Ctx } from '../main.js';
-import { Button, EmptyState, Money, PageHead, Panel, SectionHead, Skeleton, StatusPill, Table, Td, TitleCell, Tr, count, dollars, toast } from '../ui/index.js';
+import { Button, EmptyState, FetchError, Money, PageHead, Panel, SectionHead, Skeleton, StatusPill, Table, Td, TitleCell, Tr, count, dollars, toast } from '../ui/index.js';
 import { words } from './Market.js';
 
 export function Portfolio({ ctx }: { ctx: Ctx }) {
   const [pf, setPf] = useState<any | null>(null);
   const [titles, setTitles] = useState<Record<string, { title: string; agent: string; taskId: string }>>({});
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<any | null>(null);
   const load = () =>
     Promise.all([api('GET', '/api/portfolio'), api<{ tasks: any[] }>('GET', '/api/tasks').catch(() => ({ tasks: [] }))])
       .then(([p, t]) => {
@@ -17,13 +17,13 @@ export function Portfolio({ ctx }: { ctx: Ctx }) {
         setTitles(map);
         setError(null);
       })
-      .catch((e) => setError(e.error ?? 'The exchange did not answer.'));
+      .catch((e) => setError(e));
   useEffect(() => {
     if (ctx.me) void load();
   }, [ctx.tick, ctx.me?.id]);
 
-  if (!ctx.me) return <EmptyState title="Sign in to see your portfolio" hint="New traders start with $1,000 in play money." action={{ href: '#/signin', label: 'Sign in' }} />;
-  if (error) return <EmptyState kind="error" title="The exchange did not answer" hint={error} retry={() => void load()} />;
+  if (!ctx.me) return <EmptyState page title="Sign in to see your portfolio" hint="New traders start with $1,000 in play money." action={{ href: '#/signin', label: 'Sign in' }} />;
+  if (error) return <FetchError error={error} retry={() => void load()} />;
   if (!pf)
     return (
       <>
@@ -48,7 +48,7 @@ export function Portfolio({ ctx }: { ctx: Ctx }) {
   return (
     <>
       <PageHead title="Portfolio" />
-      <dl class="summary" data-testid="balances">
+      <div class="summary" data-testid="balances"><dl class="summary-list">
         <div>
           <dt>Cash</dt>
           <dd>{dollars(pf.cash)}</dd>
@@ -73,15 +73,16 @@ export function Portfolio({ ctx }: { ctx: Ctx }) {
             <Money cents={pf.pnl.total} signed />
           </dd>
         </div>
+        </dl>
         <span class="note">Play money. No cash value.</span>
-      </dl>
+      </div>
 
       <SectionHead title="Positions" aside={pf.positions.length ? `${pf.positions.length} open` : undefined} />
       <Panel testId="positions">
         {pf.positions.length === 0 ? (
           <EmptyState title="No positions yet" hint="Pick an agent in the Arena to make your first trade." action={{ href: '#/', label: 'Go to the Arena' }} />
         ) : (
-          <Table caption="Open positions" columns={[{ key: 'm', label: 'Market', width: 'task' }, { key: 's', label: 'Side' }, { key: 'q', label: 'Contracts', align: 'right' }, { key: 'c', label: 'Avg cost', align: 'right', hideSm: true }, { key: 'k', label: 'Mark', align: 'right', hideSm: true }, { key: 'u', label: 'Unrealized', align: 'right' }]}>
+          <Table caption="Open positions" columns={[{ key: 'm', label: 'Market', width: 'task' }, { key: 's', label: 'Side' }, { key: 'q', label: 'Contracts', align: 'right' }, { key: 'c', label: 'Average cost', align: 'right', hideSm: true }, { key: 'k', label: 'Mark', align: 'right', hideSm: true }, { key: 'u', label: 'Unrealized', align: 'right' }]}>
             {pf.positions.map((p: any) => (
               <Tr key={p.market} href={`#/market/${encodeURIComponent(p.market)}`}>
                 <Td>

@@ -66,9 +66,9 @@ export function KitchenSink({ ctx }: { ctx: Ctx }) {
             <p class="t-dense">Dense 13/18, table cells and the book</p>
             <p class="t-ui">Interface 14/20, the default</p>
             <p class="t-body">Body 16/24, prompts and theses</p>
-            <h3>Panel title 20/26</h3>
-            <h2>Task title 24/30</h2>
-            <h1>Page title 32/36</h1>
+            <p class="t-h3">Panel title 20/26</p>
+            <p class="t-h2">Task title 24/30</p>
+            <p class="t-h1">Page title 32/36</p>
             <p class="mono">mono 13/18: pytest tests/api/test_cart.py @ 58b0ce4</p>
             <p>
               <span class="num-m">61¢</span> <span class="num-l">61¢</span> <span class="num-xl">61¢</span>
@@ -259,11 +259,11 @@ export function KitchenSink({ ctx }: { ctx: Ctx }) {
       <SectionHead title="OrderTicket" aside="open, signed out, closed, pending, blocked, too little cash" />
       <div class="sink-grid tickets">
         <OrderTicket executorName="Claude Code" status="open" quote={{ yesBid: 60, yesAsk: 62, noBid: 38, noAsk: 40 }} signedIn cash={97750} onSubmit={async () => toast('Bought 10 Yes at 62¢')} />
-        <OrderTicket executorName="Claude Code" status="open" quote={{ yesBid: 60, yesAsk: 62, noBid: 38, noAsk: 40 }} signedIn={false} />
+        <OrderTicket executorName="Codex" status="open" quote={{ yesBid: 60, yesAsk: 62, noBid: 38, noAsk: 40 }} signedIn={false} />
         <OrderTicket executorName="Claude Code" status="settled" quote={{ yesBid: null, yesAsk: null, noBid: null, noAsk: null }} signedIn />
         <OrderTicket executorName="Claude Code" status="pending" quote={{ yesBid: null, yesAsk: null, noBid: null, noAsk: null }} signedIn />
         <OrderTicket executorName="Claude Code" status="open" quote={{ yesBid: 60, yesAsk: 62, noBid: 38, noAsk: 40 }} signedIn blockedReason="You work at Anthropic, which makes Claude Code, so you cannot trade this market." />
-        <OrderTicket executorName="Claude Code" status="open" quote={{ yesBid: 60, yesAsk: 62, noBid: 38, noAsk: 40 }} signedIn cash={410} onSubmit={async () => undefined} />
+        <OrderTicket executorName="Gemini CLI" status="open" quote={{ yesBid: 60, yesAsk: 62, noBid: 38, noAsk: 40 }} signedIn cash={410} onSubmit={async () => undefined} />
       </div>
 
       <SectionHead title="PacketView, SettlementPanel" aside={<Button onClick={() => setReplay((r) => r + 1)} data-testid="settle-replay">Replay the settlement</Button>} />

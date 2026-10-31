@@ -7,6 +7,10 @@ export interface Column {
   align?: 'left' | 'right';
   /** Hidden under 720 px. */
   hideSm?: boolean;
+  /** Hidden under 360 px. */
+  hideXs?: boolean;
+  /** Screen-reader name for a column whose header is visually empty. */
+  sr?: string;
   width?: 'task' | 'narrow';
 }
 
@@ -18,8 +22,8 @@ export function Table({ columns, caption, children, class: cls, testId }: { colu
       <thead>
         <tr>
           {columns.map((c) => (
-            <th scope="col" class={[c.align === 'right' ? 'r' : '', c.hideSm ? 'hide-sm' : '', c.width ? `w-${c.width}` : ''].join(' ')}>
-              {c.label}
+            <th scope="col" class={[c.align === 'right' ? 'r' : '', c.hideSm ? 'hide-sm' : '', c.hideXs ? 'hide-xs' : '', c.width ? `w-${c.width}` : ''].join(' ')}>
+              {c.label === '' ? <span class="sr-only">{c.sr ?? 'Actions'}</span> : c.label}
             </th>
           ))}
         </tr>
@@ -41,9 +45,9 @@ export function Tr({ onClick, href, children, class: cls, testId }: { onClick?: 
   );
 }
 
-export function Td({ children, align, hideSm, class: cls, colSpan, rowSpan }: { children?: ComponentChildren; align?: 'right'; hideSm?: boolean; class?: string; colSpan?: number; rowSpan?: number }) {
+export function Td({ children, align, hideSm, hideXs, class: cls, colSpan, rowSpan }: { children?: ComponentChildren; align?: 'right'; hideSm?: boolean; hideXs?: boolean; class?: string; colSpan?: number; rowSpan?: number }) {
   return (
-    <td class={[align === 'right' ? 'r' : '', hideSm ? 'hide-sm' : '', cls ?? ''].join(' ')} colSpan={colSpan} rowSpan={rowSpan}>
+    <td class={[align === 'right' ? 'r' : '', hideSm ? 'hide-sm' : '', hideXs ? 'hide-xs' : '', cls ?? ''].join(' ')} colSpan={colSpan} rowSpan={rowSpan}>
       {children}
     </td>
   );

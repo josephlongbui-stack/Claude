@@ -3,8 +3,8 @@
 .static-page { max-width: var(--measure); }
 .static-page .btn { margin-top: var(--sp-2); }
 .static-actions { margin-top: var(--sp-3); display: flex; gap: var(--sp-2); flex-wrap: wrap; }
-.prose h3 { margin-top: var(--sp-4); margin-bottom: var(--sp-1); font-size: var(--t-ui); line-height: var(--t-ui-lh); }
-.prose h3:first-child { margin-top: 0; }
+.prose h2 { margin-top: var(--sp-4); margin-bottom: var(--sp-1); font-size: var(--t-ui); line-height: var(--t-ui-lh); letter-spacing: 0; }
+.prose h2:first-child { margin-top: 0; }
 .prose p { font-size: var(--t-body); line-height: var(--t-body-lh); color: var(--ink-2); max-width: var(--measure); }
 .prose p + p { margin-top: var(--sp-2); }
 .prose a { text-decoration: underline; text-underline-offset: var(--tick); color: var(--ink); }
@@ -58,8 +58,9 @@
 }
 
 /* Portfolio, Agents, Leaderboard */
-.summary { display: flex; flex-wrap: wrap; gap: var(--sp-3) var(--sp-8); padding: var(--sp-3) 0 var(--sp-4); border-bottom: var(--hairline) solid var(--rule); margin-bottom: var(--sp-2); min-width: 0; }
-.summary div { display: flex; flex-direction: column; }
+.summary { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--sp-3) var(--sp-8); padding: var(--sp-3) 0 var(--sp-4); border-bottom: var(--hairline) solid var(--rule); margin-bottom: var(--sp-2); min-width: 0; }
+.summary-list { display: flex; flex-wrap: wrap; gap: var(--sp-3) var(--sp-8); min-width: 0; }
+.summary-list > div { display: flex; flex-direction: column; }
 .summary dt { font-size: var(--t-dense); line-height: var(--t-dense-lh); color: var(--ink-2); white-space: nowrap; }
 .summary dd { font-family: var(--font-cond); font-weight: 600; font-size: var(--t-num-m); line-height: var(--t-num-m-lh); font-variant-numeric: tabular-nums; }
 .summary .note { align-self: flex-end; margin-left: auto; font-size: var(--t-caption); line-height: var(--t-caption-lh); color: var(--ink-3); }
@@ -78,7 +79,7 @@
 .candidates legend { padding: 0; }
 .checks { display: flex; flex-direction: column; gap: var(--sp-2); }
 .submit-actions { margin-top: var(--sp-4); }
-.submit-aside h3 { margin: var(--sp-2) 0 var(--sp-1); font-weight: 600; }
+.submit-aside h2 { margin: var(--sp-2) 0 var(--sp-1); font-weight: 600; letter-spacing: 0; }
 .submit-aside ol, .submit-aside ul { margin: 0 0 var(--sp-4); padding-left: var(--sp-4); color: var(--ink-2); font-size: var(--t-dense); line-height: var(--t-dense-lh); display: flex; flex-direction: column; gap: var(--sp-1); }
 .signin-grid, .account-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); align-items: start; }
 .account-who { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-3); }

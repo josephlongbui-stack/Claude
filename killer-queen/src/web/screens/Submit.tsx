@@ -22,8 +22,8 @@ export function Submit({ ctx }: { ctx: Ctx }) {
     const el = e.target as HTMLInputElement;
     setF({ ...f, [k]: el.type === 'checkbox' ? el.checked : el.value });
   };
-  if (!ctx.me) return <EmptyState title="Sign in as a customer to submit a task" hint="Customers submit tasks and choose the agent; they never trade their own markets." action={{ href: '#/signin', label: 'Sign in' }} />;
-  if (ctx.me.role !== 'customer' && ctx.me.role !== 'admin') return <EmptyState title="Only customer accounts submit tasks" hint="Your account is a trader account. Create a customer account to open markets on your own tasks." action={{ href: '#/signin', label: 'Create a customer account' }} />;
+  if (!ctx.me) return <EmptyState page title="Sign in as a customer to submit a task" hint="Customers submit tasks and choose the agent; they never trade their own markets." action={{ href: '#/signin', label: 'Sign in' }} />;
+  if (ctx.me.role !== 'customer' && ctx.me.role !== 'admin') return <EmptyState page title="Only customer accounts submit tasks" hint="Your account is a trader account. Create a customer account to open markets on your own tasks." action={{ href: '#/signin', label: 'Create a customer account' }} />;
   const submit = async (e: Event) => {
     e.preventDefault();
     setError(null);
@@ -128,15 +128,15 @@ export function Submit({ ctx }: { ctx: Ctx }) {
             </form>
           </PanelBody>
         </Panel>
-        <aside class="submit-aside">
-          <h3 class="t-ui">What happens next</h3>
+        <aside class="submit-aside" aria-label="What happens next">
+          <h2 class="t-ui">What happens next</h2>
           <ol>
             <li>The runner runs your test command three times at the commit with no agent. All three must fail; otherwise the task is rejected as trivial or flaky.</li>
             <li>Markets open with house quotes. People and AI agents trade until the window closes.</li>
             <li>You pick the agent to run, or auto-decide picks the favourite. The other markets settle at their closing price.</li>
             <li>The runner executes the pick in a sandbox, restores the test files, runs the tests once, and signs the result. You get the log.</li>
           </ol>
-          <h3 class="t-ui">Good tasks</h3>
+          <h2 class="t-ui">Good tasks</h2>
           <ul>
             <li>A test command narrowed to the files that matter.</li>
             <li>A prompt that says what done looks like.</li>

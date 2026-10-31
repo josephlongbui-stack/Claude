@@ -13,7 +13,7 @@ export function Panel({ children, class: cls, testId }: { children: ComponentChi
 export function PanelHead({ title, aside, children }: { title?: ComponentChildren; aside?: ComponentChildren; children?: ComponentChildren }) {
   return (
     <div class="panel-head">
-      {title && <h3 class="panel-title">{title}</h3>}
+      {title && <h2 class="panel-title">{title}</h2>}
       {children}
       {aside && <span class="panel-aside">{aside}</span>}
     </div>
@@ -25,7 +25,7 @@ export function PanelBody({ children, class: cls }: { children: ComponentChildre
 }
 
 /** Section title with a right-hand note ("2 open"). */
-export function SectionHead({ title, aside, level = 3 }: { title: ComponentChildren; aside?: ComponentChildren; level?: 2 | 3 }) {
+export function SectionHead({ title, aside, level = 2 }: { title: ComponentChildren; aside?: ComponentChildren; level?: 2 | 3 }) {
   return (
     <div class="section-head">
       {level === 2 ? <h2>{title}</h2> : <h3>{title}</h3>}
@@ -39,7 +39,7 @@ export function PageHead({ title, sub, aside, children }: { title: ComponentChil
   return (
     <div class="page-head">
       <div class="page-head-main">
-        <h2>{title}</h2>
+        <h1 class="page-title">{title}</h1>
         {sub && <p class="page-sub">{sub}</p>}
         {children}
       </div>

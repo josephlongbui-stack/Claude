@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { api } from '../api.js';
 import { useTitle, type Ctx } from '../main.js';
-import { AgentRow, Button, Countdown, EmptyState, OddsRail, PageHead, Panel, PanelBody, PanelHead, SectionHead, SettlementPanel, Skeleton, StatusPill, Table, railMarkers, taskStatus, type MarketSummary } from '../ui/index.js';
+import { AgentRow, Button, Countdown, EmptyState, FetchError, OddsRail, PageHead, Panel, PanelBody, PanelHead, SectionHead, SettlementPanel, Skeleton, StatusPill, Table, railMarkers, taskStatus, type MarketSummary } from '../ui/index.js';
 import { when } from '../ui/PacketView.js';
 
 interface View {
@@ -14,7 +14,7 @@ const repoName = (r: string) => r.replace(/^(https?:\/\/)?github\.com\//, '');
 
 export function Task({ ctx, id }: { ctx: Ctx; id: string }) {
   const [view, setView] = useState<View | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<any | null>(null);
   const [busy, setBusy] = useState(false);
   const seenUnresolved = useRef(false);
   const [animateSettle, setAnimateSettle] = useState(false);
@@ -24,10 +24,15 @@ export function Task({ ctx, id }: { ctx: Ctx; id: string }) {
         setView(v);
         setError(null);
       })
-      .catch((e) => setError(e.status === 404 ? 'not_found' : (e.error ?? 'The exchange did not answer.')));
+      .catch((e) => setError(e.status === 404 ? 'not_found' : e));
   useEffect(() => {
     void load();
   }, [id, ctx.tick]);
+  useEffect(() => {
+    // A new task id starts fresh: no animation for a task that was settled before we arrived.
+    seenUnresolved.current = false;
+    setAnimateSettle(false);
+  }, [id]);
   useTitle(view ? view.task.title : null);
   useEffect(() => {
     if (!view) return;
@@ -38,8 +43,8 @@ export function Task({ ctx, id }: { ctx: Ctx; id: string }) {
     }
   }, [view?.task.status]);
 
-  if (error === 'not_found') return <EmptyState title="There is no task at this address" hint="It may have been removed, or the link is wrong." action={{ href: '#/', label: 'Go to the Arena' }} />;
-  if (error) return <EmptyState kind="error" title="The exchange did not answer" hint={error} retry={() => void load()} />;
+  if (error === 'not_found') return <EmptyState page title="There is no task at this address" hint="It may have been removed, or the link is wrong." action={{ href: '#/', label: 'Go to the Arena' }} />;
+  if (error) return <FetchError error={error} retry={() => void load()} />;
   if (!view)
     return (
       <>
@@ -130,7 +135,7 @@ export function Task({ ctx, id }: { ctx: Ctx; id: string }) {
             { key: 'volume', label: 'Volume', align: 'right', hideSm: true },
             { key: 'traders', label: 'Traders', align: 'right', hideSm: true },
             { key: 'record', label: 'Record', hideSm: true },
-            ...(t.status === 'open' ? [{ key: 'quick', label: '' }] : []),
+            ...(t.status === 'open' ? [{ key: 'quick', label: '', sr: 'Trade' }] : []),
           ]}
         >
           {view.markets.map((m) => (

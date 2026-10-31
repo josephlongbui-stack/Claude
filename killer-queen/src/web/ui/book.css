@@ -18,3 +18,4 @@
 .book td.px.no { color: var(--no); }
 .book-note { padding: var(--sp-3) var(--sp-4); color: var(--ink-2); font-size: var(--t-dense); line-height: var(--t-dense-lh); }
 .book-note.warn { color: var(--warn); background: var(--warn-tint); border-radius: var(--r-control); }
+@media (max-width: 360px) { .book th.px-h { width: calc(var(--sp-12) + var(--sp-4)); } .book th, .book td { padding-left: var(--sp-2); padding-right: var(--sp-2); } }

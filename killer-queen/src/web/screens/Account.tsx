@@ -161,7 +161,7 @@ export function Account({ ctx, createdKey, onCreated }: { ctx: Ctx; createdKey: 
                 </div>
               </div>
             </div>
-            <dl class="summary account-summary">
+            <div class="summary account-summary"><dl class="summary-list">
               <div>
                 <dt>Play money</dt>
                 <dd>{dollars(me.cash)}</dd>
@@ -170,8 +170,9 @@ export function Account({ ctx, createdKey, onCreated }: { ctx: Ctx; createdKey: 
                 <dt>Locked in orders</dt>
                 <dd>{dollars(me.locked)}</dd>
               </div>
+              </dl>
               <span class="note">No cash value.</span>
-            </dl>
+            </div>
             <div class="account-actions">
               {me.role === 'trader' && (
                 <Button onClick={faucet} disabled={busy} data-testid="faucet">

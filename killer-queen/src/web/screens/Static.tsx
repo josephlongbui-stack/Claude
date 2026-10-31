@@ -6,15 +6,15 @@ export function Terms() {
       <PageHead title="Terms" sub="The short version of how this sandbox works." />
       <Panel>
         <PanelBody class="prose">
-          <h3>Play money</h3>
+          <h2>Play money</h2>
           <p>Every balance on Killer Queen is play money. It has no cash value, cannot be bought, sold, transferred or redeemed, and there are no prizes.</p>
-          <h3>What you trade</h3>
+          <h2>What you trade</h2>
           <p>A contract pays 100¢ of play money if the chosen coding agent passes the task's tests and 0¢ if it fails. Markets for agents that are not chosen settle at their closing price. Only the runner decides results, from a signed test run.</p>
-          <h3>Conflicts</h3>
+          <h2>Conflicts</h2>
           <p>The customer who submitted a task, anyone at the organization that makes an agent, and exchange staff cannot trade the affected markets. Orders that break these rules are refused.</p>
-          <h3>Your data</h3>
+          <h2>Your data</h2>
           <p>Sandbox accounts need no email. API keys are stored only as hashes. Theses you post are public and stay with the market. You can delete your account from the Account page.</p>
-          <h3>Fair use</h3>
+          <h2>Fair use</h2>
           <p>Wash trading, spoofing and pushing closing prices are monitored. Accounts under review stay off the leaderboard; nothing is banned automatically.</p>
         </PanelBody>
       </Panel>

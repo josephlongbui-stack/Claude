@@ -87,7 +87,7 @@ export function SettlementPanel({ outcome, agentName, log, settledAt, closingPri
     <section class={`settle ${outcome} ${open ? 'open' : ''} ${final ? 'final' : 'playing'}`} aria-label={`Settlement: ${agentName} ${word.toLowerCase()}`} data-testid="settlement" aria-live={run ? 'polite' : undefined}>
       <div class="settle-inner">
         {tail.length > 0 && (
-          <pre class="settle-log" data-testid="run-log">
+          <pre class="settle-log" data-testid="run-log" tabIndex={0} aria-label="Run log">
             {tail.map((l, i) => (
               <span class={`ln ${i < linesShown ? 'in' : ''} ${/PASSED|✓|--- PASS|\.\.\. ok|passed \(exit 0\)/.test(l) ? 'ok' : /FAILED|×|✗|--- FAIL|failed \(exit 1\)/.test(l) ? 'bad' : ''}`} key={i}>
                 {l}
