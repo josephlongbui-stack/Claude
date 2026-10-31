@@ -19,6 +19,11 @@ blocked (with exactly what the owner needs to provide).
   longer prints a missing timestamp; the task page labels the recommendation
   "pick at close" once trading ended and shows corrections.
 - Golden journal regenerated (Task gained `corrections`).
+- End-to-end run with seeded tasks and bots found a web bug: the app
+  refreshed the account on every event, hit the 120/min read limit and
+  treated the 429 as a bad key (signed the user out). Fixed: events are
+  coalesced to one refresh per 500 ms, the account refreshes at most every
+  2 s, and only a 401 signs out. Click path re-verified after the fix.
 
 ## 2026-10-31 — Store readiness follow-ups (account deletion, thesis reports)
 - `closeAccount` command (14th) + `POST /api/me/delete`; thesis report route

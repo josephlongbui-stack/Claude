@@ -1,5 +1,5 @@
 import { render } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { api, getKey, setKey } from './api.js';
 import { Account } from './screens/Account.js';
 import { Agents } from './screens/Agents.js';
@@ -77,15 +77,26 @@ function App() {
     try {
       const r = await api<{ account: Me }>('GET', '/api/me');
       setMe(r.account);
-    } catch {
-      setKey(null);
-      setMe(null);
+    } catch (e: any) {
+      // Only a rejected key signs the user out; rate limits, outages and network errors keep the session.
+      if (e && e.status === 401) {
+        setKey(null);
+        setMe(null);
+      }
     }
   };
   useEffect(() => {
     void refreshMe();
-    // Live updates over server-sent events; a slow poll stays as the fallback and for countdowns.
-    const bump = () => setTick((x) => x + 1);
+    // Live updates over server-sent events, coalesced to at most one refresh per 500 ms so a busy
+    // market does not turn into a request storm; a slow poll stays as the fallback and for countdowns.
+    let pending: ReturnType<typeof setTimeout> | null = null;
+    const bump = () => {
+      if (pending) return;
+      pending = setTimeout(() => {
+        pending = null;
+        setTick((x) => x + 1);
+      }, 500);
+    };
     let es: EventSource | null = null;
     try {
       es = new EventSource('/api/events');
@@ -96,11 +107,17 @@ function App() {
     const t = setInterval(bump, es ? 10_000 : 1_000);
     return () => {
       clearInterval(t);
+      if (pending) clearTimeout(pending);
       es?.close();
     };
   }, []);
+  const lastMeRefresh = useRef(0);
   useEffect(() => {
-    if (tick > 0) void refreshMe(); // every event or fallback poll: balances follow fills and settlements
+    if (tick === 0) return;
+    const now = Date.now();
+    if (now - lastMeRefresh.current < 2_000) return; // balances follow fills, but no more than every 2 s
+    lastMeRefresh.current = now;
+    void refreshMe();
   }, [tick]);
   const toast = (msg: string, err = false) => {
     setToastMsg({ msg, err });
