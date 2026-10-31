@@ -91,6 +91,7 @@ function App() {
   const [toastMsg, setToastMsg] = useState<{ msg: string; err: boolean } | null>(null);
   const [tick, setTick] = useState(0);
   const [theme, setTheme] = useState<Theme>(readTheme());
+  const [demo, setDemo] = useState(false);
   const refreshMe = async () => {
     if (!getKey()) return setMe(null);
     try {
@@ -106,6 +107,7 @@ function App() {
   };
   useEffect(() => {
     void refreshMe();
+    api<{ demo?: boolean }>('GET', '/api/health').then((h) => setDemo(!!h.demo)).catch(() => undefined);
     // Live updates over server-sent events, coalesced to at most one refresh per 500 ms so a busy
     // market does not turn into a request storm; a slow poll stays as the fallback and for countdowns.
     let pending: ReturnType<typeof setTimeout> | null = null;
@@ -177,6 +179,11 @@ function App() {
               </a>
             ))}
           </nav>
+          {demo && (
+            <span class="pill warn" title="This exchange was filled by the demo seed; nothing here is a real result" data-testid="demo-badge">
+              Demo data
+            </span>
+          )}
           <span class="spacer" />
           <button class="icon-btn" onClick={cycleTheme} aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'} data-testid="theme-toggle" title={dark ? 'Light theme' : 'Dark theme'}>
             {dark ? <SunIcon /> : <MoonIcon />}

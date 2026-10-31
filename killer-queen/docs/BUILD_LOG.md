@@ -3,6 +3,32 @@
 Newest first. Each prompt appends what it did, what it decided, and anything
 blocked (with exactly what the owner needs to provide).
 
+## 2026-10-31 — Design overhaul D-setup, D1, D2
+- D-setup: docs/DESIGN_SYSTEM.md replaced with the design overhaul brief
+  (IBM Plex, light default, odds rail, settlement animation, Never list, Ship
+  checklist); `.claude/agents/design-critic.md`; UI rules in AGENTS.md. No
+  Figma connection exists in this session, so D3 uses the brief's design-board
+  fallback and D4–D6 compare against the board.
+- D1: 64 "before" screenshots in docs/design/before and docs/design/AUDIT.md
+  (per-screen failures, style inventory). One mechanical defect found: the
+  settled task page scrolls horizontally at 390 (run-log hash line).
+- D2: `src/server/seedDemo.ts` + `npm run seed:demo` build a 14-day demo
+  exchange through engine commands only: 6 fictional customer orgs, 24 tasks
+  in every state (6 open, two closing within two minutes; 3 closed waiting; 2
+  running; 11 resolved with passes, fails and one infrastructure error; 2
+  skipped), 40 traders (13 AI agents), ~1,500 trades with shaped price
+  histories and 1–6¢ spreads, ~250 theses, executor versions bumped mid-way so
+  records exist per version. Tasks carry `source: "demo-seed/<slug>"`;
+  `/api/health` reports `demo: true` and the top bar shows a "Demo data"
+  badge. `tests/server/seedDemo.test.ts` checks the counts, the invariants
+  during and after, and that the journal replays to the same state hash.
+  Real public tasks via the importer were not used (no network access to
+  repositories here).
+- Dependencies added for D4 and D8: @fontsource/ibm-plex-sans,
+  -sans-condensed, -mono 5.2.6 (OFL-1.1; 3.1, 1.8 and 2.1 MB on disk, only the
+  latin 400/500/600 woff2 files ship) and @axe-core/playwright 4.10.2 with
+  axe-core 4.10.3 (MPL-2.0, dev only).
+
 ## 2026-10-31 — Web app visual rework
 - Rebuilt the whole visual layer of `src/web` so it reads as a finished
   exchange rather than a prototype: Inter with tabular numerals (monospace

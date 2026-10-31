@@ -35,6 +35,7 @@ import { accountBody, adminAccountBody, adminCorrectBody, adminReviewBody, admin
 import { RateLimiter, rateLimit } from './rateLimit.js';
 import type { EventHub } from './events.js';
 import { mountGitHubWebhook, type GitHubIntegration } from './github.js';
+import { hasDemoData } from './seedDemo.js';
 
 export const RESULT_TIMESTAMP_WINDOW_MS = 5 * 60 * 1000;
 
@@ -84,7 +85,7 @@ export function createApp(deps: AppDeps): Express {
   const api = express.Router();
 
   api.get('/health', (_req, res) => {
-    res.json({ ok: true, mode: config.mode, runner: config.runner, applied: venue.engine.state.applied, halted: venue.isHalted, trading: venue.engine.state.trading });
+    res.json({ ok: true, demo: hasDemoData(deps.venue.engine), mode: config.mode, runner: config.runner, applied: venue.engine.state.applied, halted: venue.isHalted, trading: venue.engine.state.trading });
   });
 
   /* ---- accounts ---- */

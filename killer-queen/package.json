@@ -15,17 +15,22 @@
     "typecheck": "tsc --noEmit && tsc --noEmit -p runner/tsconfig.json",
     "build:web": "tsx scripts/build-web.ts",
     "seed": "tsx scripts/seed.ts",
+    "seed:demo": "tsx scripts/seed-demo.ts",
     "runner": "tsx runner/src/main.ts",
     "import:arena": "tsx scripts/import-arena.ts"
   },
   "license": "UNLICENSED",
   "dependencies": {
+    "@fontsource/ibm-plex-mono": "^5.2.6",
+    "@fontsource/ibm-plex-sans": "^5.2.6",
+    "@fontsource/ibm-plex-sans-condensed": "^5.2.6",
     "esbuild": "0.28.2",
     "express": "4.22.3",
     "preact": "11.1.0",
     "zod": "3.25.76"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
     "@types/express": "4.17.25",
     "@types/node": "26.6.6",
     "fast-check": "4.10.2",
