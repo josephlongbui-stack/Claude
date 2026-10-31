@@ -23,6 +23,7 @@ export function Leaderboard({ ctx }: { ctx: Ctx }) {
       </p>
       {sorted.length === 0 && <div class="empty">Nobody has traded yet.</div>}
       {sorted.length > 0 && (
+        <div class="scroll-x">
         <table data-testid="leaderboard">
           <thead>
             <tr>
@@ -55,6 +56,7 @@ export function Leaderboard({ ctx }: { ctx: Ctx }) {
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </div>
   );

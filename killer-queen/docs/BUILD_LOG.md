@@ -3,6 +3,21 @@
 Newest first. Each prompt appends what it did, what it decided, and anything
 blocked (with exactly what the owner needs to provide).
 
+## 2026-10-31 — Phase 3 (3.2/3.3 design system and screen pass)
+- docs/DESIGN_SYSTEM.md; tokens for dark and light (OS preference + header
+  toggle stored per browser); components in src/web/components (Pill,
+  PriceCell, AgentRow, OrderBookLadder with thin-book warning, OrderTicket,
+  PacketView, ThesisList, Sparkline, Skeleton, EmptyState, ErrorState);
+  Market, Task and Arena rebuilt on them; `#/kitchen-sink` shows every state.
+- Screenshots at 1440 and 390, dark and light, for every screen; fixed the
+  three tables that overflowed at 390 (scroll inside the panel). The
+  click-path walk (MANUAL.md) passes on the rebuilt screens with the
+  baseline check on.
+- Bug fixed: after the move to server-sent events the signed-in account
+  refreshed only every ~50 s; it now refreshes on every event.
+- Not run: the ui-reviewer subagent (needs the Playwright MCP from the
+  prompt series' .mcp.json); reviewed by hand from the screenshots.
+
 ## 2026-10-31 — Phase 3 (3.1 events, 3.4 SDK, 3.5 metrics, 3.6 deploy files)
 - 3.1 `src/server/events.ts`: events derived from journaled commands with
   ids `<seq>-<n>`, SSE at GET /api/events with market/task filters, resume

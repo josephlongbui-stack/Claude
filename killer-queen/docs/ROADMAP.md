@@ -60,8 +60,8 @@ deployment and real tasks.)
 ### Web (acceptance checklist per screen, used by prompt 3.3)
 - [x] **Arena** (task list): every task with per-candidate chance, volume,
       recommendation; loading and empty states. (manual, `MANUAL.md`)
-- [ ] **Arena**: designed thin-book / error states and a design pass
-      (prompt 3.2–3.3).
+- [x] **Arena**: filter, loading/empty/error states, design pass
+      (prompts 3.2–3.3; screenshots at 1440/390 in dark and light).
 - [x] **Task**: packet, candidates with chance and traders, customer close and
       decide/skip controls, running, resolved (log), skipped states.
 - [x] **Market**: ladder, order ticket (buy/sell, limit/market, price,
@@ -77,8 +77,10 @@ deployment and real tasks.)
       key, faucet, sign-out.
 - [x] A human can complete submit → trade → decide → see settlement against
       the local server. (Headless-browser run recorded in `MANUAL.md`)
-- [ ] Design system, tokens, light mode, 390 px layout, ui-reviewer pass
-      (prompts 3.2–3.3).
+- [x] Design system (docs/DESIGN_SYSTEM.md), tokens for dark and light,
+      components with every state in `#/kitchen-sink`, 390 px layout with no
+      horizontal page scroll (prompts 3.2–3.3). ui-reviewer subagent not run
+      (no Playwright MCP in this session); checked by hand from screenshots.
 
 ### Operations
 - [x] Journal in WAL mode, synchronous=FULL; a command is acknowledged only

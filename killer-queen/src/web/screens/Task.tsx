@@ -1,21 +1,29 @@
 import { useEffect, useState } from 'preact/hooks';
 import { api, countdown, when } from '../api.js';
+import { AgentRow, ErrorState, Pill, Skeleton } from '../components/index.js';
 import type { Ctx } from '../main.js';
 
 export function Task({ ctx, id }: { ctx: Ctx; id: string }) {
   const [view, setView] = useState<any | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  useEffect(() => {
+  const load = () =>
     api('GET', `/api/tasks/${encodeURIComponent(id)}`)
       .then((v) => {
         setView(v);
         setErr(null);
       })
       .catch((e) => setErr(e.error));
+  useEffect(() => {
+    void load();
   }, [id, ctx.tick]);
-  if (err) return <div class="empty no-c">{err}</div>;
-  if (!view) return <div class="empty">Loading…</div>;
+  if (err) return <ErrorState message={err} retry={() => void load()} />;
+  if (!view)
+    return (
+      <div class="panel">
+        <Skeleton lines={5} />
+      </div>
+    );
   const t = view.task;
   const isCustomer = ctx.me && ctx.me.id === t.customer;
   const act = async (path: string, body?: unknown, msg?: string) => {
@@ -30,75 +38,57 @@ export function Task({ ctx, id }: { ctx: Ctx; id: string }) {
       setBusy(false);
     }
   };
+  const baseline = t.baseline ? `failing ${t.baseline.results.filter((r: string) => r === 'failed').length}/${t.baseline.results.length}` : t.status === 'pending' ? 'running (3 agent-free test runs must fail)' : 'not run';
+  const trading = t.status === 'pending' ? 'opens after the baseline' : t.status === 'rejected' ? 'never opened' : t.status === 'open' ? `closes in ${countdown(t.closesAt, Date.now())}` : `closed ${when(t.closedAt)}`;
   return (
     <div>
       <h1>
-        {t.title} <span class={`pill ${t.status}`} data-testid="task-status">{t.status}</span>
+        {t.title} <Pill status={t.status} />
+        <span class="sr-only" data-testid="task-status">
+          {t.status}
+        </span>
       </h1>
       <div class="grid cols-3">
-        <div class="panel">
+        <div class="panel packet">
           <h2>Packet</h2>
           <div class="mono">{t.prompt}</div>
-          <table style="margin-top:8px">
-            <tr>
-              <th>Repo</th>
-              <td class="mono">
-                {t.repo} @ {t.commit}
-              </td>
-            </tr>
-            <tr>
-              <th>Test command</th>
-              <td class="mono">{t.testCommand}</td>
-            </tr>
-            <tr>
-              <th>Baseline</th>
-              <td>{t.baseline ? `failing ${t.baseline.results.filter((r: string) => r === 'failed').length}/${t.baseline.results.length}` : t.status === 'pending' ? 'running (3 agent-free test runs must fail)' : 'not run'}</td>
-            </tr>
-            <tr>
-              <th>Trading</th>
-              <td class="num">{t.status === 'pending' ? 'opens after the baseline' : t.status === 'rejected' ? 'never opened' : t.status === 'open' ? `closes in ${countdown(t.closesAt, Date.now())}` : `closed ${when(t.closedAt)}`}</td>
-            </tr>
-            <tr>
-              <th>Auto-decide</th>
-              <td>{t.autoDecide ? `yes, needs ≥ ${t.minimumChance}¢` : 'no'}</td>
-            </tr>
-          </table>
+          <dl>
+            <dt>Repo</dt>
+            <dd class="mono">
+              {t.repo} @ {t.commit}
+            </dd>
+            <dt>Test command</dt>
+            <dd class="mono">{t.testCommand}</dd>
+            <dt>Protected</dt>
+            <dd class="mono">{t.protectedPaths?.length ? t.protectedPaths.join(', ') : 'default test paths'}</dd>
+            <dt>Baseline</dt>
+            <dd>{baseline}</dd>
+            <dt>Trading</dt>
+            <dd class="num">{trading}</dd>
+            <dt>Auto-decide</dt>
+            <dd>{t.autoDecide ? `yes, needs ≥ ${t.minimumChance}¢` : 'no'}</dd>
+          </dl>
         </div>
         <div class="panel">
           <h2>Candidates</h2>
-          <table data-testid="candidates">
-            <thead>
-              <tr>
-                <th>Agent</th>
-                <th class="r">Chance</th>
-                <th class="r">Bid/Ask</th>
-                <th class="r">Vol</th>
-                <th class="r">Traders</th>
-              </tr>
-            </thead>
-            <tbody>
-              {view.markets.map((m: any) => (
-                <tr class="click" onClick={() => (location.hash = `#/market/${encodeURIComponent(m.marketId)}`)} data-testid={`market-row-${m.executorId}`}>
-                  <td>
-                    <a href={`#/market/${encodeURIComponent(m.marketId)}`} class="mono">
-                      {m.executorId}
-                    </a>
-                    <div class="muted">
-                      {m.executor.org} · v{m.executor.version} · {m.executor.passed}/{m.executor.chosen} passed
-                    </div>
-                    {m.outcome && <span class={`pill ${m.status}`}>{m.outcome}</span>}
-                    {t.chosenAgent === m.executorId && <span class="pill running">chosen</span>}
-                  </td>
-                  <td class="r num chance">{m.status === 'pending' || m.status === 'cancelled' ? '—' : `${m.status === 'settled' ? m.settlementPrice : m.status === 'open' ? m.quote.chance : m.closingPrice}¢`}</td>
-                  <td class="r num">
-                    {m.quote.yesBid ?? '–'}/{m.quote.yesAsk ?? '–'}
-                  </td>
-                  <td class="r num">{m.quote.volume}</td>
-                  <td class="r num">{m.traders}</td>
+          <div class="scroll-x">
+            <table data-testid="candidates" aria-label="Candidate agents">
+              <thead>
+                <tr>
+                  <th>Agent</th>
+                  <th class="r">Chance</th>
+                  <th class="r">Bid/Ask</th>
+                  <th class="r">Vol</th>
+                  <th class="r">Traders</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {view.markets.map((m: any) => (
+                  <AgentRow m={m} chosen={t.chosenAgent === m.executorId} onOpen={() => (location.hash = `#/market/${encodeURIComponent(m.marketId)}`)} />
+                ))}
+              </tbody>
+            </table>
+          </div>
           {view.recommendation && (
             <p>
               Market recommendation: <b class="mono">{view.recommendation.executorId}</b> at <span class="num">{view.recommendation.chance}¢</span>
@@ -107,15 +97,21 @@ export function Task({ ctx, id }: { ctx: Ctx; id: string }) {
         </div>
         <div class="panel">
           <h2>Decision</h2>
-          {t.status === 'pending' && <p class="warn-c" data-testid="baseline-pending">Baseline check running: the runner confirms the test command fails at {t.commit} three times before trading opens.</p>}
+          {t.status === 'pending' && (
+            <p class="warn-c" data-testid="baseline-pending">
+              Baseline check running: the runner confirms the test command fails at {t.commit} three times before trading opens.
+            </p>
+          )}
           {t.status === 'rejected' && (
             <div data-testid="rejected">
               <p class="no-c" style="font-size:16px;font-weight:700">Rejected: {t.rejectedReason === 'trivial' ? 'the tests already pass at the pinned commit' : 'the tests are flaky at the pinned commit'}</p>
               <h2>Baseline log</h2>
-              <div class="mono" style="max-height:300px;overflow:auto">{t.baseline?.log}</div>
+              <div class="mono" style="max-height:300px;overflow:auto">
+                {t.baseline?.log}
+              </div>
             </div>
           )}
-          {!isCustomer && <p class="muted">Only the customer ({t.customer}) can close trading and decide. The customer never trades its own task.</p>}
+          {!isCustomer && t.status !== 'rejected' && <p class="muted">Only the customer ({t.customer}) can close trading and decide. The customer never trades its own task.</p>}
           {isCustomer && t.status === 'open' && (
             <p>
               <button disabled={busy} onClick={() => act(`/api/tasks/${encodeURIComponent(id)}/close`, undefined, 'Trading closed.')} data-testid="close-trading">
@@ -140,7 +136,11 @@ export function Task({ ctx, id }: { ctx: Ctx; id: string }) {
               </p>
             </div>
           )}
-          {t.status === 'running' && <p class="warn-c">Runner is executing {t.chosenAgent} at {t.commit}…</p>}
+          {t.status === 'running' && (
+            <p class="warn-c">
+              Runner is executing <span class="mono">{t.chosenAgent}</span> at {t.commit}…
+            </p>
+          )}
           {t.status === 'resolved' && (
             <div data-testid="settlement">
               <p class={t.passed === null ? 'warn-c' : t.passed ? 'yes-c' : 'no-c'} style="font-size:16px;font-weight:700">
@@ -150,6 +150,7 @@ export function Task({ ctx, id }: { ctx: Ctx; id: string }) {
               <div class="mono" style="max-height:300px;overflow:auto" data-testid="run-log">
                 {t.runLog}
               </div>
+              {t.runLogSha256 && <p class="muted mono">sha256 {t.runLogSha256}</p>}
             </div>
           )}
           {t.status === 'skipped' && <p class="muted">Skipped: every market settled at its closing price.</p>}

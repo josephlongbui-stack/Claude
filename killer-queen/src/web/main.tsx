@@ -9,6 +9,7 @@ import { Market } from './screens/Market.js';
 import { Portfolio } from './screens/Portfolio.js';
 import { Submit } from './screens/Submit.js';
 import { Task } from './screens/Task.js';
+import { KitchenSink } from './screens/KitchenSink.js';
 
 export interface Me {
   id: string;
@@ -26,6 +27,26 @@ export interface Ctx {
   toast: (msg: string, err?: boolean) => void;
   tick: number;
 }
+
+const THEME_KEY = 'kq.theme';
+function readTheme(): 'dark' | 'light' | 'auto' {
+  try {
+    return (localStorage.getItem(THEME_KEY) as 'dark' | 'light' | null) ?? 'auto';
+  } catch {
+    return 'auto';
+  }
+}
+function applyTheme(t: 'dark' | 'light' | 'auto'): void {
+  if (t === 'auto') delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = t;
+  try {
+    if (t === 'auto') localStorage.removeItem(THEME_KEY);
+    else localStorage.setItem(THEME_KEY, t);
+  } catch {
+    /* private mode */
+  }
+}
+applyTheme(readTheme());
 
 function useHash(): string {
   const [hash, setHash] = useState(location.hash || '#/');
@@ -79,7 +100,7 @@ function App() {
     };
   }, []);
   useEffect(() => {
-    if (tick % 5 === 0) void refreshMe();
+    if (tick > 0) void refreshMe(); // every event or fallback poll: balances follow fills and settlements
   }, [tick]);
   const toast = (msg: string, err = false) => {
     setToastMsg({ msg, err });
@@ -96,7 +117,14 @@ function App() {
   else if (path === 'agents') screen = <Agents ctx={ctx} />;
   else if (path === 'submit') screen = <Submit ctx={ctx} />;
   else if (path === 'account') screen = <Account ctx={ctx} />;
+  else if (path === 'kitchen-sink') screen = <KitchenSink ctx={ctx} />;
   else screen = <div class="empty">No such page.</div>;
+  const [theme, setTheme] = useState(readTheme());
+  const cycleTheme = () => {
+    const next = theme === 'auto' ? 'dark' : theme === 'dark' ? 'light' : 'auto';
+    applyTheme(next);
+    setTheme(next);
+  };
   return (
     <>
       <header>
@@ -109,6 +137,9 @@ function App() {
           ))}
         </nav>
         <span class="spacer" />
+        <button class="ghost" onClick={cycleTheme} aria-label={`Theme: ${theme}. Switch theme`} data-testid="theme-toggle" title="Theme">
+          {theme === 'auto' ? '◐ auto' : theme === 'dark' ? '● dark' : '○ light'}
+        </button>
         <span class="who" data-testid="who">
           {me ? (
             <>

@@ -16,6 +16,7 @@ export function Agents({ ctx }: { ctx: Ctx }) {
         <h2>Coding agents · per-version records</h2>
         {rows.length === 0 && <p class="muted">No executors registered. Run npm run seed.</p>}
         {rows.length > 0 && (
+        <div class="scroll-x">
           <table data-testid="executors">
             <thead>
               <tr>
@@ -52,11 +53,13 @@ export function Agents({ ctx }: { ctx: Ctx }) {
               ))}
             </tbody>
           </table>
+        </div>
         )}
       </div>
       <div class="panel">
         <h2>Exchange stats (v0 gate metrics)</h2>
         {stats && (
+          <div class="scroll-x">
           <table data-testid="stats">
             <tr>
               <th>Settled markets</th>
@@ -95,6 +98,7 @@ export function Agents({ ctx }: { ctx: Ctx }) {
               </td>
             </tr>
           </table>
+          </div>
         )}
       </div>
     </div>

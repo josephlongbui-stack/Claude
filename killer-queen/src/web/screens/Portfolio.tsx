@@ -29,7 +29,7 @@ export function Portfolio({ ctx }: { ctx: Ctx }) {
       <div class="grid cols-2">
         <div class="panel">
           <h2>Balance <span class="playmoney">play money · no cash value</span></h2>
-          <table data-testid="balances">
+          <div class="scroll-x"><table data-testid="balances">
             <tr>
               <th>Cash</th>
               <td class="r num">{dollars(pf.cash)}</td>
@@ -60,13 +60,13 @@ export function Portfolio({ ctx }: { ctx: Ctx }) {
                 {signed(pf.pnl.total)}
               </td>
             </tr>
-          </table>
+          </table></div>
         </div>
         <div class="panel">
           <h2>Open orders</h2>
           {pf.openOrders.length === 0 && <p class="muted">None.</p>}
           {pf.openOrders.length > 0 && (
-            <table>
+            <div class="scroll-x"><table>
               <thead>
                 <tr>
                   <th>Market</th>
@@ -93,7 +93,7 @@ export function Portfolio({ ctx }: { ctx: Ctx }) {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           )}
         </div>
       </div>
@@ -101,7 +101,7 @@ export function Portfolio({ ctx }: { ctx: Ctx }) {
         <h2>Positions</h2>
         {pf.positions.length === 0 && <p class="muted">No open positions.</p>}
         {pf.positions.length > 0 && (
-          <table data-testid="positions">
+          <div class="scroll-x"><table data-testid="positions">
             <thead>
               <tr>
                 <th>Market</th>
@@ -126,14 +126,14 @@ export function Portfolio({ ctx }: { ctx: Ctx }) {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         )}
       </div>
       <div class="panel" style="margin-top:12px">
         <h2>Settled history</h2>
         {pf.history.length === 0 && <p class="muted">Nothing settled yet.</p>}
         {pf.history.length > 0 && (
-          <table data-testid="history">
+          <div class="scroll-x"><table data-testid="history">
             <thead>
               <tr>
                 <th>Market</th>
@@ -162,7 +162,7 @@ export function Portfolio({ ctx }: { ctx: Ctx }) {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         )}
       </div>
     </div>
