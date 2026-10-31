@@ -353,6 +353,10 @@ export class Engine {
     if (typeof c.version !== 'string' || c.version.trim() === '' || c.version.trim().toLowerCase() === 'latest') {
       reject('version_required', 'a concrete version is required; "latest" is not allowed (D4)');
     }
+    // Versions key the per-version records (D4), so they are plain identifiers: never "__proto__" or the like.
+    if (!/^[A-Za-z0-9][A-Za-z0-9._+-]{0,63}$/.test(c.version.trim())) {
+      reject('version_required', 'a version is 1–64 letters, digits, dots, pluses, underscores or hyphens, starting with a letter or digit');
+    }
     const existing = s.executors.get(c.id);
     const executor: Executor = { id: c.id, name: c.name.trim(), org: c.org, version: c.version.trim() };
     s.executors.set(c.id, executor);

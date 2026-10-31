@@ -45,7 +45,7 @@ export interface Packet {
   repo: string;
   commit: string;
   testCommand: string;
-  executor: { id: string; name: string; org: string; version: string; chosen: number; passed: number };
+  executor: ExecutorAtVersion;
   closesAt: number;
   quote: { yesBid: number | null; yesAsk: number | null; noBid: number | null; noAsk: number | null };
   lastPrice: number | null;
@@ -219,7 +219,8 @@ export function executorRecords(engine: Engine): ExecutorRecord[] {
       if (t.status !== 'running' && t.status !== 'resolved') continue;
       if (t.outcome === 'infra_error') continue; // D6
       const v = t.candidateVersions[id] ?? e.version;
-      const bv = (rec.byVersion[v] ??= { chosen: 0, passed: 0 });
+      // Own-property check: a version string must never reach Object.prototype (engine.ts rejects "__proto__"; this covers "constructor" and friends).
+      const bv = Object.hasOwn(rec.byVersion, v) ? rec.byVersion[v]! : (rec.byVersion[v] = { chosen: 0, passed: 0 });
       rec.chosen += 1;
       bv.chosen += 1;
       if (t.passed === true) {
@@ -248,7 +249,7 @@ export interface ExecutorAtVersion {
 
 /** The executor as a task shows it: the version frozen at task creation and the record on that version only. */
 export function executorAt(rec: ExecutorRecord, version: string): ExecutorAtVersion {
-  const bv = rec.byVersion[version] ?? { chosen: 0, passed: 0 };
+  const bv = Object.hasOwn(rec.byVersion, version) ? rec.byVersion[version]! : { chosen: 0, passed: 0 };
   return { id: rec.id, name: rec.name, org: rec.org, version, chosen: bv.chosen, passed: bv.passed };
 }
 

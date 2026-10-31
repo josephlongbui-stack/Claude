@@ -114,6 +114,9 @@ describe('executors (D4)', () => {
     assert.equal(venue.engine.state.executors.get('codex')!.version, '0.49.0');
     mustReject(venue, { type: 'upsertExecutor', id: 'gemini-cli', name: 'Gemini CLI', org: 'Google', version: 'latest' }, 'version_required');
     mustReject(venue, { type: 'upsertExecutor', id: 'gemini-cli', name: 'Gemini CLI', org: 'Google', version: '' }, 'version_required');
+    mustReject(venue, { type: 'upsertExecutor', id: 'gemini-cli', name: 'Gemini CLI', org: 'Google', version: '__proto__' }, 'version_required');
+    mustReject(venue, { type: 'upsertExecutor', id: 'gemini-cli', name: 'Gemini CLI', org: 'Google', version: '1.0 beta' }, 'version_required');
+    must(venue, { type: 'upsertExecutor', id: 'gemini-cli', name: 'Gemini CLI', org: 'Google', version: '0.14.0-rc.1+build_7' });
     mustReject(venue, { type: 'upsertExecutor', id: 'Bad Id', name: 'x', org: '', version: '1' }, 'bad_id');
   });
 

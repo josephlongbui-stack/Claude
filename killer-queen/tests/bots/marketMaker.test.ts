@@ -47,6 +47,22 @@ describe('house market maker', () => {
     assert.equal(q.yesAsk, 71);
   });
 
+  it('a version bump starts the new version at 50 while markets frozen on the old version keep its pass rate (D4, D24)', async () => {
+    const f = seedExchange();
+    for (let i = 0; i < 3; i++) {
+      const t = must(f.venue, { type: 'createTask', customer: 'cust', title: `old ${i}`, prompt: 'p', repo: 'r', commit: 'c', testCommand: 'npm test', candidateAgents: ['codex'] });
+      must(f.venue, { type: 'closeTask', taskId: t.task.id });
+      must(f.venue, { type: 'decide', taskId: t.task.id, executorId: 'codex' });
+      must(f.venue, { type: 'settle', taskId: t.task.id, outcome: i < 2 ? 'passed' : 'failed', log: '' });
+    }
+    must(f.venue, { type: 'upsertExecutor', id: 'codex', name: 'Codex', org: 'OpenAI', version: '0.49.0' });
+    const fresh = must(f.venue, { type: 'createTask', customer: 'cust', title: 'new', prompt: 'p', repo: 'r', commit: 'c', testCommand: 'npm test', candidateAgents: ['codex'] });
+    const mm = new MarketMaker(new InProcessClient(f.venue, 'mm'));
+    await mm.tick();
+    assert.equal(mm.fairValue(f.markets[1]!), 67);
+    assert.equal(mm.fairValue(`${fresh.task.id}:codex`), 50);
+  });
+
   it('moves fair value 40% toward each trade and re-quotes', async () => {
     const f = seedExchange();
     const m = f.markets[0]!;

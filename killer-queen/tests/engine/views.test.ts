@@ -24,14 +24,25 @@ describe('views', () => {
 
   it('task and packet show the version frozen at task creation and the record on that version only (D4)', () => {
     const f = seedExchange();
-    // A later version of the same agent: the open task keeps 0.48.0; the record on 0.48.0 is still empty.
+    // One settled run on codex 0.48.0 while tsk_1 (also on 0.48.0) stays open.
+    const old = must(f.venue, { type: 'createTask', customer: 'cust', title: 'old', prompt: 'p', repo: 'r', commit: 'c', testCommand: 'x', candidateAgents: ['codex'] });
+    must(f.venue, { type: 'closeTask', taskId: old.task.id });
+    must(f.venue, { type: 'decide', taskId: old.task.id, executorId: 'codex' });
+    must(f.venue, { type: 'settle', taskId: old.task.id, outcome: 'passed', log: '' });
+    // A later version: tasks created from now on freeze 0.49.0 and start its record at nothing.
     must(f.venue, { type: 'upsertExecutor', id: 'codex', name: 'Codex', org: 'OpenAI', version: '0.49.0' });
-    const tv = taskView(f.venue.engine, f.taskId);
-    const codex = tv.markets.find((m) => m.executorId === 'codex')!;
-    assert.equal(codex.executor.version, '0.48.0');
-    assert.deepEqual({ chosen: codex.executor.chosen, passed: codex.executor.passed }, { chosen: 0, passed: 0 });
-    assert.equal(packet(f.venue.engine, f.markets[1]!).executor.version, '0.48.0');
-    assert.equal(executorRecords(f.venue.engine).find((r) => r.id === 'codex')!.version, '0.49.0');
+    const fresh = must(f.venue, { type: 'createTask', customer: 'cust', title: 'new', prompt: 'p', repo: 'r', commit: 'c', testCommand: 'x', candidateAgents: ['codex'] });
+    const at = (taskId: string) => {
+      const m = taskView(f.venue.engine, taskId).markets.find((x) => x.executorId === 'codex')!.executor;
+      return { version: m.version, chosen: m.chosen, passed: m.passed };
+    };
+    assert.deepEqual(at(f.taskId), { version: '0.48.0', chosen: 1, passed: 1 });
+    assert.deepEqual(at(fresh.task.id), { version: '0.49.0', chosen: 0, passed: 0 });
+    const pk = packet(f.venue.engine, f.markets[1]!).executor;
+    assert.deepEqual({ version: pk.version, chosen: pk.chosen, passed: pk.passed }, { version: '0.48.0', chosen: 1, passed: 1 });
+    const rec = executorRecords(f.venue.engine).find((r) => r.id === 'codex')!;
+    assert.equal(rec.version, '0.49.0');
+    assert.equal(rec.chosen, 1);
   });
 
   it('packet has exactly the documented fields', () => {

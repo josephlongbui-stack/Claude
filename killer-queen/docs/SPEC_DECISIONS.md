@@ -37,8 +37,14 @@ but land in a later phase (see docs/ROADMAP.md).
   non-empty `version` that is not `latest` (case-insensitive), rejected with
   code `version_required`. `createTask` snapshots each candidate's version into
   `task.candidateVersions[executorId]`; packets show that frozen version.
-  Executor records (`chosen`, `passed`) are counted per `(id, version)`.
-  Status: engine tests `executors.test.ts`.
+  Executor records (`chosen`, `passed`) are counted per `(id, version)`, and
+  every view that names a version (task page, packet, Submit) shows the record
+  on that version only. A version is 1–64 letters, digits, dots, pluses,
+  underscores or hyphens starting with a letter or digit, so it can key the
+  per-version records safely. Status: `tests/engine/accounts.test.ts`
+  "upsertExecutor is idempotent on id and needs a concrete version",
+  `tests/engine/views.test.ts` "task and packet show the version frozen at
+  task creation…" and "a version bump starts a new track record…".
 - **D5 Run limits.** *Adopted; in the runner service.* Default 30 minutes
   wall-clock (`RUN_WALL_CLOCK_MS`), 10 minutes per test run
   (`TEST_TIMEOUT_MS`), token budget via the key's spend cap
@@ -153,8 +159,13 @@ but land in a later phase (see docs/ROADMAP.md).
   contracts. Resting bids 3¢ either side of fair value use 1% of cash per
   side. Each buy, and each pair of resting bids, counts as one of the three
   actions per market. The house market maker's first estimate is the
-  executor's historical pass rate, or 50 with no record; it moves 40% toward
-  every trade (including its own fills) in trade order.
+  executor's pass rate on the candidate version the task froze (D4: records
+  are kept per version, so a new version starts at 50 even for an agent with
+  a long record on earlier versions); it moves 40% toward every trade
+  (including its own fills) in trade order. The house traders seed their
+  estimate from the same per-version record. Status:
+  `tests/bots/marketMaker.test.ts` "a version bump starts the new version at
+  50…".
 - **D25 Executors are registered by the operator.** There is no HTTP route for
   `upsertExecutor`; the product spec lists none. In sandbox, boot registers
   claude-code, codex and gemini-cli when no executors exist, and
