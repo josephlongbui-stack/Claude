@@ -1,0 +1,9 @@
+.chart { position: relative; height: var(--chart-h); }
+.chart svg { display: block; overflow: visible; }
+.chart .grid { stroke: var(--rule); stroke-width: 1; }
+.chart .grid.edge { stroke: var(--rule-strong); }
+.chart .line { stroke: var(--ink); stroke-width: 1.5; fill: none; }
+.chart .last { fill: var(--ink); }
+.chart .axis { font-size: var(--t-caption); fill: var(--ink-3); font-family: var(--font-sans); }
+.chart-empty { height: 100%; display: flex; align-items: center; justify-content: center; color: var(--ink-2); font-size: var(--t-dense); line-height: var(--t-dense-lh); border: var(--hairline) dashed var(--rule-strong); border-radius: var(--r-control); padding: var(--sp-3); text-align: center; }
+@media (max-width: 720px) { .chart { height: var(--chart-h-sm); } }

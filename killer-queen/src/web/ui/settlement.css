@@ -1,0 +1,15 @@
+.settle { border: var(--hairline) solid var(--rule-strong); border-radius: var(--r-panel); background: var(--surface); overflow: hidden; }
+.settle-log { font-family: var(--font-mono); font-size: var(--t-dense); line-height: var(--t-dense-lh); background: var(--surface-sunken); padding: var(--sp-3) var(--sp-4); color: var(--ink-2); margin: 0; display: flex; flex-direction: column; white-space: pre; overflow-x: auto; }
+.settle-log .ln.ok { color: var(--yes); }
+.settle-log .ln.bad { color: var(--no); }
+.settle-strip { display: flex; gap: var(--tick); padding: var(--sp-3) var(--sp-4) 0; }
+.settle-strip span { flex: 1; height: var(--bar-lg); border-radius: var(--tick); background: var(--rule); }
+.settle-strip span.yes { background: var(--yes); }
+.settle-strip span.no { background: var(--no); }
+.settle-stamp { display: flex; align-items: baseline; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); flex-wrap: wrap; }
+.settle-stamp .word { font-family: var(--font-cond); font-weight: 600; font-size: var(--t-h2); line-height: var(--t-h2-lh); }
+.settle-stamp .word.yes { color: var(--yes); }
+.settle-stamp .word.no { color: var(--no); }
+.settle-stamp .word.warn { color: var(--warn); }
+.settle-stamp .paid { color: var(--ink-2); }
+.settle-you { padding: var(--sp-3) var(--sp-4); border-top: var(--hairline) solid var(--rule); font-size: var(--t-ui); line-height: var(--t-ui-lh); }

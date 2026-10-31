@@ -1,0 +1,6 @@
+.pill { display: inline-flex; align-items: center; gap: var(--sp-1); height: var(--sp-6); padding: 0 var(--sp-2); border-radius: var(--r-control); font-size: var(--t-caption); line-height: var(--t-caption-lh); font-weight: 500; background: var(--surface-sunken); color: var(--ink-2); white-space: nowrap; vertical-align: middle; }
+.pill .dot { display: inline-block; width: var(--bar); height: var(--bar); border-radius: var(--r-round); background: currentColor; }
+.pill.open, .pill.passed { color: var(--yes); background: var(--yes-tint); }
+.pill.soon, .pill.running, .pill.pending, .pill.demo, .pill.infra_error { color: var(--warn); background: var(--warn-tint); }
+.pill.failed, .pill.rejected { color: var(--no); background: var(--no-tint); }
+.pill.closed, .pill.settled, .pill.skipped, .pill.cancelled, .pill.resolved, .pill.private { color: var(--ink-2); background: var(--surface-sunken); }

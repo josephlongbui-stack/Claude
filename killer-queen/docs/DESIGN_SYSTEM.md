@@ -23,14 +23,14 @@ Light
 | --surface-sunken | #E9ECF1 | Inputs, table header, code blocks |
 | --ink | #15181E | Primary text, primary buttons |
 | --ink-2 | #4A5261 | Secondary text |
-| --ink-3 | #6B7385 | Tertiary text, placeholders (14px and up only) |
+| --ink-3 | #5F6878 | Tertiary text, placeholders (passes AA on every surface) |
 | --rule | #DDE1E8 | Hairlines, table row dividers |
 | --rule-strong | #C3C9D3 | Panel borders, input borders |
-| --yes | #00875A | Yes, passed, price up |
+| --yes | #007A50 | Yes, passed, price up (4.5:1 on --yes-tint and --surface-sunken) |
 | --yes-tint | #E3F5EE | Yes backgrounds |
-| --no | #C8295F | No, failed, price down |
+| --no | #B81F55 | No, failed, price down |
 | --no-tint | #FBE7EE | No backgrounds |
-| --warn | #B25E00 | Closing soon, flaky, infra error |
+| --warn | #9E5300 | Closing soon, flaky, infra error (4.8:1 on --warn-tint) |
 | --warn-tint | #FFF1DD | Warning backgrounds |
 | --focus | #2F6BFF | Focus ring only |
 
@@ -276,3 +276,16 @@ the Figma file). Where the frames sharpen this document:
   play-money note; page titles are `--t-h2`, section titles `--t-h3`.
 - Wordmark: name in IBM Plex Sans Condensed 600 with a Lucide crown.
 - Change cells: "▲ 3" in --yes, "▼ 5" in --no, "0" in --ink-3.
+
+## In code (D4)
+
+- Tokens: `src/web/styles/tokens.css`. Base: `base.css`. Fonts: `fonts.css`
+  (self-hosted IBM Plex, latin subsets). Components: `src/web/ui/*.tsx`, each
+  with its own stylesheet. Kitchen sink: `#/kitchen-sink`.
+- `npm run lint:styles` (part of `npm test`) refuses colour literals, raw px
+  values, px font sizes and inline sizes anywhere outside tokens.css.
+- Odds rail labels sit on one row, spread apart, joined to their pin by a
+  leader; two rows when one cannot hold them; numbered markers with a legend
+  when even two cannot (many agents on a phone).
+- Phone top bar: wordmark, balance, menu sheet. Phone Arena rows: task line,
+  agent | chance and change, then full-width Yes and No buttons at 44 px.

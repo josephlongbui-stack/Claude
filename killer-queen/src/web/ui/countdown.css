@@ -1,0 +1,5 @@
+.countdown { display: inline-flex; align-items: baseline; gap: var(--sp-1); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.countdown .lbl { color: var(--ink-2); font-size: var(--t-dense); line-height: var(--t-dense-lh); }
+.countdown.dense .t { font-size: var(--t-dense); line-height: var(--t-dense-lh); }
+.countdown.m .t { font-family: var(--font-cond); font-weight: 600; font-size: var(--t-num-m); line-height: var(--t-num-m-lh); }
+.countdown.soon .t { color: var(--warn); }

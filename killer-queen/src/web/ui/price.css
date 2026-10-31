@@ -1,0 +1,16 @@
+.price { font-variant-numeric: tabular-nums lining-nums; white-space: nowrap; }
+.price.dense { font-size: var(--t-dense); line-height: var(--t-dense-lh); font-weight: 600; }
+.price.ui { font-size: var(--t-ui); line-height: var(--t-ui-lh); font-weight: 600; }
+.price.m { font-family: var(--font-cond); font-weight: 600; font-size: var(--t-num-m); line-height: var(--t-num-m-lh); }
+.price.l { font-family: var(--font-cond); font-weight: 600; font-size: var(--t-num-l); line-height: var(--t-num-l-lh); letter-spacing: var(--tracking-tight); }
+.price.xl { font-family: var(--font-cond); font-weight: 600; font-size: var(--t-num-xl); line-height: var(--t-num-xl-lh); letter-spacing: var(--tracking-tight); }
+.price.yes { color: var(--yes); }
+.price.no { color: var(--no); }
+.change { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.change.up { color: var(--yes); }
+.change.down { color: var(--no); }
+.change.flat { color: var(--ink-3); }
+.money { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.money.yes { color: var(--yes); }
+.money.no { color: var(--no); }
+@media (max-width: 720px) { .price.xl { font-size: var(--t-num-l); line-height: var(--t-num-l-lh); } }

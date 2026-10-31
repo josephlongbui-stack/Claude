@@ -1,0 +1,11 @@
+.skeleton { display: flex; flex-direction: column; gap: var(--sp-2); }
+.sk { height: var(--t-ui-lh); border-radius: var(--r-control); background: var(--surface-sunken); animation: sk-pulse 1.4s ease-in-out infinite; }
+.sk-th { height: var(--control-h); border-radius: var(--r-control) var(--r-control) 0 0; }
+.sk-row { display: flex; gap: var(--sp-3); }
+.sk-w10 { width: 10%; } .sk-w15 { width: 15%; } .sk-w30 { width: 30%; } .sk-w40 { width: 40%; } .sk-w60 { width: 60%; }
+.sk-xl { height: var(--t-num-xl-lh); width: 25%; }
+.sk-m { height: var(--t-num-m-lh); width: 40%; }
+.sk-chart { height: var(--chart-h); }
+.sk-inline { flex-direction: row; gap: var(--sp-8); }
+.sk-stat { display: flex; flex-direction: column; gap: var(--sp-1); width: 20%; }
+@keyframes sk-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }

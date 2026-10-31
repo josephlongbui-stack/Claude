@@ -1,0 +1,8 @@
+.packet-list dt { font-size: var(--t-caption); line-height: var(--t-caption-lh); color: var(--ink-3); margin-top: var(--sp-3); }
+.packet-list dt:first-child { margin-top: 0; }
+.packet-list dd { margin-top: var(--tick); word-break: break-word; }
+.packet-list dd.mono { font-family: var(--font-mono); font-size: var(--t-dense); line-height: var(--t-dense-lh); }
+.prompt { font-family: var(--font-mono); font-size: var(--t-dense); line-height: var(--t-dense-lh); white-space: pre-wrap; word-break: break-word; background: var(--surface-sunken); border-radius: var(--r-control); padding: var(--sp-3) var(--sp-4); margin: 0; }
+.prompt-text { margin: 0; font: inherit; white-space: pre-wrap; word-break: break-word; }
+.prompt-text.clamp { white-space: normal; display: -webkit-box; -webkit-line-clamp: 8; -webkit-box-orient: vertical; overflow: hidden; }
+.link-btn { background: none; border: 0; padding: 0; margin-top: var(--sp-1); color: var(--ink); text-decoration: underline; text-underline-offset: var(--tick); cursor: pointer; font-size: var(--t-dense); line-height: var(--t-dense-lh); }

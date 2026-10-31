@@ -1,6 +1,6 @@
 /** Bundle the Preact web app into public/ with esbuild (one script). */
 import { build } from 'esbuild';
-import { copyFileSync, mkdirSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const root = resolve(import.meta.dirname, '..');
@@ -18,11 +18,13 @@ const result = await build({
   jsx: 'automatic',
   jsxImportSource: 'preact',
   outfile: resolve(out, 'app.js'),
+  loader: { '.woff2': 'file', '.woff': 'file' },
+  assetNames: 'fonts/[name]',
   logLevel: 'info',
   define: { 'process.env.NODE_ENV': watch ? '"development"' : '"production"' },
 });
 copyFileSync(resolve(root, 'src/web/index.html'), resolve(out, 'index.html'));
-copyFileSync(resolve(root, 'src/web/styles.css'), resolve(out, 'styles.css'));
+for (const f of readdirSync(resolve(root, 'src/web/static'))) copyFileSync(resolve(root, 'src/web/static', f), resolve(out, f));
 
 // Dev-only design board (D3): static frames drawn from the tokens, with the self-hosted fonts.
 if (!process.argv.includes('--no-board')) {

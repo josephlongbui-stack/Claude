@@ -1,0 +1,34 @@
+.rail { --row0: var(--sp-8); --row1: calc(var(--sp-8) + var(--t-ui-lh) + var(--sp-2)); position: relative; padding-top: calc(var(--sp-8) + var(--t-ui-lh) + var(--sp-2)); padding-bottom: var(--sp-6); }
+.rail.rows-2 { padding-top: calc(var(--sp-8) + 2 * (var(--t-ui-lh) + var(--sp-2))); }
+.rail.rows-2 { --row0: calc(var(--sp-8) + var(--t-ui-lh) + var(--sp-2)); --row1: var(--sp-8); }
+.rail.legend { --rowN: var(--sp-8); padding-top: calc(var(--sp-8) + var(--t-caption-lh)); }
+.rail .leaders { position: absolute; left: 0; top: 0; width: 100%; height: calc(100% - var(--sp-6)); overflow: visible; pointer-events: none; }
+.rail .leader { stroke: var(--rule-strong); stroke-width: 1; }
+.rail .leader.settled-yes { stroke: var(--yes); } .rail .leader.settled-no { stroke: var(--no); }
+.rail .track { position: relative; height: var(--track); background: var(--rule-strong); border-radius: var(--track); }
+.rail .tickmark { position: absolute; top: calc(-1 * var(--sp-1)); width: var(--hairline); height: calc(var(--sp-2) + var(--track)); background: var(--rule-strong); }
+.rail .tickmark span { position: absolute; top: var(--sp-3); left: 50%; transform: translateX(-50%); font-size: var(--t-caption); line-height: var(--t-caption-lh); color: var(--ink-3); white-space: nowrap; }
+.rail .marker { position: absolute; top: 0; width: 0; }
+.rail .marker .bar { position: absolute; top: calc(-1 * var(--tick)); height: calc(var(--track) + 2 * var(--tick)); background: var(--rule); border-radius: var(--r-control); }
+.rail .marker .pin { position: absolute; left: calc(-1 * var(--hairline)); width: var(--track); bottom: calc(-1 * var(--sp-1)); top: calc(-1 * var(--sp-4)); background: var(--ink-2); border-radius: var(--hairline); }
+.rail .marker.lead .pin { background: var(--ink); }
+.rail .marker.closed .pin { background: var(--ink-3); }
+.rail .marker.settled-yes .pin { background: var(--yes); }
+.rail .marker.settled-no .pin { background: var(--no); }
+.rail .num { position: absolute; transform: translateX(-50%); bottom: calc(var(--rowN) + var(--track)); font-size: var(--t-caption); line-height: var(--t-caption-lh); font-weight: 600; color: var(--ink-2); background: var(--surface); padding: 0 var(--tick); }
+.rail .num.lead { color: var(--ink); }
+.rail .num.settled-yes { color: var(--yes); } .rail .num.settled-no { color: var(--no); }
+.rail .lbl { position: absolute; transform: translateX(-50%); white-space: nowrap; font-size: var(--t-ui); line-height: var(--t-ui-lh); color: var(--ink-2); background: var(--surface); padding: 0 var(--sp-1); border-radius: var(--r-control); }
+.rail .lbl.row-0 { bottom: calc(var(--row0) + var(--track)); }
+.rail .lbl.row-1 { bottom: calc(var(--row1) + var(--track)); }
+.rail .lbl b { font-family: var(--font-cond); font-weight: 600; font-size: var(--t-h3); line-height: var(--t-ui-lh); color: var(--ink); }
+.rail .lbl.lead { color: var(--ink); font-weight: 500; }
+.rail .lbl.closed, .rail .lbl.closed b { color: var(--ink-3); }
+.rail .lbl.settled-yes, .rail .lbl.settled-yes b { color: var(--yes); }
+.rail .lbl.settled-no, .rail .lbl.settled-no b { color: var(--no); }
+.rail-legend { margin: var(--sp-4) 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-4); counter-reset: rail; font-size: var(--t-dense); line-height: var(--t-dense-lh); color: var(--ink-2); }
+.rail-legend li { counter-increment: rail; }
+.rail-legend li::before { content: counter(rail) " "; font-weight: 600; color: var(--ink-2); }
+.rail-legend li b { color: var(--ink); }
+.rail-legend li.lead { color: var(--ink); font-weight: 500; }
+.rail-legend li.settled-yes b { color: var(--yes); } .rail-legend li.settled-no b { color: var(--no); }

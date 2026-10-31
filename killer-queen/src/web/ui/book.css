@@ -1,0 +1,20 @@
+.book-wrap { display: flex; flex-direction: column; gap: var(--sp-2); }
+.book { width: 100%; border-collapse: collapse; font-size: var(--t-dense); line-height: var(--t-dense-lh); font-variant-numeric: tabular-nums; table-layout: fixed; }
+.book th { font-weight: 500; color: var(--ink-2); padding: var(--sp-2) var(--sp-3); border-bottom: var(--hairline) solid var(--rule-strong); background: var(--surface-sunken); text-align: left; }
+.book th.yes-h { text-align: right; border-top-left-radius: var(--r-panel); }
+.book th.px-h { text-align: center; width: calc(var(--sp-16) + var(--sp-8)); }
+.book th.no-h { border-top-right-radius: var(--r-panel); }
+.book td { padding: var(--sp-1) var(--sp-3); border-bottom: var(--hairline) solid var(--rule); height: calc(var(--t-dense-lh) + var(--sp-2)); }
+.book tbody tr:last-child td { border-bottom: 0; }
+.book td.lvl { position: relative; }
+.book td.lvl.yes { text-align: right; }
+.book td.lvl .depth { position: absolute; top: var(--sp-1); bottom: var(--sp-1); }
+.book td.lvl.yes .depth { right: 0; background: var(--yes-tint); }
+.book td.lvl.no .depth { left: 0; background: var(--no-tint); }
+.book td.lvl .q { position: relative; }
+.book td.px { text-align: center; font-weight: 500; white-space: nowrap; }
+.book td.px.mid { color: var(--ink-2); background: var(--surface-sunken); font-weight: 400; }
+.book td.px.yes { color: var(--yes); }
+.book td.px.no { color: var(--no); }
+.book-note { padding: var(--sp-3) var(--sp-4); color: var(--ink-2); font-size: var(--t-dense); line-height: var(--t-dense-lh); }
+.book-note.warn { color: var(--warn); background: var(--warn-tint); border-radius: var(--r-control); }

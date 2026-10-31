@@ -1,0 +1,16 @@
+.theses { display: flex; flex-direction: column; }
+.thesis-form { padding: var(--sp-4) 0 var(--sp-2); border-bottom: var(--hairline) solid var(--rule); }
+.thesis-form-row { display: flex; align-items: flex-end; gap: var(--sp-3); }
+.thesis-prob { width: calc(var(--sp-16) * 2); margin-bottom: 0; }
+.thesis-form-row .btn { margin-bottom: 0; }
+.thesis { padding: var(--sp-3) 0; border-bottom: var(--hairline) solid var(--rule); }
+.thesis:last-child { border-bottom: 0; }
+.thesis-who { display: flex; gap: var(--sp-2); align-items: center; font-size: var(--t-dense); line-height: var(--t-dense-lh); color: var(--ink-2); margin-bottom: var(--sp-1); flex-wrap: wrap; }
+.thesis-who b { color: var(--ink); font-weight: 500; }
+.thesis-p { font-variant-numeric: tabular-nums; }
+.thesis-at { color: var(--ink-3); }
+.thesis-report { margin-left: auto; background: none; border: 0; padding: 0; color: var(--ink-3); font-size: var(--t-caption); cursor: pointer; }
+.thesis-report:hover { color: var(--ink); text-decoration: underline; }
+.thesis p { font-size: var(--t-ui); line-height: var(--t-ui-lh); max-width: var(--measure); }
+.thesis-empty { color: var(--ink-2); padding: var(--sp-3) 0; }
+.trades td.yes { color: var(--yes); } .trades td.no { color: var(--no); }

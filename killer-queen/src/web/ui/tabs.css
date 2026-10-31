@@ -1,0 +1,7 @@
+.tabs { display: inline-flex; gap: var(--sp-4); max-width: 100%; overflow-x: auto; scrollbar-width: none; border-bottom: var(--hairline) solid var(--rule); }
+.tabs::-webkit-scrollbar { display: none; }
+.tabs button { height: var(--control-h-lg); padding: 0 var(--sp-1); margin-bottom: calc(-1 * var(--hairline)); border: 0; border-bottom: var(--tick) solid transparent; background: transparent; color: var(--ink-2); font-size: var(--t-ui); line-height: var(--t-ui-lh); font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: var(--sp-1); white-space: nowrap; }
+.tabs button:hover { color: var(--ink); }
+.tabs button.on { color: var(--ink); border-bottom-color: var(--ink); }
+.tabs .count { color: var(--ink-3); font-variant-numeric: tabular-nums; font-weight: 400; }
+@media (max-width: 720px) { .tabs button { height: var(--touch); } }

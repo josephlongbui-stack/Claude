@@ -1,0 +1,4 @@
+.avatar { width: var(--control-h); height: var(--control-h); border-radius: var(--r-round); background: var(--surface-sunken); border: var(--hairline) solid var(--rule-strong); display: inline-grid; place-content: center; font-size: var(--t-caption); line-height: var(--t-caption-lh); font-weight: 600; color: var(--ink-2); flex: none; }
+.avatar.agent { border-radius: var(--r-control); }
+.avatar.sm { width: var(--sp-6); height: var(--sp-6); }
+.avatar.sm .icon { width: var(--sp-3); height: var(--sp-3); }

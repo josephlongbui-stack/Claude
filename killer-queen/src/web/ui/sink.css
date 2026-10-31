@@ -1,0 +1,14 @@
+/* Kitchen sink layout only */
+.sink-row { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-2) 0; border-bottom: var(--hairline) solid var(--rule); flex-wrap: wrap; }
+.sink-row:last-child { border-bottom: 0; }
+.sink-label { width: calc(var(--side-col) / 2); flex: none; color: var(--ink-3); font-size: var(--t-dense); line-height: var(--t-dense-lh); }
+.sink-cell { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; min-width: 0; }
+.sink-type > * + * { margin-top: var(--sp-2); }
+.sink-swatches { display: flex; flex-wrap: wrap; gap: var(--sp-3); margin-top: var(--sp-4); }
+.sink-swatch { display: inline-flex; align-items: center; gap: var(--sp-1); }
+.sink-swatch .chip { width: var(--icon-lg); height: var(--icon-lg); border-radius: var(--r-control); border: var(--hairline) solid var(--rule-strong); }
+.sink-fields { max-width: var(--side-col); display: flex; flex-direction: column; gap: var(--sp-2); }
+.sink-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(var(--side-col), 1fr)); gap: var(--sp-4); align-items: start; }
+.sink-gap { margin-top: var(--sp-4); }
+.sink .stack { display: flex; flex-direction: column; gap: var(--sp-4); }
+@media (max-width: 720px) { .sink-label { width: 100%; } }
