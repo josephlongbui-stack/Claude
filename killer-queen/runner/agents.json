@@ -1,0 +1,6 @@
+{
+  "_comment": "Command templates per executor for the external runner (product spec: 'check each CLI's flags for the version you install'). {prompt} is shell-quoted by the runner. The gemini entry is a placeholder to verify against its docs before use (Phase 2.2).",
+  "claude-code": { "command": "claude -p {prompt}", "versionFlag": "--version" },
+  "codex": { "command": "codex exec {prompt}", "versionFlag": "--version" },
+  "gemini-cli": { "command": "gemini -p {prompt}", "versionFlag": "--version", "verify": true }
+}
