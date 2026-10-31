@@ -1,0 +1,12 @@
+appId: dev.killerqueen.app
+---
+- launchApp
+- tapOn: "Profile"
+- tapOn:
+    id: "signup-name"
+- inputText: "Maestro Trader"
+- tapOn:
+    id: "signup-submit"
+- assertVisible:
+    id: "api-key"
+- assertVisible: "Play money"

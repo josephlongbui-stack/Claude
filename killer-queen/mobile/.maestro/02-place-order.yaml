@@ -1,0 +1,16 @@
+appId: dev.killerqueen.app
+---
+- launchApp
+- tapOn: "Markets"
+- tapOn:
+    id: "task-row-0"
+- tapOn:
+    id: "market-row-0"
+- tapOn:
+    id: "side-yes"
+- tapOn:
+    id: "type-market"
+- tapOn:
+    id: "place-order"
+- assertVisible:
+    id: "order-result"

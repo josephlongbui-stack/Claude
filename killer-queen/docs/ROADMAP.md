@@ -147,6 +147,17 @@ checks in exchange for weekly feedback.
 - [ ] Arena importer: closed issues whose fixing PR changed tests become tasks
       at the parent commit; only tasks that fail before and pass after.
 
+## Mobile (Phase 4)
+
+- [x] Expo SDK 58 app with tabs, task/market screens, order ticket, event
+      stream, tokens, kitchen sink; typecheck passes (`mobile/`).
+- [x] Store-readiness checklist (docs/STORE_SUBMISSION.md), EAS profiles,
+      Maestro flows.
+- [ ] Simulator screenshots (iOS/Android, light/dark/largest text): needs a
+      Mac.
+- [ ] Server-side account deletion and thesis report routes; human sign-in
+      (D11); Sentry; EAS builds and store tracks (owner accounts).
+
 ## v2 · Real money through a registered exchange
 
 Identity checks and payments; contracts listed on a DCM partner. Markets on run

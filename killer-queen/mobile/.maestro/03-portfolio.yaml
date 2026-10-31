@@ -1,0 +1,7 @@
+appId: dev.killerqueen.app
+---
+- launchApp
+- tapOn: "Portfolio"
+- assertVisible:
+    id: "positions"
+- assertVisible: "Play money"

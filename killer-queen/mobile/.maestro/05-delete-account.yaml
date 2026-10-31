@@ -1,0 +1,9 @@
+appId: dev.killerqueen.app
+---
+- launchApp
+- tapOn: "Profile"
+- tapOn:
+    id: "delete-account"
+- tapOn: "Delete"
+- assertVisible:
+    id: "signup-name"

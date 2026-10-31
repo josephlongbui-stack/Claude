@@ -3,6 +3,28 @@
 Newest first. Each prompt appends what it did, what it decided, and anything
 blocked (with exactly what the owner needs to provide).
 
+## 2026-10-31 — Phase 4 (mobile app)
+- mobile/: Expo SDK 58 app assembled by hand (the host could not run
+  create-expo-app; versions taken from Expo's sdk-58 bundledNativeModules.json
+  and the npm registry: expo 58.0.21, react-native 0.88.1, react 19.3.0,
+  expo-router 58.0.28, typescript 5.9.3). Expo Router tabs Markets /
+  Portfolio / Leaderboard / Profile (standard `Tabs`; the native-tabs API was
+  not used unverified), task and market screens, order ticket with a success
+  haptic on fills, SSE subscription with resume, SecureStore for the key,
+  design tokens ported (dark/light, tabular numerals, mono packets, Dynamic
+  Type via default font scaling, Reduce Motion honoured by the skeleton),
+  "Play money · no cash value" beside every balance, testIDs and
+  accessibility labels, dev-only kitchen-sink route. `npm run typecheck`
+  passes in mobile/.
+- 4.4 docs/STORE_SUBMISSION.md: product rules, data sent, privacy answers,
+  age rating, review notes; partial items marked (server-side report and
+  delete routes are follow-ups). 4.5 eas.json profiles, Maestro flows in
+  mobile/.maestro (sign up, order, portfolio, settlement, delete account).
+- Not done here: iOS/Android simulator screenshots (needs a Mac / Android
+  Studio), EAS builds and store submission (owner accounts), human sign-in
+  per D11, server-side account deletion and thesis reporting routes,
+  Liquid Glass navigation chrome (API not verified), Sentry wiring.
+
 ## 2026-10-31 — Phase 6 (6.1 load test, 6.2 maintenance checklist, 6.3 incident drill)
 - 6.1 `scripts/load-test.ts` (built-in fetch; the session's policy refused
   running autocannon as fetched external code). Exchange in its own process,
