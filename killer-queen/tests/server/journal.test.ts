@@ -132,3 +132,36 @@ describe('golden journal', () => {
     assert.equal(stateHash(venue.engine.state), golden.hash);
   });
 });
+
+describe('crash between apply and commit (D21, invariant 10)', () => {
+  it('acknowledged state survives a restart; the unacknowledged command is absent', () => {
+    const path = join(dir, 'crash.db');
+    const real = new Journal(path);
+    let crashOnSeq = -1;
+    const sink = {
+      append(seq: number, command: Command) {
+        if (seq === crashOnSeq) throw new Error('simulated crash before commit');
+        real.append(seq, command);
+      },
+    };
+    const venue = new Venue({ engine: new Engine(), clock: new FakeClock(), journal: sink });
+    must(venue, { type: 'createAccount', id: 'a', name: 'a', kind: 'human', role: 'trader', org: '', keyHash: null, startingCash: 0 });
+    must(venue, { type: 'deposit', account: 'a', amount: 1000, reason: 'admin' }); // acknowledged: seq 2 committed
+    crashOnSeq = 3;
+    assert.throws(() => venue.apply({ type: 'deposit', account: 'a', amount: 500, reason: 'admin' }), /simulated crash/);
+    // The caller never got an ok; memory did apply it, so the venue refuses to continue.
+    assert.equal(venue.engine.account('a')!.cash, 1500);
+    assert.match(venue.isHalted ?? '', /simulated crash/);
+    assert.equal(real.length, 2);
+    real.close();
+
+    const restarted = openVenue(path, new FakeClock());
+    assert.equal(restarted.replayed, 2);
+    assert.equal(restarted.venue.engine.account('a')!.cash, 1000, 'unacknowledged deposit must be absent');
+    assertInvariants(restarted.venue.engine, 'after crash restart');
+    must(restarted.venue, { type: 'deposit', account: 'a', amount: 7, reason: 'admin' });
+    assert.equal(restarted.journal.length, 3);
+    assert.equal(restarted.venue.engine.account('a')!.cash, 1007);
+    restarted.journal.close();
+  });
+});

@@ -3,7 +3,10 @@
 Every money and fairness rule as a numbered, testable statement, with the test
 that proves it today. `assertInvariants` is `tests/helpers/invariants.ts`; the
 fixture helpers `must`/`mustReject` call it after every command in every engine
-and bot test, and the random run calls it after every one of 1,500 orders.
+and bot test, the random run calls it after every one of 1,500 orders, and
+`tests/engine/property.test.ts` calls it after every command of `KQ_PROP_RUNS`
+random sequences over all eleven commands (with a before/after hash on every
+rejection and a replay-hash check per sequence).
 
 1. **Conservation.** Sum of every account's cash and locked plus all market
    escrow equals total deposits, after every command.
@@ -49,7 +52,8 @@ and bot test, and the random run calls it after every one of 1,500 orders.
    operators (who have no account) ever rests or fills.
    Proof: `tests/engine/matching.test.ts` "conflict rules" (both commands, each
    party); `tests/server/http.test.ts` "conflicts are rejected over HTTP with
-   403"; `tests/bots/simTrader.test.ts` "respects conflicts";
+   403"; `tests/server/fuzz.test.ts`; `tests/bots/simTrader.test.ts` "respects
+   conflicts";
    `tests/bots/llm.test.ts` "an Anthropic-org trader cannot order on a Claude
    Code market".
 9. **Signed settlement.** The chosen market settles only from a valid signed
@@ -64,8 +68,9 @@ and bot test, and the random run calls it after every one of 1,500 orders.
     synchronous=FULL; a gap or corrupt row is reported, never skipped.
     Proof: `tests/server/journal.test.ts` "a failed append halts the venue",
     "WAL mode and synchronous=FULL are set", "a sequence gap or corrupt row is
-    reported"; `tests/server/restart.test.ts`. A crash injected between apply
-    and commit (prompt 1.4): **none** yet.
+    reported"; `tests/server/restart.test.ts`; crash injected between apply
+    and commit: `tests/server/journal.test.ts` "acknowledged state survives a
+    restart; the unacknowledged command is absent".
 11. **Integer cents.** Cash, locked, deposited, escrow, prices and quantities
     are safe integers; prices 1–99.
     Proof: `assertInvariants`; `tests/engine/money.test.ts`;
@@ -78,3 +83,14 @@ and bot test, and the random run calls it after every one of 1,500 orders.
     Proof: `assertInvariants` (book block);
     `tests/engine/matching.test.ts` "non-crossing orders rest … price priority
     then time".
+13. **Pause switch.** While `state.trading.paused`, no order is accepted;
+    cancels and settlement continue; the switch is journaled.
+    Proof: `tests/engine/lifecycle.test.ts` "while paused no order is
+    accepted…"; `tests/server/hardening.test.ts` "admin pause-trading is a
+    journaled command…".
+14. **Idempotent orders.** One `clientKey` per account places at most one
+    order, across restarts.
+    Proof: `tests/engine/lifecycle.test.ts` "a second order with the same
+    client key is rejected…"; `tests/server/hardening.test.ts`
+    "Idempotency-Key: a retry never places two orders, survives a restart".
+

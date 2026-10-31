@@ -16,6 +16,8 @@ export function createState(): EngineState {
     counters: { account: 0, task: 0, order: 0, fill: 0, comment: 0, seq: 0 },
     totals: { deposited: 0 },
     usedRunIds: new Set(),
+    clientKeys: new Map(),
+    trading: { paused: false, reason: '', since: null },
     applied: 0,
   };
 }

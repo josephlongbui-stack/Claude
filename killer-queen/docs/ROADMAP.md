@@ -83,8 +83,14 @@ deployment and real tasks.)
 ### Operations
 - [x] Journal in WAL mode, synchronous=FULL; a command is acknowledged only
       after its row commits. (`journal.test.ts`)
-- [ ] Crash injected between apply and commit, restart, acknowledged state
-      survives (prompt 1.4).
+- [x] Crash injected between apply and commit, restart, acknowledged state
+      survives (prompt 1.4). (`journal.test.ts`)
+- [x] Property tests over every command with `assertInvariants` after each
+      (prompt 1.1, `property.test.ts`, `KQ_PROP_RUNS`).
+- [x] API hardening (prompt 1.5): per-key rate limits, `Idempotency-Key` on
+      orders, body limits, constant-time key check, journaled pause switch,
+      fuzz test with unchanged state hash. (`hardening.test.ts`,
+      `fuzz.test.ts`)
 - [x] Gate metrics in `/api/stats`: Brier of closing prices vs base rate,
       calibration of 70–80¢ markets, median spread at close, median distinct
       traders per market, time to tradable market, settled count.
@@ -108,7 +114,8 @@ checks in exchange for weekly feedback.
       flaky tasks are rejected (D2).
 - [x] Signed results carry runId and timestamp; replays and stale results are
       refused (D9). (`runner.test.ts`; required in live mode)
-- [ ] Rate limits per API key: 429 with `code: rate_limited`.
+- [x] Rate limits per API key: 429 with `code: rate_limited`. (Phase 1.5;
+      per process, no Redis)
 - [ ] Surveillance alerts: wash trading, spoofing, closing-price pressure,
       conflicted-org trading, unusual win rates; admin queue; nothing
       auto-banned.

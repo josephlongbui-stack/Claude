@@ -28,6 +28,7 @@ import {
 import { newApiKey, requireAccount, requireAdminKey, requireRole, requireSecret, type AuthedRequest } from './auth.js';
 import type { Config } from './config.js';
 import { HttpError, errorHandler, statusForCode } from './errors.js';
+import { RateLimiter, rateLimit } from './rateLimit.js';
 
 export const RESULT_TIMESTAMP_WINDOW_MS = 5 * 60 * 1000;
 
@@ -114,24 +115,30 @@ export function createApp(deps: AppDeps): Express {
   const app = express();
   app.disable('x-powered-by');
   app.set('etag', false);
-  app.use(
-    express.json({
-      limit: '6mb',
-      verify: (req, _res, buf) => {
-        (req as AuthedRequest).rawBody = buf;
-      },
-    }),
-  );
+  const verify = (req: Request, _res: Response, buf: Buffer) => {
+    (req as AuthedRequest).rawBody = buf;
+  };
+  // Runner logs may be large; everything else is small.
+  app.use('/api/runner/results', express.json({ limit: '6mb', verify }));
+  app.use(express.json({ limit: '64kb', verify }));
   const auth = requireAccount(venue);
+  const limiter = new RateLimiter(clock);
+  const rl = config.rateLimits;
+  const limitOrders = rateLimit(limiter, 'orders', rl.orders);
+  const limitTasks = rateLimit(limiter, 'tasks', rl.tasks);
+  const limitWrites = rateLimit(limiter, 'writes', rl.writes);
+  const limitReads = rateLimit(limiter, 'reads', rl.reads);
+  const limitAnon = rateLimit(limiter, 'anon', rl.anon);
   const api = express.Router();
 
   api.get('/health', (_req, res) => {
-    res.json({ ok: true, mode: config.mode, runner: config.runner, applied: venue.engine.state.applied, halted: venue.isHalted });
+    res.json({ ok: true, mode: config.mode, runner: config.runner, applied: venue.engine.state.applied, halted: venue.isHalted, trading: venue.engine.state.trading });
   });
 
   /* ---- accounts ---- */
   api.post(
     '/accounts',
+    limitAnon,
     wrap((req, res) => {
       if (config.mode === 'live') throw new HttpError(403, 'forbidden', 'open sign-up is off in live mode; accounts are provisioned by an admin');
       const body = accountBody.parse(req.body);
@@ -141,11 +148,12 @@ export function createApp(deps: AppDeps): Express {
       res.status(201).json({ account: publicAccount(account), apiKey: key.raw });
     }),
   );
-  api.get('/me', auth, wrap((req, res) => res.json({ account: publicAccount(req.account!) })));
-  api.get('/portfolio', auth, wrap((req, res) => res.json(portfolio(venue.engine, req.account!.id))));
+  api.get('/me', auth, limitReads, wrap((req, res) => res.json({ account: publicAccount(req.account!) })));
+  api.get('/portfolio', auth, limitReads, wrap((req, res) => res.json(portfolio(venue.engine, req.account!.id))));
   api.post(
     '/wallet/faucet',
     auth,
+    limitWrites,
     wrap((req, res) => {
       if (config.mode === 'live') throw new HttpError(404, 'not_found', 'no faucet in live mode');
       const { account } = unwrap(venue.apply({ type: 'deposit', account: req.account!.id, amount: config.startingCashCents, reason: 'faucet' }));
@@ -154,9 +162,10 @@ export function createApp(deps: AppDeps): Express {
   );
 
   /* ---- tasks and markets ---- */
-  api.get('/tasks', (_req, res) => res.json({ tasks: allTasks(venue.engine) }));
+  api.get('/tasks', limitAnon, (_req, res) => res.json({ tasks: allTasks(venue.engine) }));
   api.get(
     '/tasks/:id',
+    limitAnon,
     wrap((req, res) => {
       if (!venue.engine.task(req.params.id!)) throw new HttpError(404, 'task_not_found', `no task ${req.params.id}`);
       res.json(taskView(venue.engine, req.params.id!));
@@ -164,20 +173,22 @@ export function createApp(deps: AppDeps): Express {
   );
   api.get(
     '/markets/:id',
+    limitAnon,
     wrap((req, res) => {
       if (!venue.engine.market(req.params.id!)) throw new HttpError(404, 'market_not_found', `no market ${req.params.id}`);
       res.json(marketView(venue.engine, req.params.id!));
     }),
   );
-  api.get('/agent/markets', auth, wrap((req, res) => res.json({ markets: agentMarkets(venue.engine, req.account!.id) })));
-  api.get('/executors', (_req, res) => res.json({ executors: executorRecords(venue.engine) }));
-  api.get('/leaderboard', (_req, res) => res.json({ leaderboard: leaderboard(venue.engine) }));
-  api.get('/stats', (_req, res) => res.json(stats(venue.engine)));
+  api.get('/agent/markets', auth, limitReads, wrap((req, res) => res.json({ markets: agentMarkets(venue.engine, req.account!.id) })));
+  api.get('/executors', limitAnon, (_req, res) => res.json({ executors: executorRecords(venue.engine) }));
+  api.get('/leaderboard', limitAnon, (_req, res) => res.json({ leaderboard: leaderboard(venue.engine) }));
+  api.get('/stats', limitAnon, (_req, res) => res.json(stats(venue.engine)));
 
   api.post(
     '/tasks',
     auth,
     requireRole('customer', 'admin'),
+    limitTasks,
     wrap((req, res) => {
       const body = taskBody.parse(req.body);
       if (body.forceOutcome !== undefined && body.forceOutcome !== null && config.mode === 'live') {
@@ -206,6 +217,7 @@ export function createApp(deps: AppDeps): Express {
   api.post(
     '/tasks/:id/close',
     auth,
+    limitWrites,
     wrap((req, res) => {
       unwrap(venue.apply({ type: 'closeTask', taskId: req.params.id!, by: req.account!.id }));
       res.json(taskView(venue.engine, req.params.id!));
@@ -214,6 +226,7 @@ export function createApp(deps: AppDeps): Express {
   api.post(
     '/tasks/:id/decide',
     auth,
+    limitWrites,
     wrap((req, res) => {
       const body = decideBody.parse(req.body ?? {});
       unwrap(venue.apply({ type: 'decide', taskId: req.params.id!, executorId: body.executorId, by: req.account!.id }));
@@ -225,27 +238,44 @@ export function createApp(deps: AppDeps): Express {
   api.post(
     '/orders',
     auth,
+    limitOrders,
     wrap((req, res) => {
       const body = orderBody.parse(req.body);
-      const data = unwrap(
-        venue.apply({
-          type: 'placeOrder',
-          account: req.account!.id,
-          market: body.marketId,
-          side: body.side,
-          action: body.action,
-          orderType: body.type,
-          price: body.price,
-          quantity: body.quantity,
-          tif: body.tif,
-        }),
-      );
-      res.status(201).json(data);
+      // Idempotency-Key (D27): a retry with the same key returns the original order instead of placing another.
+      const idem = req.headers['idempotency-key'];
+      const clientKey = typeof idem === 'string' && idem.trim() !== '' ? idem.trim() : undefined;
+      if (clientKey !== undefined && clientKey.length > 128) throw new HttpError(400, 'validation', 'Idempotency-Key must be at most 128 characters');
+      const replay = (order: { id: string }) => {
+        const fills = venue.engine.state.fills.filter((f) => f.takerOrder === order.id);
+        res.status(200).json({ order: venue.engine.order(order.id), fills, replayed: true });
+      };
+      if (clientKey !== undefined) {
+        const existing = venue.engine.orderByClientKey(req.account!.id, clientKey);
+        if (existing) return replay(existing);
+      }
+      const r = venue.apply({
+        type: 'placeOrder',
+        account: req.account!.id,
+        market: body.marketId,
+        side: body.side,
+        action: body.action,
+        orderType: body.type,
+        price: body.price,
+        quantity: body.quantity,
+        tif: body.tif,
+        clientKey,
+      });
+      if (!r.ok && r.code === 'duplicate_client_key' && clientKey !== undefined) {
+        const existing = venue.engine.orderByClientKey(req.account!.id, clientKey);
+        if (existing) return replay(existing);
+      }
+      res.status(201).json(unwrap(r));
     }),
   );
   api.delete(
     '/orders/:id',
     auth,
+    limitWrites,
     wrap((req, res) => {
       const data = unwrap(venue.apply({ type: 'cancelOrder', account: req.account!.id, orderId: req.params.id! }));
       res.json(data);
@@ -254,6 +284,7 @@ export function createApp(deps: AppDeps): Express {
   api.post(
     '/markets/:id/comments',
     auth,
+    limitWrites,
     wrap((req, res) => {
       const body = commentBody.parse(req.body);
       const data = unwrap(venue.apply({ type: 'comment', account: req.account!.id, market: req.params.id!, text: body.text, probability: body.probability ?? null }));
@@ -317,6 +348,17 @@ export function createApp(deps: AppDeps): Express {
       const body = z.object({ outcome: z.enum(['passed', 'failed', 'infra_error']), log: z.string().max(100_000).default('settled by admin') }).strict().parse(req.body);
       const data = unwrap(venue.apply({ type: 'settle', taskId: req.params.id!, outcome: body.outcome, log: body.log, runId: null }));
       res.json({ task: publicTask(data.task), market: data.market });
+    }),
+  );
+
+  api.get('/admin/trading', requireAdminKey(config.adminKey), (_req, res) => res.json({ trading: venue.engine.state.trading }));
+  api.post(
+    '/admin/trading',
+    requireAdminKey(config.adminKey),
+    wrap((req, res) => {
+      const body = z.object({ paused: z.boolean(), reason: z.string().max(500).optional() }).strict().parse(req.body);
+      unwrap(venue.apply({ type: 'pauseTrading', paused: body.paused, reason: body.reason, by: null }));
+      res.json({ trading: venue.engine.state.trading });
     }),
   );
 

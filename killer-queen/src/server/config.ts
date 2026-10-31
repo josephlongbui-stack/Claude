@@ -24,6 +24,11 @@ const envSchema = z.object({
   MM_CASH_CENTS: z.coerce.number().int().nonnegative().default(100_000_000),
   SIM_TRADERS: z.coerce.number().int().min(0).max(20).default(3),
   LOG_LEVEL: z.enum(['silent', 'info', 'debug']).default('info'),
+  RATE_LIMIT_ORDERS_PER_MIN: z.coerce.number().int().nonnegative().default(30),
+  RATE_LIMIT_TASKS_PER_MIN: z.coerce.number().int().nonnegative().default(5),
+  RATE_LIMIT_WRITES_PER_MIN: z.coerce.number().int().nonnegative().default(60),
+  RATE_LIMIT_READS_PER_MIN: z.coerce.number().int().nonnegative().default(120),
+  RATE_LIMIT_ANON_PER_MIN: z.coerce.number().int().nonnegative().default(300),
 });
 
 export interface Config {
@@ -46,6 +51,8 @@ export interface Config {
   mmCashCents: number;
   simTraders: number;
   logLevel: 'silent' | 'info' | 'debug';
+  /** Per API key (orders, tasks, writes, reads) and per IP for unauthenticated calls; 0 disables. */
+  rateLimits: { orders: number; tasks: number; writes: number; reads: number; anon: number };
 }
 
 export class ConfigError extends Error {}
@@ -90,5 +97,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     mmCashCents: e.MM_CASH_CENTS,
     simTraders: e.SIM_TRADERS,
     logLevel: e.LOG_LEVEL,
+    rateLimits: { orders: e.RATE_LIMIT_ORDERS_PER_MIN, tasks: e.RATE_LIMIT_TASKS_PER_MIN, writes: e.RATE_LIMIT_WRITES_PER_MIN, reads: e.RATE_LIMIT_READS_PER_MIN, anon: e.RATE_LIMIT_ANON_PER_MIN },
   };
 }

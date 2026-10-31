@@ -217,6 +217,8 @@ export interface PlaceOrderCommand extends Stamped {
   price?: number;
   quantity: number;
   tif?: Tif;
+  /** Caller-supplied idempotency key (D27): a second order with the same key is rejected. */
+  clientKey?: string;
 }
 
 export interface CancelOrderCommand extends Stamped {
@@ -256,6 +258,15 @@ export interface SettleCommand extends Stamped {
   runId?: string | null;
 }
 
+/** Admin switch (D26): while paused, no new orders rest or fill; cancels and settlement continue. */
+export interface PauseTradingCommand extends Stamped {
+  type: 'pauseTrading';
+  paused: boolean;
+  reason?: string;
+  /** Admin account, or null when the admin key was used. */
+  by?: string | null;
+}
+
 export type Command =
   | CreateAccountCommand
   | DepositCommand
@@ -266,7 +277,8 @@ export type Command =
   | CommentCommand
   | CloseTaskCommand
   | DecideCommand
-  | SettleCommand;
+  | SettleCommand
+  | PauseTradingCommand;
 
 export type CommandType = Command['type'];
 
@@ -281,6 +293,7 @@ export const COMMAND_TYPES: readonly CommandType[] = [
   'closeTask',
   'decide',
   'settle',
+  'pauseTrading',
 ] as const;
 
 /** A command as callers build it: the Venue stamps `at` when missing. */
@@ -301,6 +314,7 @@ export interface CommandResults {
   closeTask: { task: Task; markets: Market[]; cancelledOrders: number };
   decide: { task: Task; settled: Market[] };
   settle: { task: Task; market: Market };
+  pauseTrading: { paused: boolean; reason: string };
 }
 
 export type EngineOk<T extends CommandType = CommandType> = { ok: true; seq: number; data: CommandResults[T] };
@@ -329,6 +343,9 @@ export interface EngineState {
   counters: { account: number; task: number; order: number; fill: number; comment: number; seq: number };
   totals: { deposited: Cents };
   usedRunIds: Set<string>;
+  /** `${account}|${clientKey}` → order id (D27). */
+  clientKeys: Map<string, string>;
+  trading: { paused: boolean; reason: string; since: number | null };
   /** Number of commands applied so far. */
   applied: number;
 }

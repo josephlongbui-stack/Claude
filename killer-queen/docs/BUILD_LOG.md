@@ -3,6 +3,27 @@
 Newest first. Each prompt appends what it did, what it decided, and anything
 blocked (with exactly what the owner needs to provide).
 
+## 2026-10-31 — Phase 1: harden the exchange (prompts 1.1–1.5)
+- 1.1 `tests/engine/property.test.ts`: fast-check sequences over every command
+  (weighted toward valid traders/markets so most sequences trade), invariants
+  after each command, before/after hash on each rejection, replay hash per
+  sequence. `KQ_PROP_RUNS` (default 200, ~3 s).
+- 1.2 Determinism audit: the only clock read in src/engine is the injected
+  `systemClock` default; `tests/engine/determinism.test.ts` fails the build if
+  Date.now/Math.random/timers/I/O or server imports appear in src/engine.
+- 1.3 Already in v0 (D4 versions, D6 infra_error, D7 half-up, staff/runner
+  conflicts); nothing to change.
+- 1.4 Crash injection test: a journal sink that throws before commit; restart
+  shows acknowledged state present and the unacknowledged command absent.
+- 1.5 Rate limits (D28), Idempotency-Key via journaled clientKey (D27),
+  64 kB body limit (6 MB for runner logs), constant-time key comparison
+  (D29), `pauseTrading` command + admin route (D26), fuzz suite.
+- Golden journal hash changed to
+  7ad74cb95af087f1e8d24c8b671e5d77962efba496b5b5581c6de78b8e428a6e because
+  `EngineState` gained `clientKeys` and `trading` (D26, D27); the 22 golden
+  commands are unchanged.
+- Per supervision note: commits stay local; nothing pushed after v0.
+
 ## 2026-10-31 — 0.2-alt v0 build and 0.3 invariants
 - Built v0 from the spec in the spec's stack, test-first, one commit per
   slice: engine (ten commands, matching, netting, settlement, views), SQLite

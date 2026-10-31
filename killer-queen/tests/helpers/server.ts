@@ -35,6 +35,11 @@ export async function startTestServer(opts: { env?: Record<string, string>; dir?
     HOUSE_BOTS: 'mm',
     ADMIN_KEY: 'admin-key-for-tests',
     LOG_LEVEL: 'silent',
+    RATE_LIMIT_ORDERS_PER_MIN: '0',
+    RATE_LIMIT_TASKS_PER_MIN: '0',
+    RATE_LIMIT_WRITES_PER_MIN: '0',
+    RATE_LIMIT_READS_PER_MIN: '0',
+    RATE_LIMIT_ANON_PER_MIN: '0',
     ...opts.env,
   });
   const booted = await boot({ config, clock, listen: 0, timers: false, publicDir: join(dir, 'no-public'), bots: opts.bots ?? [], seedExecutors: false });

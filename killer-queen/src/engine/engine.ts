@@ -29,6 +29,7 @@ import {
   type Market,
   type MarketOutcome,
   type Order,
+  type PauseTradingCommand,
   type PlaceOrderCommand,
   type Position,
   type SettleCommand,
@@ -132,6 +133,8 @@ export class Engine {
         return this.decide(cmd);
       case 'settle':
         return this.settle(cmd);
+      case 'pauseTrading':
+        return this.pauseTrading(cmd);
       default:
         return assertNever(cmd);
     }
@@ -165,6 +168,11 @@ export class Engine {
 
   order(id: string): Order | undefined {
     return this.state.orders.get(id);
+  }
+
+  orderByClientKey(accountId: string, clientKey: string): Order | undefined {
+    const id = this.state.clientKeys.get(`${accountId}|${clientKey}`);
+    return id === undefined ? undefined : this.state.orders.get(id);
   }
 
   book(marketId: string): Book {
@@ -397,6 +405,7 @@ export class Engine {
     const conflict = this.conflictReason(account, task, executor);
     if (conflict) reject('conflict', conflict);
     if (market.status !== 'open' || task.status !== 'open') reject('market_closed', `market ${market.id} is ${market.status}`);
+    if (s.trading.paused) reject('trading_paused', `trading is paused${s.trading.reason ? `: ${s.trading.reason}` : ''}`);
     if (c.side !== 'yes' && c.side !== 'no') reject('bad_side', 'side must be yes or no');
     if (c.action !== 'buy' && c.action !== 'sell') reject('bad_action', 'action must be buy or sell');
     if (c.orderType !== 'limit' && c.orderType !== 'market') reject('bad_type', 'type must be limit or market');
@@ -404,6 +413,11 @@ export class Engine {
     if (c.tif !== undefined && c.tif !== 'gtc' && c.tif !== 'ioc') reject('bad_tif', 'tif must be gtc or ioc');
     if (c.id !== undefined && (typeof c.id !== 'string' || c.id === '')) reject('bad_id', 'id must be a non-empty string');
     if (c.id !== undefined && s.orders.has(c.id)) reject('duplicate_id', `order ${c.id} already exists`);
+    if (c.clientKey !== undefined) {
+      if (typeof c.clientKey !== 'string' || c.clientKey === '' || c.clientKey.length > 128) reject('bad_client_key', 'clientKey must be 1–128 characters');
+      const existing = s.clientKeys.get(`${account.id}|${c.clientKey}`);
+      if (existing !== undefined) reject('duplicate_client_key', `order ${existing} was already placed with that key`);
+    }
 
     // D17: sell side s at p == buy other side at 100 − p; market == IOC at 99 for the side bought.
     let side: Side = c.action === 'sell' ? otherSide(c.side) : c.side;
@@ -443,6 +457,7 @@ export class Engine {
     account.cash -= lock;
     account.locked += lock;
     s.orders.set(id, order);
+    if (c.clientKey !== undefined) s.clientKeys.set(`${account.id}|${c.clientKey}`, id);
 
     const fills = this.match(order, account, market, house ?? null, c.at);
 
@@ -714,6 +729,20 @@ export class Engine {
     task.runId = runId;
     if (runId !== null) s.usedRunIds.add(runId);
     return { task, market };
+  }
+
+  private pauseTrading(c: PauseTradingCommand): CommandResults['pauseTrading'] {
+    const s = this.state;
+    if (typeof c.paused !== 'boolean') reject('bad_paused', 'paused must be true or false');
+    if (c.reason !== undefined && (typeof c.reason !== 'string' || c.reason.length > 500)) reject('bad_reason', 'reason must be a short string');
+    if (c.by !== undefined && c.by !== null) {
+      const by = s.accounts.get(c.by);
+      if (!by) reject('account_not_found', `no account ${c.by}`);
+      if (by.role !== 'admin') reject('forbidden', 'only an admin pauses trading');
+    }
+    const reason = c.paused ? (c.reason ?? '') : '';
+    s.trading = { paused: c.paused, reason, since: c.paused ? c.at : null };
+    return { paused: c.paused, reason };
   }
 
   /** Pay every position at `price` for Yes (100 − price for No); escrow must reach exactly 0. */

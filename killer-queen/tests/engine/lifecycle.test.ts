@@ -197,3 +197,39 @@ describe('close, decide, settle', () => {
     assert.equal(r2.task.id, 'tsk_2');
   });
 });
+
+describe('pause trading (D26) and client keys (D27)', () => {
+  it('while paused no order is accepted; cancels, close, decide and settle still work', () => {
+    const f = seedExchange();
+    const m = f.markets[0]!;
+    const o = buy(f.venue, 'alice', m, 'yes', 40, 5);
+    mustReject(f.venue, { type: 'pauseTrading', paused: true, reason: 'x', by: 'alice' }, 'forbidden');
+    const p = must(f.venue, { type: 'pauseTrading', paused: true, reason: 'incident 12', by: 'admin' });
+    assert.equal(p.paused, true);
+    assert.equal(f.venue.engine.state.trading.since, f.clock.now());
+    mustReject(f.venue, { type: 'placeOrder', account: 'bob', market: m, side: 'no', action: 'buy', orderType: 'limit', price: 60, quantity: 5 }, 'trading_paused');
+    must(f.venue, { type: 'cancelOrder', account: 'alice', orderId: o.order.id });
+    must(f.venue, { type: 'closeTask', taskId: f.taskId });
+    must(f.venue, { type: 'decide', taskId: f.taskId, executorId: 'codex' });
+    must(f.venue, { type: 'settle', taskId: f.taskId, outcome: 'failed', log: '' });
+    must(f.venue, { type: 'pauseTrading', paused: false, by: null });
+    assert.equal(f.venue.engine.state.trading.paused, false);
+    assert.equal(f.venue.engine.state.trading.reason, '');
+    const t2 = must(f.venue, { type: 'createTask', customer: 'cust', title: 't', prompt: 'p', repo: 'r', commit: 'c', testCommand: 'npm test', candidateAgents: ['codex'] });
+    buy(f.venue, 'bob', t2.markets[0]!.id, 'no', 60, 5);
+  });
+
+  it('a second order with the same client key is rejected and the first can be looked up', () => {
+    const f = seedExchange();
+    const m = f.markets[0]!;
+    const first = must(f.venue, { type: 'placeOrder', account: 'alice', market: m, side: 'yes', action: 'buy', orderType: 'limit', price: 40, quantity: 5, clientKey: 'retry-1' });
+    mustReject(f.venue, { type: 'placeOrder', account: 'alice', market: m, side: 'yes', action: 'buy', orderType: 'limit', price: 40, quantity: 5, clientKey: 'retry-1' }, 'duplicate_client_key');
+    assert.equal(f.venue.engine.orderByClientKey('alice', 'retry-1')!.id, first.order.id);
+    // another account may reuse the same key string
+    must(f.venue, { type: 'placeOrder', account: 'bob', market: m, side: 'yes', action: 'buy', orderType: 'limit', price: 40, quantity: 5, clientKey: 'retry-1' });
+    mustReject(f.venue, { type: 'placeOrder', account: 'bob', market: m, side: 'yes', action: 'buy', orderType: 'limit', price: 40, quantity: 5, clientKey: '' }, 'bad_client_key');
+    // a rejected order does not consume its key
+    mustReject(f.venue, { type: 'placeOrder', account: 'carol', market: m, side: 'yes', action: 'buy', orderType: 'limit', price: 0, quantity: 5, clientKey: 'k2' }, 'bad_price');
+    must(f.venue, { type: 'placeOrder', account: 'carol', market: m, side: 'yes', action: 'buy', orderType: 'limit', price: 10, quantity: 5, clientKey: 'k2' });
+  });
+});

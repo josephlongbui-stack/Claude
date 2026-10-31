@@ -20,12 +20,23 @@ export function bearer(req: Request): string | null {
   return m ? m[1]!.trim() : null;
 }
 
+/** Find the account whose key hash matches, comparing every keyed account in constant time. */
+export function findAccountByKey(venue: Venue, token: string): Account | undefined {
+  const hash = sha256(token);
+  let found: Account | undefined;
+  for (const a of venue.engine.state.accounts.values()) {
+    if (a.keyHash === null) continue;
+    if (constantTimeEqual(hash, a.keyHash)) found = a; // no early exit
+  }
+  return found;
+}
+
 /** Resolve the caller's account from `Authorization: Bearer <api key>` by SHA-256 lookup. */
 export function requireAccount(venue: Venue) {
   return (req: AuthedRequest, _res: Response, next: NextFunction): void => {
     const token = bearer(req);
     if (!token) return next(new HttpError(401, 'unauthorized', 'missing Authorization: Bearer <api key>'));
-    const account = venue.engine.accountByKeyHash(sha256(token));
+    const account = findAccountByKey(venue, token);
     if (!account) return next(new HttpError(401, 'unauthorized', 'unknown api key'));
     req.account = account;
     next();

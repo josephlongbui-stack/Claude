@@ -139,3 +139,26 @@ but land in a later phase (see docs/ROADMAP.md).
   `upsertExecutor`; the product spec lists none. In sandbox, boot registers
   claude-code, codex and gemini-cli when no executors exist, and
   `npm run seed` adds a demo customer and three demo tasks.
+- **D26 Pause trading.** An eleventh journaled command, `pauseTrading`
+  `{ paused, reason, by }`, is the admin switch prompt 1.5 asks for. While
+  paused, `placeOrder` is rejected with `trading_paused`; cancels, comments,
+  close, decide and settle continue so money keeps settling. Only an admin
+  account (or the admin key, `by: null`) may flip it. This extends the spec's
+  ten commands deliberately; the spec's rule "every state change is one
+  journaled command" still holds.
+- **D27 Idempotent orders.** `placeOrder` takes an optional `clientKey`
+  (1–128 chars, unique per account, journaled in `state.clientKeys`). Over
+  HTTP it comes from the `Idempotency-Key` header: a retry with the same key
+  returns the original order (200, `replayed: true`) instead of placing a
+  second one, and this survives restarts because the key is in the journal.
+  A rejected order does not consume its key.
+- **D28 Rate limits.** In-process token buckets per API key: orders 30/min,
+  task creates 5/min, other writes 60/min, authenticated reads 120/min, and
+  300/min per IP for public reads and sign-up (`RATE_LIMIT_*_PER_MIN`, 0
+  disables). Refill is continuous; a refusal is `429 { code: "rate_limited" }`
+  with `Retry-After`. Limits are per process (no Redis), as the v1 note allows.
+- **D29 Constant-time key check.** `Authorization: Bearer` keys are hashed and
+  compared against every keyed account with `timingSafeEqual`, without an
+  early exit, so response time does not depend on how close a guess is. This
+  is O(accounts) per request, fine at v0/v1 scale; an index can come later.
+

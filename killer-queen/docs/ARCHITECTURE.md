@@ -40,9 +40,13 @@ Pure TypeScript, no I/O, no clock, no randomness.
 | `closeTask` | task exists, open, `by` is customer/admin or null | status closed; per market: closing price from the book (D7), then cancel every open order |
 | `decide` | task closed, `by` is customer/admin or null, candidate or null | null: skipped, all markets settle at closing price; else chosen market → running, others settle at closing price (D14) |
 | `settle` | task running, outcome, log string, unused runId | chosen market pays 100/0 or closing price (infra_error); task resolved |
+| `pauseTrading` (D26, added in Phase 1) | boolean, short reason, `by` is an admin or null | `state.trading` flips; placeOrder rejects `trading_paused` while paused |
 
 Ids: `acc_n`, `tsk_n`, `o<n>`, `f<n>`, `c<n>` from engine counters that skip
-explicitly supplied ids; replay therefore reproduces them (D12).
+explicitly supplied ids; replay therefore reproduces them (D12). `placeOrder`
+also accepts a `clientKey` (D27) recorded in `state.clientKeys` so a retried
+order is rejected with `duplicate_client_key` and the original can be looked
+up with `orderByClientKey`.
 
 ### Money flow of one fill
 
@@ -64,20 +68,29 @@ Rows are never updated or deleted; corrections are new commands.
 
 `tests/golden/journal.json` is a fixed 22-command sequence with its expected
 state hash; `scripts/make-golden.ts` regenerates it (explain the new hash in
-`docs/BUILD_LOG.md`).
+`docs/BUILD_LOG.md`). `tests/engine/property.test.ts` runs `KQ_PROP_RUNS`
+random sequences of every command (default 200) with the invariant checker
+after each one and a replay-hash comparison at the end;
+`tests/server/fuzz.test.ts` sends random invalid requests to every route and
+requires 4xx `{ error, code }` with an unchanged state hash.
 
 ## Server (`src/server`)
 
 - `config.ts`: zod over `process.env`; live + simulated → `ConfigError`; live
   needs a 16+ char `RUNNER_SECRET`.
-- `auth.ts`: `Authorization: Bearer <key>` → `sha256` → `accountByKeyHash`;
-  runner secret and admin key compared in constant time; `newApiKey()` makes
-  `kq_` + 48 hex.
+- `auth.ts`: `Authorization: Bearer <key>` → `sha256` → compared against every
+  keyed account with `timingSafeEqual` and no early exit (D29); runner secret
+  and admin key compared in constant time; `newApiKey()` makes `kq_` + 48 hex.
+- `rateLimit.ts`: token buckets per key/IP on the injected clock (D28);
+  `429 rate_limited` with `Retry-After`.
 - `app.ts`: every route from the spec table (see `README.md`), zod schemas
   with `.strict()`, errors mapped by `statusForCode` (404 not found, 403
-  conflict/forbidden, 401 auth, 409 state conflicts, 400 validation). Runner
-  results verify `x-kq-signature: sha256=<HMAC of the raw body>`, the 5-minute
-  timestamp window, and pass `runId` to the engine for single use (D9).
+  conflict/forbidden, 401 auth, 409 state conflicts, 429 rate limited, 400
+  validation, 413 too large), JSON bodies capped at 64 kB (6 MB for runner
+  logs), no stack traces. `POST /api/orders` honours `Idempotency-Key` (D27).
+  Runner results verify `x-kq-signature: sha256=<HMAC of the raw body>`, the
+  5-minute timestamp window, and pass `runId` to the engine for single use
+  (D9). `POST /api/admin/trading` (admin key) journals `pauseTrading`.
   Static `public/` is served with an SPA fallback when it exists.
 - `runners/simulated.ts`: listens to venue `decide` events, queues the task,
   settles after a delay with the deterministic outcome (D20); `flush()` for
@@ -165,5 +178,7 @@ and through boot).
 11. **Accounts.** Spec: "people sign up in the app with identity checks";
     built sandbox has open sign-up and live mode refuses it until v1 identity
     gates exist. API keys for everyone, no sessions yet (D11 is Phase 4).
-12. **Not in v0** (identity, surveillance, container runner, GitHub app,
-    importer, rate limits, snapshots/Postgres): not built, as the spec says.
+12. **Rate limits and idempotency** were listed as "not in v0"; Phase 1
+    (prompt 1.5) added per-key token buckets, `Idempotency-Key` and the
+    `pauseTrading` command. Identity, surveillance, the container runner,
+    GitHub app, importer and snapshots/Postgres remain unbuilt.
