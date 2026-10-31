@@ -126,3 +126,16 @@ but land in a later phase (see docs/ROADMAP.md).
   (default 600000) unless the command supplies `closesAt`. Boot auto-closes any
   open task whose `closesAt` has passed and then auto-decides it if
   `autoDecide` is set.
+- **D24 House trader sizing.** "2.5% of its cash scaled by the edge" means a
+  budget of `cash × 0.025 × min(4, edge / 4)` cents at an edge of `edge`
+  cents (so a 4¢ edge is 2.5%, 8¢ is 5%, capped at 10%), spent as an
+  immediate-or-cancel order at the best ask for `floor(budget / (price + 1))`
+  contracts. Resting bids 3¢ either side of fair value use 1% of cash per
+  side. Each buy, and each pair of resting bids, counts as one of the three
+  actions per market. The house market maker's first estimate is the
+  executor's historical pass rate, or 50 with no record; it moves 40% toward
+  every trade (including its own fills) in trade order.
+- **D25 Executors are registered by the operator.** There is no HTTP route for
+  `upsertExecutor`; the product spec lists none. In sandbox, boot registers
+  claude-code, codex and gemini-cli when no executors exist, and
+  `npm run seed` adds a demo customer and three demo tasks.

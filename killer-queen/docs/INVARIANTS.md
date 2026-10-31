@@ -1,17 +1,80 @@
 # Invariants
 
-1. Conservation: sum of every account's cash and locked plus all market escrow
-   equals total deposits, after every command.
-2. Escrow: each market's escrow equals 100 cents times its open interest.
-3. Net positions: no account holds Yes and No in the same market.
-4. Locks: an account's locked funds equal the sum over its open orders of
-   remaining quantity times (price + fee rate).
-5. Settlement: escrow empties exactly; open orders are cancelled and unlocked at
-   close.
-6. Rejection is free: a rejected command leaves the state hash unchanged.
-7. Determinism: replaying the journal produces a byte-identical state hash.
-8. Conflicts: no order from the customer, the agent's maker org, staff or runner
-   operators ever rests or fills.
-9. Signed settlement: the chosen market settles only from a valid signed result
-   for a task in running.
-10. Durability: a command is acknowledged only after its journal row commits.
+Every money and fairness rule as a numbered, testable statement, with the test
+that proves it today. `assertInvariants` is `tests/helpers/invariants.ts`; the
+fixture helpers `must`/`mustReject` call it after every command in every engine
+and bot test, and the random run calls it after every one of 1,500 orders.
+
+1. **Conservation.** Sum of every account's cash and locked plus all market
+   escrow equals total deposits, after every command.
+   Proof: `assertInvariants` (conservation block), run after every command;
+   `tests/engine/invariants.test.ts` "holds after every step and after close +
+   decide + settle (pass)" and the fail/skip/infra_error cases.
+2. **Escrow.** Each market's escrow equals 100 cents times its open interest,
+   and open interest equals the sum of Yes positions and the sum of No
+   positions.
+   Proof: `assertInvariants` (per-market block); `tests/engine/matching.test.ts`
+   "a Yes bid and a No bid summing to 100¢ or more match…" checks the exact
+   amounts.
+3. **Net positions.** No account holds Yes and No in the same market.
+   Proof: `assertInvariants`; `tests/engine/matching.test.ts` "buying the other
+   side nets into cash with the right realized profit" and "selling Yes at p
+   is buying No at 100 − p".
+4. **Locks.** An account's locked funds equal the sum over its open orders of
+   remaining quantity times (price + fee rate); non-open orders lock nothing.
+   Proof: `assertInvariants` (locks block); `tests/engine/matching.test.ts`
+   "cancelOrder refunds the remaining lock" and "house market maker pays no
+   fee and locks only the price".
+5. **Settlement.** Escrow empties exactly; open orders are cancelled and
+   unlocked at close; a settled market has no resting orders.
+   Proof: `tests/engine/lifecycle.test.ts` "close cancels open orders, returns
+   locks…", "decide settles unchosen markets…", "skip settles every market…",
+   "infra_error settles the chosen market at the closing price";
+   `tests/engine/invariants.test.ts` asserts escrow 0 and locked 0 after each
+   finish; the engine throws if escrow does not reach 0.
+6. **Rejection is free.** A rejected command leaves the state hash unchanged.
+   Proof: `mustReject` in `tests/helpers/fixtures.ts` compares `stateHash`
+   before and after for every rejection test (accounts, executors, matching,
+   conflicts, lifecycle, createTask validation); `tests/engine/matching.test.ts`
+   "a rejected order leaves the state hash unchanged"; sampled every 10th step
+   of the random run.
+7. **Determinism.** Replaying the journal produces a byte-identical state hash.
+   Proof: `tests/engine/invariants.test.ts` "replaying the recorded commands
+   into a fresh engine rebuilds the identical state hash";
+   `tests/server/journal.test.ts` "replaying the journal rebuilds identical
+   state" and the golden journal test; `tests/server/restart.test.ts` "state
+   survives a server restart".
+8. **Conflicts.** No order or comment from the customer, the customer's org,
+   the agent's maker org, staff (customer, admin, house roles) or runner
+   operators (who have no account) ever rests or fills.
+   Proof: `tests/engine/matching.test.ts` "conflict rules" (both commands, each
+   party); `tests/server/http.test.ts` "conflicts are rejected over HTTP with
+   403"; `tests/bots/simTrader.test.ts` "respects conflicts";
+   `tests/bots/llm.test.ts` "an Anthropic-org trader cannot order on a Claude
+   Code market".
+9. **Signed settlement.** The chosen market settles only from a valid signed
+   result for a task in running (or the sandbox admin route), with a fresh
+   runId and a timestamp inside the window.
+   Proof: `tests/server/runner.test.ts` "end to end…" (bad HMAC 401 and the
+   market stays running; unsigned 401; stale timestamp 401; reused runId 409);
+   `tests/engine/lifecycle.test.ts` rejects `settle` unless running;
+   `tests/server/http.test.ts` "admin hand-settle needs the admin key".
+10. **Durability.** A command is acknowledged only after its journal row
+    commits; a failed append halts the venue; the journal is WAL with
+    synchronous=FULL; a gap or corrupt row is reported, never skipped.
+    Proof: `tests/server/journal.test.ts` "a failed append halts the venue",
+    "WAL mode and synchronous=FULL are set", "a sequence gap or corrupt row is
+    reported"; `tests/server/restart.test.ts`. A crash injected between apply
+    and commit (prompt 1.4): **none** yet.
+11. **Integer cents.** Cash, locked, deposited, escrow, prices and quantities
+    are safe integers; prices 1–99.
+    Proof: `assertInvariants`; `tests/engine/money.test.ts`;
+    `tests/engine/accounts.test.ts` "deposit … fractional amounts are rejected";
+    `tests/engine/matching.test.ts` "insufficient funds and bad prices are
+    rejected without side effects".
+12. **Books.** Each side of a book is sorted by price descending then
+    sequence ascending and holds exactly the market's open orders; non-open
+    markets have empty books.
+    Proof: `assertInvariants` (book block);
+    `tests/engine/matching.test.ts` "non-crossing orders rest … price priority
+    then time".

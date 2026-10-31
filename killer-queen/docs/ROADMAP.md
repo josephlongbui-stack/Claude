@@ -2,7 +2,8 @@
 
 Phases and gates from the product spec. Each feature is a testable acceptance
 statement; a box is ticked only when a named automated test (or a recorded
-manual check for UI) proves it.
+manual check for UI) proves it. Test names are in `docs/INVARIANTS.md` and the
+suites under `tests/`.
 
 ## v0 · Play-money exchange (weeks 1–6)
 
@@ -10,74 +11,85 @@ Order book, house market maker and agent traders, sandbox runner, web app and
 API. Public arena on open-source tasks that have tests.
 
 **Gate:** 500 settled runs, closing prices at least 10% more accurate (Brier)
-than the agents' historical pass rates.
+than the agents' historical pass rates. (Operational gate; needs a public
+deployment and real tasks.)
 
 ### Engine
-- [ ] A Yes bid and a No bid summing to 100¢ or more match at the resting
-      price; fees and locks are exact to the cent.
-- [ ] Non-crossing orders rest and quotes reflect them.
-- [ ] Buying the other side nets into cash with the right realized profit.
-- [ ] Conflict rules block the agent's maker org and the customer (and staff).
-- [ ] Insufficient funds and bad prices are rejected without side effects
+- [x] A Yes bid and a No bid summing to 100¢ or more match at the resting
+      price; fees and locks are exact to the cent. (`matching.test.ts`)
+- [x] Non-crossing orders rest and quotes reflect them. (`matching.test.ts`)
+- [x] Buying the other side nets into cash with the right realized profit.
+- [x] Conflict rules block the agent's maker org and the customer (and staff).
+- [x] Insufficient funds and bad prices are rejected without side effects
       (state hash unchanged).
-- [ ] Immediate-or-cancel orders never rest; a market buy is IOC at 99.
-- [ ] Close, decide and settle pay the right amounts, including unchosen
-      markets; escrow is 0 after settlement.
-- [ ] Money is conserved after every step of 1,500 random orders; positions
-      are always net; escrow = 100 × open interest.
-- [ ] Replaying the journal rebuilds identical state (same state hash).
-- [ ] Every rule in docs/INVARIANTS.md is checked after every command in the
-      property test.
+- [x] Immediate-or-cancel orders never rest; a market buy is IOC at 99.
+- [x] Close, decide and settle pay the right amounts, including unchosen
+      markets; escrow is 0 after settlement. (`lifecycle.test.ts`)
+- [x] Money is conserved after every step of 1,500 random orders; positions
+      are always net; escrow = 100 × open interest. (`invariants.test.ts`)
+- [x] Replaying the journal rebuilds identical state (same state hash).
+      (`journal.test.ts`, golden journal)
+- [x] Every rule in docs/INVARIANTS.md is checked after every command in the
+      engine tests and the random run. (`helpers/invariants.ts`)
 
 ### Server
-- [ ] Every route in the spec's HTTP API table exists with zod validation and
-      `{ error, code }` errors.
-- [ ] End to end over HTTP: customer submits, humans and agents trade, the
-      runner settles with a signed result.
-- [ ] Bad HMAC gets 401 and the market stays running.
-- [ ] State survives a server restart.
-- [ ] Live mode refuses to boot with the simulated runner.
-- [ ] Faucet works in sandbox and is refused in live.
-- [ ] Trading windows auto-close on schedule; auto-decide picks the highest
-      chance when asked.
+- [x] Every route in the spec's HTTP API table exists with zod validation and
+      `{ error, code }` errors. (`http.test.ts`)
+- [x] End to end over HTTP: customer submits, humans and agents trade, the
+      runner settles with a signed result. (`runner.test.ts`)
+- [x] Bad HMAC gets 401 and the market stays running.
+- [x] State survives a server restart. (`restart.test.ts`)
+- [x] Live mode refuses to boot with the simulated runner.
+- [x] Faucet works in sandbox and is refused in live.
+- [x] Trading windows auto-close on schedule; auto-decide picks the highest
+      chance when asked. (`restart.test.ts`)
 
 ### Bots
-- [ ] The house market maker quotes both sides of every market from creation,
+- [x] The house market maker quotes both sides of every market from creation,
       4¢ around fair value, 30 per side, 1¢ skew per 60 inventory, cap 1,200.
-- [ ] After a trade the market maker's fair value moves 40% toward the trade.
-- [ ] Heuristic traders post a thesis, buy on a ≥ 4¢ edge sized at 2.5% of cash
+      (`marketMaker.test.ts`)
+- [x] After a trade the market maker's fair value moves 40% toward the trade.
+- [x] Heuristic traders post a thesis, buy on a ≥ 4¢ edge sized at 2.5% of cash
       scaled by the edge, otherwise rest 3¢ either side, at most 3 trades.
-- [ ] Bots trade over HTTP without breaking the books.
-- [ ] LLM adapters build the right request for Anthropic, OpenAI and Gemini
+      (`simTrader.test.ts`)
+- [x] Bots trade over HTTP without breaking the books. (`httpBots.test.ts`)
+- [x] LLM adapters build the right request for Anthropic, OpenAI and Gemini
       and parse `{ probability, rationale }`; bad replies skip trading without
-      crashing; a lab's trader never trades that lab's agent.
+      crashing; a lab's trader never trades that lab's agent. (`llm.test.ts`)
 
 ### Web (acceptance checklist per screen, used by prompt 3.3)
-- [ ] **Arena** (task list): every open task with per-candidate chance, volume,
-      recommendation; states: loading, empty, closed, running, settled.
-- [ ] **Task**: packet, one book per candidate, trades, theses; customer sees
-      close and decide/skip controls; states: open, closed (decide step),
-      running, resolved/skipped, error.
-- [ ] **Market**: ladder, order ticket (buy Yes/No, limit or market, price,
-      quantity), recent trades, theses, position; thin-book and no-trades
-      states.
-- [ ] **Portfolio**: cash, locked, positions with unrealized P&L, open orders
-      (cancel), settled history; "Play money - no cash value" beside balances.
-- [ ] **Leaderboard**: humans and agents side by side, by profit and by
+- [x] **Arena** (task list): every task with per-candidate chance, volume,
+      recommendation; loading and empty states. (manual, `MANUAL.md`)
+- [ ] **Arena**: designed thin-book / error states and a design pass
+      (prompt 3.2–3.3).
+- [x] **Task**: packet, candidates with chance and traders, customer close and
+      decide/skip controls, running, resolved (log), skipped states.
+- [x] **Market**: ladder, order ticket (buy/sell, limit/market, price,
+      quantity, lock preview), recent trades, theses, position, own orders.
+- [x] **Portfolio**: cash, locked, positions with unrealized P&L, open orders
+      (cancel), settled history; "play money · no cash value" beside balances.
+- [x] **Leaderboard**: humans and agents side by side, by profit and by
       accuracy.
-- [ ] **Agent records**: executors with chosen/passed per version.
-- [ ] **Submit task**: prompt, repo, commit, test command, candidates,
-      auto-decide, minimum chance; validation errors shown inline.
-- [ ] **API keys**: create account, key shown once, copy; sign-out.
-- [ ] A human can complete submit → trade → decide → see settlement against
-      the local server (docs/MANUAL.md click path).
+- [x] **Agent records**: executors with chosen/passed per version, gate stats.
+- [x] **Submit task**: prompt, repo, commit, test command, candidates,
+      auto-decide, minimum chance; API errors shown inline.
+- [x] **API keys** (Account): create account, key shown once, sign in with a
+      key, faucet, sign-out.
+- [x] A human can complete submit → trade → decide → see settlement against
+      the local server. (Headless-browser run recorded in `MANUAL.md`)
+- [ ] Design system, tokens, light mode, 390 px layout, ui-reviewer pass
+      (prompts 3.2–3.3).
 
 ### Operations
-- [ ] Journal in WAL mode, synchronous=FULL; a command is acknowledged only
-      after its row commits.
-- [ ] Gate metrics in `/api/stats`: Brier of closing prices, calibration of
-      70–80¢ markets, median spread at close, median distinct traders per
-      market, time to tradable market, settled count.
+- [x] Journal in WAL mode, synchronous=FULL; a command is acknowledged only
+      after its row commits. (`journal.test.ts`)
+- [ ] Crash injected between apply and commit, restart, acknowledged state
+      survives (prompt 1.4).
+- [x] Gate metrics in `/api/stats`: Brier of closing prices vs base rate,
+      calibration of 70–80¢ markets, median spread at close, median distinct
+      traders per market, time to tradable market, settled count.
+      (`views.test.ts`) Decision lift needs a customer default agent (v1).
+- [ ] Server-sent events instead of polling (prompt 3.1).
 - [ ] Deploy: Dockerfile, persistent volume for the journal, nightly backup and
       restore drill (prompt 3.6).
 
@@ -94,8 +106,8 @@ checks in exchange for weekly feedback.
       still fails (D1).
 - [ ] Baseline check: 3 runs at the pinned commit must all fail; trivial and
       flaky tasks are rejected (D2).
-- [ ] Signed results carry runId and timestamp; replays and stale results are
-      refused (D9).
+- [x] Signed results carry runId and timestamp; replays and stale results are
+      refused (D9). (`runner.test.ts`; required in live mode)
 - [ ] Rate limits per API key: 429 with `code: rate_limited`.
 - [ ] Surveillance alerts: wash trading, spoofing, closing-price pressure,
       conflicted-org trading, unusual win rates; admin queue; nothing
