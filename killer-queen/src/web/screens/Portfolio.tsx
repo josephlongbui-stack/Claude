@@ -1,173 +1,160 @@
 import { useEffect, useState } from 'preact/hooks';
-import { api, dollars, signed } from '../api.js';
-import { Card, EmptyState, Pill, Skeleton, Stat } from '../components/index.js';
+import { api } from '../api.js';
 import type { Ctx } from '../main.js';
+import { Button, EmptyState, Money, PageHead, Panel, SectionHead, Skeleton, StatusPill, Table, Td, TitleCell, Tr, count, dollars, toast } from '../ui/index.js';
+import { words } from './Market.js';
 
 export function Portfolio({ ctx }: { ctx: Ctx }) {
   const [pf, setPf] = useState<any | null>(null);
+  const [titles, setTitles] = useState<Record<string, { title: string; agent: string; taskId: string }>>({});
+  const [error, setError] = useState<string | null>(null);
+  const load = () =>
+    Promise.all([api('GET', '/api/portfolio'), api<{ tasks: any[] }>('GET', '/api/tasks').catch(() => ({ tasks: [] }))])
+      .then(([p, t]) => {
+        setPf(p);
+        const map: Record<string, { title: string; agent: string; taskId: string }> = {};
+        for (const e of t.tasks) for (const m of e.markets) map[m.marketId] = { title: e.task.title, agent: `${m.executor.name} ${m.executor.version}`, taskId: e.task.id };
+        setTitles(map);
+        setError(null);
+      })
+      .catch((e) => setError(e.error ?? 'The exchange did not answer.'));
   useEffect(() => {
-    if (!ctx.me) return;
-    api('GET', '/api/portfolio').then(setPf).catch(() => setPf(null));
+    if (ctx.me) void load();
   }, [ctx.tick, ctx.me?.id]);
-  if (!ctx.me) return <EmptyState title="Sign in to see your portfolio" hint="New traders start with $1,000 of play money." action={{ href: '#/account', label: 'Sign in or create an account' }} />;
+
+  if (!ctx.me) return <EmptyState title="Sign in to see your portfolio" hint="New traders start with $1,000 in play money." action={{ href: '#/signin', label: 'Sign in' }} />;
+  if (error) return <EmptyState kind="error" title="The exchange did not answer" hint={error} retry={() => void load()} />;
   if (!pf)
     return (
-      <div class="card card-body">
-        <Skeleton lines={6} />
-      </div>
+      <>
+        <PageHead title="Portfolio" />
+        <Skeleton shape="summary" />
+        <Panel>
+          <Skeleton shape="table" />
+        </Panel>
+      </>
     );
   const cancel = async (id: string) => {
     try {
       await api('DELETE', `/api/orders/${encodeURIComponent(id)}`);
-      ctx.toast('Order cancelled.');
+      toast('Order cancelled; the lock is back in your cash.');
+      await Promise.all([load(), ctx.refreshMe()]);
     } catch (e: any) {
-      ctx.toast(`${e.error} (${e.code})`, true);
+      toast(words(e), 'error');
     }
   };
-  const pnl = (n: number) => <span class={n >= 0 ? 'yes-c' : 'no-c'}>{signed(n)}</span>;
+  const openValue = pf.positions.reduce((a: number, p: any) => a + p.quantity * (p.side === 'yes' ? p.mark : 100 - p.mark), 0);
+  const agentOf = (executorId: string, market: string) => titles[market]?.agent ?? executorId;
   return (
-    <div class="stack" style="gap:20px">
-      <div class="page-head">
+    <>
+      <PageHead title="Portfolio" />
+      <dl class="summary" data-testid="balances">
         <div>
-          <h1>Portfolio</h1>
-          <p class="sub">Play money · no cash value</p>
+          <dt>Cash</dt>
+          <dd>{dollars(pf.cash)}</dd>
         </div>
-      </div>
-      <div class="grid grid-4" data-testid="balances">
-        <Stat label="Cash" value={dollars(pf.cash)} hint={`${dollars(pf.locked)} locked in orders`} />
-        <Stat label="Total P&L" value={pnl(pf.pnl.total)} hint="net of fees" testId="pnl-total" />
-        <Stat label="Realized" value={pnl(pf.pnl.realized)} hint={`${dollars(pf.pnl.fees)} in fees`} />
-        <Stat label="Unrealized" value={pnl(pf.pnl.unrealized)} hint="open positions at the live price" />
-      </div>
-      <Card title="Positions" sub={pf.positions.length ? `${pf.positions.length} open` : undefined} flush testId="positions">
-        {pf.positions.length === 0 && (
-          <div class="card-body">
-            <p class="muted">
-              No open positions. <a href="#/">Find a market</a>.
-            </p>
-          </div>
+        <div>
+          <dt>Locked in orders</dt>
+          <dd>{dollars(pf.locked)}</dd>
+        </div>
+        <div>
+          <dt>Open positions</dt>
+          <dd>{dollars(openValue)}</dd>
+        </div>
+        <div>
+          <dt>Realized P&amp;L</dt>
+          <dd>
+            <Money cents={pf.pnl.realized - pf.pnl.fees} signed />
+          </dd>
+        </div>
+        <div data-testid="pnl-total">
+          <dt>Total P&amp;L</dt>
+          <dd>
+            <Money cents={pf.pnl.total} signed />
+          </dd>
+        </div>
+        <span class="note">Play money. No cash value.</span>
+      </dl>
+
+      <SectionHead title="Positions" aside={pf.positions.length ? `${pf.positions.length} open` : undefined} />
+      <Panel testId="positions">
+        {pf.positions.length === 0 ? (
+          <EmptyState title="No positions yet" hint="Pick an agent in the Arena to make your first trade." action={{ href: '#/', label: 'Go to the Arena' }} />
+        ) : (
+          <Table caption="Open positions" columns={[{ key: 'm', label: 'Market', width: 'task' }, { key: 's', label: 'Side' }, { key: 'q', label: 'Contracts', align: 'right' }, { key: 'c', label: 'Avg cost', align: 'right', hideSm: true }, { key: 'k', label: 'Mark', align: 'right', hideSm: true }, { key: 'u', label: 'Unrealized', align: 'right' }]}>
+            {pf.positions.map((p: any) => (
+              <Tr key={p.market} href={`#/market/${encodeURIComponent(p.market)}`}>
+                <Td>
+                  <TitleCell title={p.title} sub={agentOf(p.executorId, p.market)} />
+                </Td>
+                <Td class={p.side === 'yes' ? 'yes' : 'no'}>{p.side === 'yes' ? 'Yes' : 'No'}</Td>
+                <Td align="right">{count(p.quantity)}</Td>
+                <Td align="right" hideSm>
+                  {p.avgCost}¢
+                </Td>
+                <Td align="right" hideSm>
+                  {p.mark}¢
+                </Td>
+                <Td align="right">
+                  <Money cents={p.unrealized} signed />
+                </Td>
+              </Tr>
+            ))}
+          </Table>
         )}
-        {pf.positions.length > 0 && (
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Market</th>
-                  <th>Side</th>
-                  <th class="r">Contracts</th>
-                  <th class="r">Avg cost</th>
-                  <th class="r">Mark</th>
-                  <th class="r">Unrealized</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pf.positions.map((p: any) => (
-                  <tr class="click" onClick={() => (location.hash = `#/market/${encodeURIComponent(p.market)}`)}>
-                    <td>
-                      <div style="font-weight:500">{p.title}</div>
-                      <div class="muted" style="font-size:12.5px">
-                        {p.executorId}
-                      </div>
-                    </td>
-                    <td class={p.side === 'yes' ? 'yes-c' : 'no-c'} style="font-weight:600">
-                      {p.side === 'yes' ? 'Yes' : 'No'}
-                    </td>
-                    <td class="r num">{p.quantity}</td>
-                    <td class="r num">{p.avgCost}¢</td>
-                    <td class="r num">{p.mark}¢</td>
-                    <td class="r num">{pnl(p.unrealized)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      </Panel>
+
+      <SectionHead title="Open orders" aside={pf.openOrders.length ? `${pf.openOrders.length} resting` : undefined} />
+      <Panel testId="open-orders">
+        {pf.openOrders.length === 0 ? (
+          <EmptyState title="No resting orders" hint="Limit orders that do not fill at once wait here until they fill or you cancel them." />
+        ) : (
+          <Table caption="Open orders" columns={[{ key: 'm', label: 'Market', width: 'task' }, { key: 's', label: 'Side' }, { key: 'p', label: 'Price', align: 'right' }, { key: 'l', label: 'Left', align: 'right' }, { key: 'a', label: '' }]}>
+            {pf.openOrders.map((o: any) => (
+              <Tr key={o.id}>
+                <Td>
+                  <TitleCell title={titles[o.market]?.title ?? o.market} href={`#/market/${encodeURIComponent(o.market)}`} sub={titles[o.market]?.agent} />
+                </Td>
+                <Td class={o.side === 'yes' ? 'yes' : 'no'}>{o.side === 'yes' ? 'Yes' : 'No'}</Td>
+                <Td align="right">{o.price}¢</Td>
+                <Td align="right">{count(o.quantity - o.filled)}</Td>
+                <Td align="right">
+                  <Button variant="quiet" class="compact" onClick={() => cancel(o.id)} aria-label={`Cancel ${o.quantity - o.filled} ${o.side === 'yes' ? 'Yes' : 'No'} at ${o.price} cents`}>
+                    Cancel
+                  </Button>
+                </Td>
+              </Tr>
+            ))}
+          </Table>
         )}
-      </Card>
-      <div class="grid grid-2">
-        <Card title="Open orders" flush>
-          {pf.openOrders.length === 0 && (
-            <div class="card-body">
-              <p class="muted">None resting.</p>
-            </div>
-          )}
-          {pf.openOrders.length > 0 && (
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Market</th>
-                    <th>Side</th>
-                    <th class="r">Price</th>
-                    <th class="r">Left</th>
-                    <th />
-                  </tr>
-                </thead>
-                <tbody>
-                  {pf.openOrders.map((o: any) => (
-                    <tr>
-                      <td>
-                        <a href={`#/market/${encodeURIComponent(o.market)}`} class="code">
-                          {o.market}
-                        </a>
-                      </td>
-                      <td class={o.side === 'yes' ? 'yes-c' : 'no-c'} style="font-weight:600">
-                        {o.side === 'yes' ? 'Yes' : 'No'}
-                      </td>
-                      <td class="r num">{o.price}¢</td>
-                      <td class="r num">{o.quantity - o.filled}</td>
-                      <td class="r">
-                        <button class="ghost" onClick={() => cancel(o.id)}>
-                          Cancel
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </Card>
-        <Card title="Settled" flush testId="history">
-          {pf.history.length === 0 && (
-            <div class="card-body">
-              <p class="muted">Nothing settled yet.</p>
-            </div>
-          )}
-          {pf.history.length > 0 && (
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Market</th>
-                    <th>Outcome</th>
-                    <th class="r">Held</th>
-                    <th class="r">Payout</th>
-                    <th class="r">Realized</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pf.history.map((h: any) => (
-                    <tr class="click" onClick={() => (location.hash = `#/market/${encodeURIComponent(h.market)}`)}>
-                      <td>
-                        <div style="font-weight:500">{h.title}</div>
-                        <div class="muted" style="font-size:12.5px">
-                          {h.executorId}
-                        </div>
-                      </td>
-                      <td>
-                        <Pill status={h.closed.outcome === 'passed' || h.closed.outcome === 'failed' ? h.closed.outcome : 'settled'}>{h.closed.outcome}</Pill>
-                      </td>
-                      <td class="r num">{h.closed.yes > 0 ? `${h.closed.yes} Yes` : h.closed.no > 0 ? `${h.closed.no} No` : '—'}</td>
-                      <td class="r num">{dollars(h.payout)}</td>
-                      <td class="r num">{pnl(h.realized)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </Card>
-      </div>
-    </div>
+      </Panel>
+
+      <SectionHead title="Settled" aside={pf.history.length ? `${pf.history.length} ${pf.history.length === 1 ? 'market' : 'markets'}` : undefined} />
+      <Panel testId="history">
+        {pf.history.length === 0 ? (
+          <EmptyState title="Nothing has settled yet" hint="Markets settle when the chosen agent finishes its run, or at the closing price when it is not chosen." />
+        ) : (
+          <Table caption="Settled positions" columns={[{ key: 'm', label: 'Market', width: 'task' }, { key: 'o', label: 'Outcome' }, { key: 'h', label: 'Held', align: 'right', hideSm: true }, { key: 'p', label: 'Paid out', align: 'right' }, { key: 'r', label: 'Realized', align: 'right' }]}>
+            {pf.history.map((h: any) => (
+              <Tr key={h.market} href={`#/market/${encodeURIComponent(h.market)}`}>
+                <Td>
+                  <TitleCell title={h.title} sub={agentOf(h.executorId, h.market)} />
+                </Td>
+                <Td>
+                  <StatusPill status={h.outcome === 'passed' || h.outcome === 'failed' ? h.outcome : h.outcome === 'infra_error' ? 'infra_error' : 'settled'}>{h.outcome === 'unchosen' || h.outcome === 'skipped' ? `Settled at ${h.settlementPrice ?? '—'}¢` : undefined}</StatusPill>
+                </Td>
+                <Td align="right" hideSm>
+                  {h.yes > 0 ? `${count(h.yes)} Yes` : h.no > 0 ? `${count(h.no)} No` : '—'}
+                </Td>
+                <Td align="right">{dollars(h.payout)}</Td>
+                <Td align="right">
+                  <Money cents={h.realized} signed />
+                </Td>
+              </Tr>
+            ))}
+          </Table>
+        )}
+      </Panel>
+    </>
   );
 }

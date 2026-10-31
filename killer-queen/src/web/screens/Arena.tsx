@@ -1,125 +1,177 @@
 import { useEffect, useState } from 'preact/hooks';
-import { api, countdown } from '../api.js';
-import { ChanceBar, EmptyState, ErrorState, Pill, PriceCell, Segmented, Skeleton, Stat, chanceOf } from '../components/index.js';
+import { api } from '../api.js';
 import type { Ctx } from '../main.js';
+import { AgentRow, Button, Countdown, EmptyState, PageHead, Panel, Skeleton, StatusPill, Table, Tabs, Td, TitleCell, chanceOf, count, taskStatus, type MarketSummary } from '../ui/index.js';
+import { when } from '../ui/PacketView.js';
 
-type Filter = 'all' | 'open' | 'done';
-const OPEN = ['pending', 'open', 'closed', 'running'];
+type Filter = 'soon' | 'traded' | 'new' | 'progress' | 'settled';
+
+interface Entry {
+  task: { id: string; title: string; repo: string; commit: string; status: string; closesAt: number; openedAt: number | null; createdAt: number; resolvedAt: number | null; closedAt: number | null; visibility: string; chosenAgent: string | null; passed: boolean | null; outcome: string | null };
+  markets: MarketSummary[];
+  recommendation: { executorId: string; chance: number } | null;
+}
+
+const OPEN = (e: Entry) => e.task.status === 'open';
+const PROGRESS = (e: Entry) => e.task.status === 'closed' || e.task.status === 'running' || e.task.status === 'pending';
+const DONE = (e: Entry) => e.task.status === 'resolved' || e.task.status === 'skipped' || e.task.status === 'rejected';
+const volume = (e: Entry) => e.markets.reduce((a, m) => a + m.quote.volume, 0);
+const repoName = (r: string) => r.replace(/^(https?:\/\/)?github\.com\//, '');
 
 export function Arena({ ctx }: { ctx: Ctx }) {
-  const [tasks, setTasks] = useState<any[] | null>(null);
-  const [stats, setStats] = useState<any | null>(null);
-  const [err, setErr] = useState<string | null>(null);
-  const [filter, setFilter] = useState<Filter>('open');
+  const [entries, setEntries] = useState<Entry[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<Filter>('soon');
   const load = () =>
-    Promise.all([api<{ tasks: any[] }>('GET', '/api/tasks'), api('GET', '/api/stats').catch(() => null)])
-      .then(([r, s]) => {
-        setTasks(r.tasks);
-        setStats(s);
-        setErr(null);
+    api<{ tasks: Entry[] }>('GET', '/api/tasks')
+      .then((r) => {
+        setEntries(r.tasks);
+        setError(null);
       })
-      .catch((e) => setErr(e.error));
+      .catch((e) => setError(e.error ?? 'The exchange did not answer.'));
   useEffect(() => {
     void load();
   }, [ctx.tick]);
-  if (err) return <ErrorState message={err} retry={() => void load()} />;
-  if (!tasks)
-    return (
-      <div class="grid grid-2">
-        {[0, 1, 2, 3].map(() => (
-          <div class="card card-body">
-            <Skeleton lines={5} />
-          </div>
-        ))}
-      </div>
-    );
-  const now = Date.now();
-  const shown = tasks.filter((t) => (filter === 'all' ? true : filter === 'open' ? OPEN.includes(t.task.status) : !OPEN.includes(t.task.status)));
-  const openCount = tasks.filter((t) => OPEN.includes(t.task.status)).length;
-  return (
-    <div class="stack" style="gap:20px">
-      <div class="page-head">
-        <div>
-          <h1>Markets</h1>
-          <p class="sub">Will this coding agent pass the task's tests? Trade Yes or No before the run.</p>
-        </div>
-        <Segmented value={filter} label="Filter tasks" onChange={setFilter} options={[{ value: 'open', label: `Live · ${openCount}` }, { value: 'done', label: `Settled · ${tasks.length - openCount}` }, { value: 'all', label: 'All' }]} />
-      </div>
-      {stats && (
-        <div class="grid grid-4">
-          <Stat label="Open markets" value={stats.markets.open} />
-          <Stat label="Contracts traded" value={stats.volume.toLocaleString()} />
-          <Stat label="Settled on a test result" value={stats.markets.settledOnTests} hint={stats.priceBrier !== null ? `price Brier ${stats.priceBrier.toFixed(3)}` : 'no results yet'} />
-          <Stat label="Median spread at close" value={stats.medianSpreadAtClose === null ? '—' : `${stats.medianSpreadAtClose}¢`} hint="target 6¢ or less" />
-        </div>
-      )}
-      {tasks.length === 0 && <EmptyState title="No tasks yet" hint="Submit one as a customer, or run npm run seed on the exchange." action={{ href: '#/submit', label: 'Submit a task' }} />}
-      {tasks.length > 0 && shown.length === 0 && <EmptyState title={filter === 'open' ? 'Nothing live right now' : 'Nothing settled yet'} hint={filter === 'open' ? 'Every task has settled. Submit a new one to open markets.' : 'Markets settle when the chosen agent finishes its run.'} action={filter === 'open' ? { href: '#/submit', label: 'Submit a task' } : undefined} />}
-      {shown.length > 0 && (
-        <div class="grid grid-2" data-testid="arena-table">
-          {shown.map((t) => (
-            <article class="card task-card" onClick={() => (location.hash = `#/task/${encodeURIComponent(t.task.id)}`)} data-testid={`task-row-${t.task.id}`}>
-              <div class="row between" style="align-items:flex-start">
-                <div class="grow">
-                  <div class="title">{t.task.title}</div>
-                  <div class="row wrap" style="margin-top:6px">
-                    <span class="chip ellipsis" style="max-width:100%">
-                      {t.task.repo} @ {t.task.commit}
-                    </span>
-                    <Pill status={t.task.status} />
-                    {t.task.visibility === 'private' && <Pill status="private">private</Pill>}
-                  </div>
-                </div>
-                <div class="num muted" style="font-size:12.5px;white-space:nowrap">
-                  {t.task.status === 'open' ? `closes in ${countdown(t.task.closesAt, now)}` : t.task.status === 'pending' ? 'baseline running' : t.task.status === 'running' ? 'agent running' : ''}
-                </div>
-              </div>
-              <div>
-                {t.markets.map((m: any) => {
-                  const chance = chanceOf(m);
-                  const onTests = m.status === 'settled' && (m.outcome === 'passed' || m.outcome === 'failed');
-                  return (
-                    <div class="cand">
-                      <div class="grow">
-                        <div class="row between">
-                          <span class="name">{m.executor.name ?? m.executorId}</span>
-                          <span class="muted num" style="font-size:12px">
-                            {m.outcome ? m.outcome : m.quote.yesBid !== null || m.quote.yesAsk !== null ? `${m.quote.yesBid ?? '–'} · ${m.quote.yesAsk ?? '–'}` : 'no quotes'}
-                          </span>
-                        </div>
-                        <div class="bar">
-                          <ChanceBar value={chance} muted={m.status !== 'open'} />
-                        </div>
-                      </div>
-                      <div style="text-align:right">
-                        <PriceCell value={chance} size="md" side={onTests ? (m.outcome === 'passed' ? 'yes' : 'no') : undefined} label={`${m.executorId} chance`} />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              <div class="foot">
-                <span>
-                  {t.recommendation ? (
-                    <>
-                      Market favours <b style="color:var(--text)">{t.markets.find((m: any) => m.executorId === t.recommendation.executorId)?.executor.name ?? t.recommendation.executorId}</b>
-                      {t.task.chosenAgent && (
-                        <>
-                          {' '}· ran <b style="color:var(--text)">{t.task.chosenAgent}</b>
-                          {t.task.passed !== null && <span class={t.task.passed ? 'yes-c' : 'no-c'}> · {t.task.passed ? 'passed' : 'failed'}</span>}
-                        </>
-                      )}
-                    </>
-                  ) : (
-                    'Markets open after the baseline check'
-                  )}
-                </span>
-                <span class="num">{t.markets.reduce((a: number, m: any) => a + m.quote.volume, 0).toLocaleString()} contracts</span>
-              </div>
-            </article>
-          ))}
-        </div>
-      )}
+
+  const intro = !ctx.me && (
+    <div class="arena-intro" data-testid="intro">
+      <p>Humans and AI agents trade Yes or No on whether a coding agent will pass a task's tests, before anyone runs it. The price is the chance.</p>
+      <Button variant="primary" size={40} href="#/signin" data-testid="start-trading">
+        Start trading with $1,000 in play money
+      </Button>
     </div>
   );
+
+  if (error) return <EmptyState kind="error" title="The exchange did not answer" hint={error} retry={() => void load()} />;
+  if (!entries)
+    return (
+      <>
+        {intro}
+        <PageHead title="Arena" sub="Will the agent pass the task's tests? Trade before the run." />
+        <Panel>
+          <Skeleton shape="table" rows={8} />
+        </Panel>
+      </>
+    );
+
+  const open = entries.filter(OPEN);
+  const progress = entries.filter(PROGRESS);
+  const done = entries.filter(DONE);
+  const lists: Record<Filter, Entry[]> = {
+    soon: [...open].sort((a, b) => a.task.closesAt - b.task.closesAt),
+    traded: [...open].sort((a, b) => volume(b) - volume(a)),
+    new: [...open].sort((a, b) => (b.task.openedAt ?? b.task.createdAt) - (a.task.openedAt ?? a.task.createdAt)),
+    progress: [...progress].sort((a, b) => (b.task.closedAt ?? b.task.createdAt) - (a.task.closedAt ?? a.task.createdAt)),
+    settled: [...done].sort((a, b) => (b.task.resolvedAt ?? b.task.closedAt ?? b.task.createdAt) - (a.task.resolvedAt ?? a.task.closedAt ?? a.task.createdAt)),
+  };
+  const shown = lists[filter];
+  const settledTab = filter === 'settled';
+  const now = Date.now();
+  const emptyWords: Record<Filter, [string, string]> = {
+    soon: ['No markets are open', 'Markets open when a customer submits a task and the baseline check passes.'],
+    traded: ['No markets are open', 'Markets open when a customer submits a task and the baseline check passes.'],
+    new: ['No markets are open', 'Markets open when a customer submits a task and the baseline check passes.'],
+    progress: ['Nothing in progress', 'Tasks appear here while trading is closed and a decision or a run is pending.'],
+    settled: ['Nothing has settled yet', 'Markets settle when the chosen agent finishes its run.'],
+  };
+  return (
+    <>
+      {intro}
+      <PageHead
+        title="Arena"
+        sub="Will the agent pass the task's tests? Trade before the run."
+        aside={
+          <Tabs
+            label="Filter tasks"
+            value={filter}
+            onChange={setFilter}
+            tabs={[
+              { id: 'soon', label: 'Closing soon', count: open.length },
+              { id: 'traded', label: 'Most traded' },
+              { id: 'new', label: 'New' },
+              { id: 'progress', label: 'In progress', count: progress.length },
+              { id: 'settled', label: 'Settled', count: done.length },
+            ]}
+          />
+        }
+      />
+      {shown.length === 0 ? (
+        <Panel>
+          <EmptyState title={emptyWords[filter][0]} hint={emptyWords[filter][1]} action={ctx.me && (ctx.me.role === 'customer' || ctx.me.role === 'admin') ? { href: '#/submit', label: 'Submit a task' } : undefined} />
+        </Panel>
+      ) : (
+        <Panel>
+          <Table
+            caption={`${shown.length} tasks, one row per candidate agent`}
+            class="arena-table"
+            testId="arena-table"
+            columns={[
+              { key: 'task', label: 'Task', width: 'task' },
+              { key: 'agent', label: 'Agent' },
+              { key: 'chance', label: settledTab ? 'Settled at' : 'Chance', align: 'right' },
+              { key: 'change', label: 'Change', align: 'right' },
+              { key: 'volume', label: 'Volume', align: 'right', hideSm: true },
+              { key: 'closes', label: settledTab ? 'Result' : filter === 'progress' ? 'Status' : 'Closes', hideSm: true },
+              { key: 'quick', label: '' },
+            ]}
+          >
+            {shown.map((e) => {
+              const n = e.markets.length;
+              const st = taskStatus(e.task, now);
+              const trail = (
+                <Td rowSpan={n} class="closes-cell">
+                  {e.task.status === 'open' ? (
+                    <Countdown closesAt={e.task.closesAt} />
+                  ) : e.task.status === 'resolved' || e.task.status === 'skipped' || e.task.status === 'rejected' ? (
+                    <span class="closes-result">
+                      <StatusPill status={st} />
+                      <span class="ink-3 t-caption">{when(e.task.resolvedAt ?? e.task.closedAt)}</span>
+                    </span>
+                  ) : (
+                    <StatusPill status={st}>{e.task.status === 'closed' ? 'Awaiting decision' : undefined}</StatusPill>
+                  )}
+                </Td>
+              );
+              return e.markets.map((m, i) => (
+                <AgentRow
+                  key={m.marketId}
+                  m={m}
+                  group={i === 0}
+                  chosen={e.task.chosenAgent === m.executorId}
+                  columns={['agent', 'chance', 'change', 'volume', 'quick']}
+                  lead={
+                    i === 0 ? (
+                      <Td rowSpan={n} class="task-cell">
+                        <span class="sr-only" data-testid={`task-row-${e.task.id}`}>
+                          {e.task.title}
+                        </span>
+                        <TitleCell
+                          title={e.task.title}
+                          href={`#/task/${encodeURIComponent(e.task.id)}`}
+                          sub={
+                            <span class="mono">
+                              {repoName(e.task.repo)} {e.task.commit}
+                              {e.task.visibility === 'private' && <StatusPill status="private" />}
+                            </span>
+                          }
+                        />
+                        {e.recommendation && n > 1 && e.task.status === 'open' && (
+                          <div class="task-fav t-caption ink-3">
+                            Market favours {e.markets.find((x) => x.executorId === e.recommendation!.executorId)?.executor.name} at {e.recommendation.chance}¢ with {count(volume(e))} contracts traded
+                          </div>
+                        )}
+                      </Td>
+                    ) : undefined
+                  }
+                  trail={i === 0 ? trail : undefined}
+                />
+              ));
+            })}
+          </Table>
+        </Panel>
+      )}
+    </>
+  );
 }
+
+export { chanceOf };

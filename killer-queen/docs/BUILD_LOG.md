@@ -3,6 +3,52 @@
 Newest first. Each prompt appends what it did, what it decided, and anything
 blocked (with exactly what the owner needs to provide).
 
+## 2026-10-31 — Design overhaul D4, D5, D6
+- D4 foundation: IBM Plex self-hosted through @fontsource and bundled by
+  esbuild (`public/fonts`, latin subsets only); `src/web/styles/tokens.css`
+  (light default, dark by OS or toggle), `base.css` (reset, tabular numerals,
+  focus ring, restyled selects, checkboxes and number inputs, reduced motion);
+  the component library in `src/web/ui` (Icon, Button, PriceCell, ChangeCell,
+  Money, StatusPill, Countdown, Avatar, Tabs, Field/Input/Select/Checkbox,
+  Panel, Table, EmptyState, Skeleton, Toast, AgentRow, BookLadder, PriceChart,
+  PacketView, OrderTicket, OddsRail, SettlementPanel, ThesisList, TradeList,
+  TopBar, Footer), each with its own token-only stylesheet; the kitchen sink
+  at `#/kitchen-sink` (unlinked) with every state; `npm run lint:styles`
+  (colour literals, px sizes, px font sizes and inline sizes are refused
+  outside tokens.css) runs as part of `npm test`; the old stylesheet and
+  component file are gone. The design-critic agent reviewed the sink and its
+  eleven blockers were fixed: the light outcome and tertiary colours now pass
+  AA on every surface (`--yes #007A50`, `--no #B81F55`, `--warn #9E5300`,
+  `--ink-3 #5F6878`), the order book is a real table, rail labels are spread
+  on one row with slanted leaders (two rows, then a numbered legend, when
+  they do not fit), the chart draws at its real size, the phone table reflows
+  into a grid with 44 px buttons, the "Closes" header sits over its column,
+  the ticket shows its low-cash state and a total, the packet clamp no longer
+  cuts a line, and the sink's data varies.
+- D5 shell: TopBar (wordmark with a Lucide crown, nav, balance labelled play
+  money, account avatar, theme toggle, "Demo data" badge; wordmark, balance
+  and a menu sheet at 390), per-page titles, meta description, favicon SVG and
+  PNG, apple-touch-icon, manifest icons and a build-time Open Graph image
+  (`scripts/make-brand-assets.ts`, outputs committed in `src/web/static`;
+  the server fills the public URL into the page), designed 404 and error
+  pages, the Arena as the signed-out front page with one line and "Start
+  trading with $1,000 in play money", a footer with Terms, Contact and the
+  no-cash-value line.
+- D6 screens: Arena (one table grouped by task; Closing soon, Most traded,
+  New, In progress, Settled), Task (title row with countdown or status, meta
+  line, odds rail, agent table, decide panel, result panel, prompt), Market
+  (packet | chance hero, chart, settlement, book, theses/trades | ticket and
+  your position; sticky Buy Yes / Buy No bar and a ticket sheet on phones),
+  Portfolio (summary line, three tables), Leaderboard, Agents (per-version
+  table plus gate metrics as a summary line), Submit task, Sign in and
+  Account (API key shown once, faucet, delete). `quote.change` (last trade
+  against the latest trade at least a day older) was added to the market
+  view for the Change column. API errors are rewritten in plain words.
+  Verified: the headless click path (MANUAL.md) with no page errors, every
+  page at 1440 and 390 in light and dark with no horizontal scroll.
+- Not done here: Figma (no connection), design-critic rounds on the screens
+  (D9), axe (D8).
+
 ## 2026-10-31 — Design overhaul D3 (design board)
 - No Figma in this session, so the fallback: `src/web/design-board/` is a
   static page drawn only from the new tokens (`src/web/styles/tokens.css`,

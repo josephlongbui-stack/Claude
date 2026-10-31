@@ -15,6 +15,8 @@ export interface Quote {
   openInterest: number;
   /** Market probability of passing, in cents (D15). */
   chance: number;
+  /** Last trade minus the last trade at least a day earlier (or the first trade); null with fewer than two trades. */
+  change: number | null;
 }
 
 export interface BookLevel {
@@ -164,7 +166,27 @@ export function quote(engine: Engine, marketId: string): Quote {
   else if (sides.yesBid !== null && sides.yesAsk !== null && sides.yesAsk - sides.yesBid <= 20) chance = midHalfUp(sides.yesBid, sides.yesAsk);
   else if (market.lastPrice !== null) chance = market.lastPrice;
   else chance = 50;
-  return { ...sides, lastPrice: market.lastPrice, volume: market.volume, openInterest: market.openInterest, chance };
+  return { ...sides, lastPrice: market.lastPrice, volume: market.volume, openInterest: market.openInterest, chance, change: dayChange(engine, marketId) };
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Day-over-day move: the last fill against the latest fill at least a day older, or the first fill. Pure: no clock. */
+export function dayChange(engine: Engine, marketId: string): number | null {
+  let last: Fill | null = null;
+  let first: Fill | null = null;
+  for (const f of engine.state.fills) {
+    if (f.market !== marketId) continue;
+    first ??= f;
+    last = f;
+  }
+  if (!last || !first || last === first) return null;
+  let ref: Fill = first;
+  for (const f of engine.state.fills) {
+    if (f.market !== marketId || f === last) continue;
+    if (f.at <= last.at - DAY_MS) ref = f;
+  }
+  return last.yesPrice - ref.yesPrice;
 }
 
 export function bookLevels(engine: Engine, marketId: string): { yes: BookLevel[]; no: BookLevel[] } {

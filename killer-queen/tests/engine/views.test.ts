@@ -1,9 +1,27 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { agentMarkets, executorRecords, leaderboard, packet, portfolio, stats, taskView } from '../../src/engine/index.js';
+import { agentMarkets, executorRecords, leaderboard, packet, portfolio, quote, stats, taskView } from '../../src/engine/index.js';
 import { buy, must, seedExchange } from '../helpers/fixtures.js';
 
 describe('views', () => {
+  it('quote.change is the move since the latest trade at least a day earlier, null with fewer than two trades', () => {
+    const f = seedExchange();
+    const codex = f.markets[1]!;
+    const t0 = f.clock.now();
+    assert.equal(quote(f.venue.engine, codex).change, null);
+    buy(f.venue, 'alice', codex, 'yes', 60, 5);
+    buy(f.venue, 'bob', codex, 'no', 40, 5); // trade at 60
+    assert.equal(quote(f.venue.engine, codex).change, null, 'one trade is not a change');
+    f.clock.set(t0 + 23 * 3_600_000);
+    buy(f.venue, 'alice', codex, 'yes', 63, 5);
+    buy(f.venue, 'bob', codex, 'no', 37, 5); // trade at 63, less than a day after the first
+    assert.equal(quote(f.venue.engine, codex).change, 3, 'against the first trade when nothing is a day old');
+    f.clock.set(t0 + 25 * 3_600_000);
+    buy(f.venue, 'alice', codex, 'yes', 66, 5);
+    buy(f.venue, 'bob', codex, 'no', 34, 5); // trade at 66; the 60 trade is the latest one at least a day older
+    assert.equal(quote(f.venue.engine, codex).change, 6);
+  });
+
   it('packet has exactly the documented fields', () => {
     const f = seedExchange();
     const codex = f.markets[1]!;
