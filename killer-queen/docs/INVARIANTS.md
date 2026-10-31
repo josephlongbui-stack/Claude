@@ -109,4 +109,11 @@ rejection and a replay-hash check per sequence).
     (and so of the journal); the same journal yields the same alerts.
     Proof: `tests/engine/surveillance.test.ts` (each alert kind must and must
     not fire; determinism and stable ids).
+18. **Corrections conserve money.** A settlement correction never mints or
+    burns play money and never drives cash negative: it is refused unless every
+    recipient still holds its payout, and after it escrow is 0 again.
+    Proof: `tests/engine/lifecycle.test.ts` "correctSettlement";
+    `tests/engine/property.test.ts` (corrections mixed into random sequences
+    under `assertInvariants`); `tests/server/runner.test.ts` "a runner-signed
+    correction".
 

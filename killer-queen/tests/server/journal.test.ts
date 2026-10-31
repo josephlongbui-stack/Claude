@@ -165,3 +165,14 @@ describe('crash between apply and commit (D21, invariant 10)', () => {
     restarted.journal.close();
   });
 });
+
+describe('replay of a journal the engine rejects', () => {
+  it('fails loudly instead of skipping the row', () => {
+    const path = join(dir, 'rejected.db');
+    const j = new Journal(path);
+    j.append(1, { type: 'createAccount', at: 1, id: 'a', name: 'a', kind: 'human', role: 'trader', org: '', keyHash: null, startingCash: 0 });
+    j.append(2, { type: 'deposit', at: 2, account: 'ghost', amount: 5, reason: 'admin' }); // would be rejected by the engine
+    j.close();
+    assert.throws(() => openVenue(path), /journal replay rejected deposit: account_not_found/);
+  });
+});

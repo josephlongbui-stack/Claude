@@ -184,7 +184,8 @@ export class EventHub {
       case 'baseline':
       case 'closeTask':
       case 'decide':
-      case 'settle': {
+      case 'settle':
+      case 'correctSettlement': {
         const taskId = cmd.type === 'createTask' ? (result.data as { task: { id: string } }).task.id : cmd.taskId;
         out.push(this.taskEvent(taskId, seq, next()));
         const t = this.venue.engine.task(taskId)!;

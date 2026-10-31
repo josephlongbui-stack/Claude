@@ -70,6 +70,13 @@ Baseline result body:
   "log": "…", "logSha256": "<hex>", "timestamp": 1793400100000 }
 ```
 
+Correction body (D36), when a result turns out to be wrong:
+
+```json
+{ "kind": "correction", "taskId": "tsk_2", "runId": "run_9a1…", "outcome": "passed",
+  "log": "…re-run log…", "logSha256": "<hex>", "timestamp": 1793402000000, "reason": "runner ran the wrong commit" }
+```
+
 Rules the exchange enforces, in order:
 
 1. **Signature.** The header must be `sha256=` + HMAC-SHA256 of the exact raw
@@ -85,7 +92,9 @@ Rules the exchange enforces, in order:
    so the published log can be checked later.
 5. **State.** A `run` result needs the task in `running` (else
    `409 task_not_running`); a `baseline` result needs `pending` (else
-   `409 task_not_pending`). `runId`, if present, must be unused across both
+   `409 task_not_pending`); a `correction` needs `resolved`, a different
+   outcome, and every payout recipient still holding its payout (else
+   `409 cannot_reverse`, and the operator compensates by hand). `runId`, if present, must be unused across both
    kinds (`409 run_id_used`); required in live mode.
 
 The result is journaled as a `settle` or `baseline` command. A second valid

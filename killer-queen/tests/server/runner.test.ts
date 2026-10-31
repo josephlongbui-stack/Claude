@@ -226,3 +226,41 @@ describe('baseline over HTTP (D2)', () => {
     }
   });
 });
+
+describe('a runner-signed correction (D36)', () => {
+  it('reverses a wrong result over HTTP, needs a reason, and the sandbox admin route works too', async () => {
+    const s = await startTestServer({ env: { RUNNER: 'external' } });
+    try {
+      seedExecutors(s);
+      const cust = await s.signup('Corr customer', 'customer');
+      const alice = await s.signup('Corr Alice', 'trader');
+      const bob = await s.signup('Corr Bob', 'trader');
+      const created = await s.api('POST', '/api/tasks', { token: cust.apiKey, body: { ...TASK, candidateAgents: ['codex'] } });
+      const taskId = created.body.task.id;
+      const m = `${taskId}:codex`;
+      await s.api('POST', '/api/orders', { token: bob.apiKey, body: { marketId: m, side: 'no', price: 50, quantity: 10 } });
+      await s.api('POST', '/api/orders', { token: alice.apiKey, body: { marketId: m, side: 'yes', price: 50, quantity: 10 } });
+      await s.api('POST', `/api/tasks/${taskId}/close`, { token: cust.apiKey });
+      await s.api('POST', `/api/tasks/${taskId}/decide`, { token: cust.apiKey, body: { executorId: 'codex' } });
+      assert.equal((await s.signedResult({ taskId, passed: false, log: 'wrong', runId: 'r1', timestamp: s.clock.now() })).status, 200);
+      const aliceAfterWrong = (await s.api('GET', '/api/portfolio', { token: alice.apiKey })).body.cash;
+      const noReason = await s.signedResult({ kind: 'correction', taskId, outcome: 'passed', log: 'right', runId: 'r2', timestamp: s.clock.now() });
+      assert.equal(noReason.status, 400);
+      const fixed = await s.signedResult({ kind: 'correction', taskId, outcome: 'passed', log: 'right', runId: 'r2', timestamp: s.clock.now(), reason: 'ran the wrong commit' });
+      assert.equal(fixed.status, 200, JSON.stringify(fixed.body));
+      assert.equal(fixed.body.task.passed, true);
+      assert.equal(fixed.body.reversed.length, 2);
+      assert.equal((await s.api('GET', '/api/portfolio', { token: alice.apiKey })).body.cash, aliceAfterWrong + 1000);
+      assert.equal((await s.api('GET', `/api/tasks/${taskId}`)).body.task.corrections.length, 1);
+      const again = await s.signedResult({ kind: 'correction', taskId, outcome: 'passed', log: 'right', runId: 'r3', timestamp: s.clock.now(), reason: 'dup' });
+      assert.equal(again.status, 409);
+      assert.equal(again.body.code, 'same_outcome');
+      const admin = await s.api('POST', `/api/admin/tasks/${taskId}/correct`, { headers: { 'x-admin-key': 'admin-key-for-tests' }, body: { outcome: 'failed', reason: 'and back' } });
+      assert.equal(admin.status, 200);
+      assert.equal(admin.body.task.passed, false);
+      assertInvariants(s.booted.venue.engine, 'after corrections');
+    } finally {
+      await s.stop();
+    }
+  });
+});

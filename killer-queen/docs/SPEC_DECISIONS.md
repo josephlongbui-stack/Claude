@@ -220,4 +220,16 @@ but land in a later phase (see docs/ROADMAP.md).
   edited; nothing served after the command shows the old name. Thesis
   reports (`POST /api/markets/:id/comments/:commentId/report`) are
   operational data in memory for the admin queue, not exchange state.
-
+- **D36 Correcting a wrong settlement.** `correctSettlement` (15th command;
+  admin account, the sandbox admin key, or a runner-signed result with
+  `kind: "correction"` and a `reason`) reverses the chosen market's payouts
+  into escrow, restores every position from its settlement snapshot, and
+  re-settles on the corrected outcome; the task records the correction
+  (`corrections[]`), the executor record follows, and the new log hash is
+  journaled. It is allowed only while every recipient still holds at least its
+  payout in cash (`cannot_reverse` otherwise), so play money never goes
+  negative and conservation holds through the reversal. When reversal is
+  impossible the operator compensates with `deposit` (reason `admin`) and
+  records the incident; what to do with real money in that case is a policy
+  for counsel, not code (the spec's "nobody is refunded or clawed back" still
+  governs unchosen markets, which this command never touches).

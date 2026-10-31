@@ -57,13 +57,14 @@ describe('cents and prices', () => {
         case 'baseline':
         case 'reviewAccount':
         case 'closeAccount':
+        case 'correctSettlement':
           return c.type;
         default:
           return assertNever(c);
       }
     };
     for (const t of COMMAND_TYPES) assert.equal(name({ type: t } as Command), t);
-    assert.equal(COMMAND_TYPES.length, 14); // the spec's ten plus pauseTrading (D26), baseline (D2), reviewAccount (5.2), closeAccount (store)
+    assert.equal(COMMAND_TYPES.length, 15); // the spec's ten plus pauseTrading (D26), baseline (D2), reviewAccount (5.2), closeAccount (D35), correctSettlement (D36)
     assert.throws(() => assertNever({ type: 'bogus' } as never), /Unhandled case/);
   });
 });

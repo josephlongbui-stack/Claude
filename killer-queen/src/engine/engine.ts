@@ -18,6 +18,7 @@ import {
   type CommandResults,
   type CommandType,
   type CommentCommand,
+  type CorrectSettlementCommand,
   type CreateAccountCommand,
   type CreateTaskCommand,
   type DecideCommand,
@@ -147,6 +148,8 @@ export class Engine {
         return this.reviewAccount(cmd);
       case 'closeAccount':
         return this.closeAccount(cmd);
+      case 'correctSettlement':
+        return this.correctSettlement(cmd);
       default:
         return assertNever(cmd);
     }
@@ -433,6 +436,7 @@ export class Engine {
       forceBaseline: c.forceBaseline ?? null,
       source,
       visibility,
+      corrections: [],
     };
     s.tasks.set(id, task);
     const markets: Market[] = [];
@@ -907,6 +911,70 @@ export class Engine {
     account.deviceHash = null;
     account.closed = true;
     return { account, cancelledOrders };
+  }
+
+  private correctSettlement(c: CorrectSettlementCommand): CommandResults['correctSettlement'] {
+    const s = this.state;
+    const task = s.tasks.get(c.taskId);
+    if (!task) reject('task_not_found', `no task ${c.taskId}`);
+    if (c.by !== undefined && c.by !== null) {
+      const by = s.accounts.get(c.by);
+      if (!by) reject('account_not_found', `no account ${c.by}`);
+      if (by.role !== 'admin') reject('forbidden', 'only an admin corrects a settlement');
+    }
+    if (task.status !== 'resolved' || task.chosenAgent === null || task.outcome === null) reject('task_not_resolved', `task ${task.id} is ${task.status}; only a resolved task can be corrected`);
+    if (c.outcome !== 'passed' && c.outcome !== 'failed' && c.outcome !== 'infra_error') reject('bad_outcome', 'outcome must be passed, failed or infra_error');
+    if (c.outcome === task.outcome) reject('same_outcome', `task ${task.id} already settled as ${task.outcome}`);
+    if (typeof c.log !== 'string') reject('bad_log', 'log must be a string');
+    if (typeof c.reason !== 'string' || c.reason.trim() === '' || c.reason.length > 500) reject('bad_reason', 'a short reason is required');
+    const runId = c.runId ?? null;
+    if (runId !== null) {
+      if (typeof runId !== 'string' || runId === '') reject('bad_run_id', 'runId must be a non-empty string');
+      if (s.usedRunIds.has(runId)) reject('run_id_used', `runId ${runId} was already used`);
+    }
+    const market = s.markets.get(makeMarketId(task.id, task.chosenAgent))!;
+    if (market.status !== 'settled' || market.closingPrice === null) reject('market_not_settled', `market ${market.id} is ${market.status}`);
+    // Reversibility: every recipient must still hold its payout, or nothing changes (play money cannot go negative).
+    const reversed: { account: string; payout: number }[] = [];
+    for (const pos of this.positionsFor(market.id)) {
+      const closed = pos.closed;
+      if (!closed) continue;
+      const payout = closed.yes * closed.settlementPrice + closed.no * (CONTRACT_VALUE - closed.settlementPrice);
+      if (payout === 0 && closed.yes === 0 && closed.no === 0) continue;
+      const account = s.accounts.get(pos.account)!;
+      if (account.cash < payout) reject('cannot_reverse', `${pos.account} received ${payout}¢ but holds only ${account.cash}¢; use compensation instead`);
+      reversed.push({ account: pos.account, payout });
+    }
+
+    // ---- mutate: take the payouts back into escrow, restore positions, re-settle ----
+    const from = task.outcome;
+    for (const pos of this.positionsFor(market.id)) {
+      const closed = pos.closed;
+      if (!closed) continue;
+      const payout = closed.yes * closed.settlementPrice + closed.no * (CONTRACT_VALUE - closed.settlementPrice);
+      const account = s.accounts.get(pos.account)!;
+      account.cash -= payout;
+      market.escrow += payout;
+      pos.payout -= payout;
+      pos.realized -= payout - closed.yesCost - closed.noCost;
+      pos.yes = closed.yes;
+      pos.no = closed.no;
+      pos.yesCost = closed.yesCost;
+      pos.noCost = closed.noCost;
+      pos.closed = null;
+      market.openInterest += closed.yes;
+    }
+    if (market.escrow !== CONTRACT_VALUE * market.openInterest) throw new Error(`correction left escrow ${market.escrow} for ${market.openInterest} open interest on ${market.id}`);
+    const price = c.outcome === 'passed' ? CONTRACT_VALUE : c.outcome === 'failed' ? 0 : market.closingPrice;
+    this.settleMarket(market, price, c.outcome);
+    task.outcome = c.outcome;
+    task.passed = c.outcome === 'infra_error' ? null : c.outcome === 'passed';
+    task.runLog = c.log;
+    task.runLogSha256 = sha256(c.log);
+    task.runId = runId;
+    task.corrections.push({ at: c.at, from, to: c.outcome, runId, reason: c.reason.trim() });
+    if (runId !== null) s.usedRunIds.add(runId);
+    return { task, market, reversed };
   }
 
   /** Pay every position at `price` for Yes (100 − price for No); escrow must reach exactly 0. */

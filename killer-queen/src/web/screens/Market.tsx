@@ -65,7 +65,7 @@ export function Market({ ctx, id }: { ctx: Ctx; id: string }) {
         : m.status === 'running'
           ? 'closed; the chosen agent is running'
           : m.outcome
-            ? `settled ${m.outcome} at ${m.settlementPrice}¢ · ${when(m.closedAt ?? null)}`
+            ? `settled ${m.outcome} at ${m.settlementPrice}¢`
             : `closed at ${m.closingPrice}¢`;
   const blocked = m.status === 'pending' ? 'Trading opens after the baseline check.' : m.status === 'cancelled' ? 'This task was rejected at the baseline check; the market never opened.' : m.status !== 'open' ? 'Trading is closed.' : null;
   return (

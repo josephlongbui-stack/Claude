@@ -117,3 +117,21 @@ describe('LLM adapters', () => {
     assert.deepEqual(enabledBots(loadConfig({ HOUSE_BOTS: 'mm,sim', OPENAI_API_KEY: 'k', OPENAI_MODEL: 'm' })), ['mm', 'sim']);
   });
 });
+
+describe('LLM traders at boot', () => {
+  it('boot creates a lab trader account only when its key and model are set; the account carries the lab org', async () => {
+    const { startTestServer } = await import('../helpers/server.js');
+    const { houseBotFactories } = await import('../../src/bots/index.js');
+    const s = await startTestServer({ env: { HOUSE_BOTS: 'llm', ANTHROPIC_API_KEY: 'k', ANTHROPIC_MODEL: 'claude-test', OPENAI_API_KEY: 'k2' }, bots: houseBotFactories() });
+    try {
+      assert.deepEqual(s.booted.bots.map((b) => b.name), ['llm']);
+      const anthropic = s.booted.venue.engine.account('llm-anthropic');
+      assert.ok(anthropic);
+      assert.equal(anthropic!.org, 'Anthropic');
+      assert.equal(anthropic!.kind, 'agent');
+      assert.equal(s.booted.venue.engine.account('llm-openai'), undefined, 'no model id: trader off');
+    } finally {
+      await s.stop();
+    }
+  });
+});

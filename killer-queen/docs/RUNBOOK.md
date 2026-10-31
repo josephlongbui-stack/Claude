@@ -104,21 +104,20 @@ Runs on a throwaway journal: a wrong settlement, correction with new commands
 only, pause/resume, backup, restore, hash comparison. Last run 2026-10-31
 (37 ms end to end, restored hash matched live). What it found:
 
-- There is **no reversal command**. With today's commands the only correction
-  is compensation: `deposit` (reason `admin`) pays the wronged side what a
-  correct settlement would have paid, which mints play money and leaves the
-  other side's wrong payout in place. Acceptable for play money; impossible for
-  real money.
-- `task.passed` and the executor's record keep the wrong outcome; nothing
-  journaled can fix the track record today.
-- Follow-up before any real-money phase: a `correctSettlement` admin command
-  (journaled; requires the runner's corrected signed result; reverses the
-  payouts of the wrong settlement and re-settles with the right outcome).
-  Record every compensation in `docs/decisions/` until then.
+- `correctSettlement` (D36) reverses the wrong payouts and re-settles on the
+  corrected result, fixing the executor record, with no play money minted. In
+  the drill it succeeds because the recipients still hold their payouts.
+- It is refused (`cannot_reverse`) when a recipient has already spent the
+  payout; the fallback is compensation with `deposit` (reason `admin`), which
+  mints play money and leaves the record wrong. For real money that case needs
+  a clawback policy from counsel, not code.
+- Record every correction or compensation in `docs/decisions/`.
 
 Steps for a real incident: pause trading → write the incident note (task id,
-wrong result, evidence from the runner log hash) → compensate with `deposit`
-(reason `admin`) per affected account → resume → take a backup → run
+wrong result, evidence from the runner log hash) → have the runner re-run and
+post `kind: "correction"` (or in sandbox `POST /api/admin/tasks/:id/correct`)
+→ if refused with `cannot_reverse`, compensate with `deposit` (reason
+`admin`) per affected account → resume → take a backup → run
 `scripts/restore-drill.sh`.
 
 ## Monthly maintenance (prompt 6.2)

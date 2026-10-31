@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { agentMarkets, leaderboard, packet, portfolio, stats, taskView } from '../../src/engine/index.js';
+import { agentMarkets, executorRecords, leaderboard, packet, portfolio, stats, taskView } from '../../src/engine/index.js';
 import { buy, must, seedExchange } from '../helpers/fixtures.js';
 
 describe('views', () => {
@@ -128,5 +128,26 @@ describe('views', () => {
     const staff = agentMarkets(f.venue.engine, 'anthropic-staffer').find((x) => x.packet.marketId === claude)!;
     assert.equal(staff.canTrade, false);
     assert.match(staff.conflict!, /Anthropic/);
+  });
+});
+
+describe('executor records per version', () => {
+  it('a version bump starts a new track record while the total keeps counting', () => {
+    const f = seedExchange({ withTask: false });
+    const run = (outcome: 'passed' | 'failed') => {
+      const t = must(f.venue, { type: 'createTask', customer: 'cust', title: 't', prompt: 'p', repo: 'r', commit: 'c', testCommand: 'x', candidateAgents: ['codex'] });
+      must(f.venue, { type: 'closeTask', taskId: t.task.id });
+      must(f.venue, { type: 'decide', taskId: t.task.id, executorId: 'codex' });
+      must(f.venue, { type: 'settle', taskId: t.task.id, outcome, log: '' });
+    };
+    run('passed');
+    run('failed');
+    must(f.venue, { type: 'upsertExecutor', id: 'codex', name: 'Codex', org: 'OpenAI', version: '0.49.0' });
+    run('passed');
+    const rec = executorRecords(f.venue.engine).find((r) => r.id === 'codex')!;
+    assert.equal(rec.chosen, 3);
+    assert.equal(rec.passed, 2);
+    assert.deepEqual(rec.byVersion, { '0.48.0': { chosen: 2, passed: 1 }, '0.49.0': { chosen: 1, passed: 1 } });
+    assert.equal(rec.version, '0.49.0');
   });
 });

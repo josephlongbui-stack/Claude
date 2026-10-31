@@ -293,3 +293,83 @@ describe('baseline check (D2)', () => {
     assert.equal(stats(f.venue.engine).medianMsToTradable, 0);
   });
 });
+
+describe('correctSettlement (D36)', () => {
+  const settleWrong = () => {
+    const f = seedExchange();
+    const claude = f.markets[0]!;
+    buy(f.venue, 'bob', claude, 'no', 40, 10);
+    buy(f.venue, 'alice', claude, 'yes', 60, 10); // alice 10 Yes @60, bob 10 No @40
+    buy(f.venue, 'carol', claude, 'yes', 30, 4);
+    buy(f.venue, 'botty', claude, 'no', 70, 4); // carol 4 Yes @30, botty 4 No @70
+    must(f.venue, { type: 'closeTask', taskId: f.taskId });
+    must(f.venue, { type: 'decide', taskId: f.taskId, executorId: 'claude-code' });
+    must(f.venue, { type: 'settle', taskId: f.taskId, outcome: 'failed', log: 'wrong', runId: 'bad' });
+    return { f, claude };
+  };
+  const cash = (f: ReturnType<typeof seedExchange>, id: string) => f.venue.engine.account(id)!.cash;
+
+  it('reverses the wrong payouts, re-settles on the corrected result, fixes the record, mints nothing', () => {
+    const { f, claude } = settleWrong();
+    const e = f.venue.engine;
+    const deposited = e.state.totals.deposited;
+    const before = { alice: cash(f, 'alice'), bob: cash(f, 'bob'), carol: cash(f, 'carol'), botty: cash(f, 'botty') };
+    assert.equal(executorRecords(e).find((r) => r.id === 'claude-code')!.passed, 0);
+    mustReject(f.venue, { type: 'correctSettlement', taskId: f.taskId, outcome: 'failed', log: '', reason: 'x', by: 'admin' }, 'same_outcome');
+    mustReject(f.venue, { type: 'correctSettlement', taskId: f.taskId, outcome: 'passed', log: '', reason: '', by: 'admin' }, 'bad_reason');
+    mustReject(f.venue, { type: 'correctSettlement', taskId: f.taskId, outcome: 'passed', log: '', reason: 'x', by: 'alice' }, 'forbidden');
+    mustReject(f.venue, { type: 'correctSettlement', taskId: f.taskId, outcome: 'passed', log: '', reason: 'x', runId: 'bad' }, 'run_id_used');
+    const r = must(f.venue, { type: 'correctSettlement', taskId: f.taskId, outcome: 'passed', log: 'right', reason: 'runner ran the wrong commit', runId: 'good', by: 'admin' });
+    assert.deepEqual(r.reversed.map((x) => [x.account, x.payout]).sort(), [['alice', 0], ['bob', 1000], ['botty', 400], ['carol', 0]].sort());
+    // No holders give back 100/contract; Yes holders now receive 100/contract.
+    assert.equal(cash(f, 'alice'), before.alice + 1000);
+    assert.equal(cash(f, 'carol'), before.carol + 400);
+    assert.equal(cash(f, 'bob'), before.bob - 1000);
+    assert.equal(cash(f, 'botty'), before.botty - 400);
+    assert.equal(e.state.totals.deposited, deposited, 'nothing minted');
+    const m = e.market(claude)!;
+    assert.equal(m.status, 'settled');
+    assert.equal(m.outcome, 'passed');
+    assert.equal(m.settlementPrice, 100);
+    assert.equal(m.escrow, 0);
+    const t = e.task(f.taskId)!;
+    assert.equal(t.outcome, 'passed');
+    assert.equal(t.passed, true);
+    assert.equal(t.runLog, 'right');
+    assert.equal(t.runId, 'good');
+    assert.deepEqual(t.corrections.map((c) => [c.from, c.to, c.reason]), [['failed', 'passed', 'runner ran the wrong commit']]);
+    assert.equal(executorRecords(e).find((r) => r.id === 'claude-code')!.passed, 1);
+    assert.equal(e.position(claude, 'alice')!.realized, 400);
+    assert.equal(e.position(claude, 'bob')!.realized, -400);
+    assert.equal(e.position(claude, 'alice')!.closed!.outcome, 'passed');
+    // a second correction back is allowed (different outcome) and reverses again
+    must(f.venue, { type: 'correctSettlement', taskId: f.taskId, outcome: 'infra_error', log: 'container died', reason: 'second thoughts', by: 'admin' });
+    assert.equal(e.market(claude)!.settlementPrice, e.market(claude)!.closingPrice);
+    assert.equal(e.task(f.taskId)!.corrections.length, 2);
+  });
+
+  it('is refused when a recipient no longer holds its payout; the state is untouched', () => {
+    const { f } = settleWrong();
+    // bob received 1000; lock almost all of his cash in an order on another, still-open task
+    const other = must(f.venue, { type: 'createTask', customer: 'cust', title: 'other', prompt: 'p', repo: 'r', commit: 'c', testCommand: 'x', candidateAgents: ['codex'] });
+    const codex = other.markets[0]!.id;
+    const bob = f.venue.engine.account('bob')!;
+    const qty = Math.floor(bob.cash / 2); // price 1 + fee 1 = 2¢ per contract
+    buy(f.venue, 'bob', codex, 'yes', 1, qty);
+    assert.ok(f.venue.engine.account('bob')!.cash < 1000);
+    mustReject(f.venue, { type: 'correctSettlement', taskId: f.taskId, outcome: 'passed', log: '', reason: 'x', by: 'admin' }, 'cannot_reverse');
+    // once the order is cancelled the correction goes through
+    const order = [...f.venue.engine.state.orders.values()].find((o) => o.account === 'bob' && o.status === 'open')!;
+    must(f.venue, { type: 'cancelOrder', account: 'bob', orderId: order.id });
+    must(f.venue, { type: 'correctSettlement', taskId: f.taskId, outcome: 'passed', log: '', reason: 'x', by: 'admin' });
+  });
+
+  it('only resolved tasks with a chosen market can be corrected', () => {
+    const f = seedExchange();
+    mustReject(f.venue, { type: 'correctSettlement', taskId: f.taskId, outcome: 'passed', log: '', reason: 'x' }, 'task_not_resolved');
+    must(f.venue, { type: 'closeTask', taskId: f.taskId });
+    must(f.venue, { type: 'decide', taskId: f.taskId, executorId: null });
+    mustReject(f.venue, { type: 'correctSettlement', taskId: f.taskId, outcome: 'passed', log: '', reason: 'x' }, 'task_not_resolved');
+    mustReject(f.venue, { type: 'correctSettlement', taskId: 'nope', outcome: 'passed', log: '', reason: 'x' }, 'task_not_found');
+  });
+});

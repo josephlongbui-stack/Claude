@@ -107,8 +107,8 @@ deployment and real tasks.)
       (6.1, `scripts/load-test.ts`); incident drill with findings in the
       runbook (6.3, `scripts/incident-drill.ts`); monthly maintenance
       checklist (6.2).
-- [ ] `correctSettlement` admin command (drill finding) before any
-      real-money phase.
+- [x] `correctSettlement` command with a reversibility guard (drill
+      finding; D36). Real-money clawback policy remains a counsel decision.
 - [x] SDK: typed client from the server's zod schemas, idempotent retries,
       event stream, outside-agent template, quickstart (prompt 3.4,
       `tests/sdk/client.test.ts`).

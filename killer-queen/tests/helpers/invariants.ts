@@ -3,7 +3,7 @@
  * Throws with a precise message on the first violation.
  */
 import assert from 'node:assert/strict';
-import { CONTRACT_VALUE, type Engine, type EngineState, stateHash as hashState } from '../../src/engine/index.js';
+import { CONTRACT_VALUE, type Engine, stateHash as hashState } from '../../src/engine/index.js';
 
 export function assertInvariants(engine: Engine, label = ''): void {
   const s = engine.state;
@@ -86,12 +86,4 @@ export function assertInvariants(engine: Engine, label = ''): void {
 
 export function stateHash(engine: Engine): string {
   return hashState(engine.state);
-}
-
-export function totals(s: EngineState): { cashAndLocked: number; escrow: number; deposited: number } {
-  let cashAndLocked = 0;
-  let escrow = 0;
-  for (const a of s.accounts.values()) cashAndLocked += a.cash + a.locked;
-  for (const m of s.markets.values()) escrow += m.escrow;
-  return { cashAndLocked, escrow, deposited: s.totals.deposited };
 }

@@ -55,24 +55,28 @@ log('WRONG settlement applied', `bob (No) received 2000¢; alice (Yes) received 
 ok(v.apply({ type: 'pauseTrading', paused: true, reason: 'incident: tsk_drill settled on a wrong result', by: 'admin' }));
 log('trading paused', 'journaled pauseTrading');
 
-// 2. Correct with new commands only. Today the engine has no reversal command, so the
-//    only lever is compensation: pay Yes holders what a correct settlement would have paid.
-const positions = v.engine.positionsFor(m);
-const compensation: { account: string; owed: number }[] = [];
-for (const p of positions) {
-  const c = p.closed!;
-  const shouldHaveReceived = c.yes * 100; // correct result: passed → Yes pays 100
-  const received = p.payout;
-  if (shouldHaveReceived > received) compensation.push({ account: p.account, owed: shouldHaveReceived - received });
+// 2. Correct with new commands only: correctSettlement reverses the payouts and re-settles,
+//    but only if every recipient still holds its payout; otherwise fall back to compensation.
+const findings: string[] = [];
+const correction = v.apply({ type: 'correctSettlement', taskId: 'tsk_drill', outcome: 'passed', log: 'runner re-ran: passed', reason: 'incident drill: wrong result', runId: 'good-run', by: 'admin' });
+if (correction.ok) {
+  log('settlement corrected', `reversed ${correction.data.reversed.map((r) => `${r.account} ${r.payout}¢`).join(', ')}; now ${v.engine.task('tsk_drill')!.outcome}; alice cash ${cash('alice')}, bob cash ${cash('bob')}`);
+  findings.push('correctSettlement reversed the wrong payouts and re-settled; the executor record now counts a pass; no play money was minted.');
+} else {
+  log('correction refused', `${correction.code}: ${correction.error}`);
+  const positions = v.engine.positionsFor(m);
+  const compensation: { account: string; owed: number }[] = [];
+  for (const p of positions) {
+    const c = p.closed!;
+    const shouldHaveReceived = c.yes * 100;
+    if (shouldHaveReceived > p.payout) compensation.push({ account: p.account, owed: shouldHaveReceived - p.payout });
+  }
+  for (const c of compensation) ok(v.apply({ type: 'deposit', account: c.account, amount: c.owed, reason: 'admin' }));
+  log('compensation deposited (fallback)', compensation.map((c) => `${c.account} +${c.owed}¢`).join(', ') || 'nobody owed');
+  findings.push('Reversal was impossible (a recipient had spent the payout); compensation minted play money and the record stays wrong. For real money this needs a clawback policy decided with counsel.');
 }
-for (const c of compensation) ok(v.apply({ type: 'deposit', account: c.account, amount: c.owed, reason: 'admin' }));
-log('compensation deposited', compensation.map((c) => `${c.account} +${c.owed}¢`).join(', ') || 'nobody owed');
 const before = { cash: [...v.engine.state.accounts.values()].reduce((a, x) => a + x.cash + x.locked, 0), escrow: [...v.engine.state.markets.values()].reduce((a, x) => a + x.escrow, 0), deposited: v.engine.state.totals.deposited };
 log('conservation check', `cash+locked ${before.cash} + escrow ${before.escrow} == deposits ${before.deposited}: ${before.cash + before.escrow === before.deposited}`);
-const findings: string[] = [];
-findings.push('No reversal command exists: bob keeps the 2000¢ a correct settlement would not have paid, and alice is made whole by minting 2000¢ (fine for play money, impossible for real money).');
-findings.push(`task.passed still reads ${String(v.engine.task('tsk_drill')!.passed)} and the executor record counts a fail; nothing journaled can fix the record today.`);
-findings.push('A correctSettlement command (admin, journaled, reverses payouts and re-settles with the right outcome, requires the runner\'s corrected signed result) is the missing tool; until then document compensations in the incident log.');
 ok(v.apply({ type: 'pauseTrading', paused: false, by: 'admin' }));
 log('trading resumed');
 

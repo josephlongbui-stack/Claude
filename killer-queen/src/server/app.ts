@@ -31,7 +31,7 @@ import {
 import { newApiKey, optionalAccount, requireAccount, requireAdminKey, requireRole, requireSecret, type AuthedRequest } from './auth.js';
 import type { Config } from './config.js';
 import { HttpError, errorHandler, statusForCode } from './errors.js';
-import { accountBody, adminAccountBody, adminReviewBody, adminSettleBody, adminTradingBody, commentBody, decideBody, orderBody, resultBody, taskBody } from './schemas.js';
+import { accountBody, adminAccountBody, adminCorrectBody, adminReviewBody, adminSettleBody, adminTradingBody, commentBody, decideBody, orderBody, resultBody, taskBody } from './schemas.js';
 import { RateLimiter, rateLimit } from './rateLimit.js';
 import type { EventHub } from './events.js';
 import { mountGitHubWebhook, type GitHubIntegration } from './github.js';
@@ -349,6 +349,11 @@ export function createApp(deps: AppDeps): Express {
         return;
       }
       const outcome: RunOutcome = body.outcome ?? (body.passed ? 'passed' : 'failed');
+      if (body.kind === 'correction') {
+        const data = unwrap(venue.apply({ type: 'correctSettlement', taskId: body.taskId, outcome, log: body.log, reason: body.reason!, runId: body.runId ?? null, by: null }));
+        res.json({ task: publicTask(data.task), market: data.market, reversed: data.reversed });
+        return;
+      }
       const data = unwrap(venue.apply({ type: 'settle', taskId: body.taskId, outcome, log: body.log, runId: body.runId ?? null }));
       res.json({ task: publicTask(data.task), market: data.market });
     }),
@@ -383,6 +388,18 @@ export function createApp(deps: AppDeps): Express {
       if (typeof req.query.markets === 'string' && req.query.markets) filter.markets = new Set(req.query.markets.split(',').filter(Boolean).slice(0, 100));
       if (typeof req.query.tasks === 'string' && req.query.tasks) filter.tasks = new Set(req.query.tasks.split(',').filter(Boolean).slice(0, 100));
       deps.events.attach(res, lastId ?? null, { ...filter, canSeeTask });
+    }),
+  );
+
+  /** Sandbox hand-correction of a wrong settlement (D36); live mode uses a runner-signed correction. */
+  api.post(
+    '/admin/tasks/:id/correct',
+    requireAdminKey(config.adminKey),
+    wrap((req, res) => {
+      if (config.mode !== 'sandbox') throw new HttpError(403, 'forbidden', 'hand correction is sandbox-only; post a signed correction from the runner');
+      const body = adminCorrectBody.parse(req.body);
+      const data = unwrap(venue.apply({ type: 'correctSettlement', taskId: req.params.id!, outcome: body.outcome, log: body.log, reason: body.reason, runId: null, by: null }));
+      res.json({ task: publicTask(data.task), market: data.market, reversed: data.reversed });
     }),
   );
 

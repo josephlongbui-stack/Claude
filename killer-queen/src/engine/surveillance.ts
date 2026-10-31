@@ -5,7 +5,7 @@
  */
 import type { Engine } from './engine.js';
 import { leaderboard } from './views.js';
-import type { Account, Fill, Market } from './types.js';
+import type { Account, Market } from './types.js';
 
 export type AlertKind = 'wash_trade' | 'spoofing' | 'closing_pressure' | 'conflicted_trade' | 'unusual_win_rate';
 
@@ -147,8 +147,4 @@ export function alerts(engine: Engine, partial: Partial<SurveillanceOptions> = {
   }
 
   return out.sort((a, b) => (a.kind < b.kind ? -1 : a.kind > b.kind ? 1 : a.id < b.id ? -1 : 1));
-}
-
-export function fillsBetween(engine: Engine, a: string, b: string): Fill[] {
-  return engine.state.fills.filter((f) => (f.yesAccount === a && f.noAccount === b) || (f.yesAccount === b && f.noAccount === a));
 }

@@ -160,7 +160,7 @@ export class GitHubIntegration {
     if (this.unsubscribe) return;
     this.unsubscribe = this.venue.onApplied((cmd, result) => {
       if (!result.ok) return;
-      if (cmd.type !== 'closeTask' && cmd.type !== 'decide' && cmd.type !== 'settle' && cmd.type !== 'baseline') return;
+      if (cmd.type !== 'closeTask' && cmd.type !== 'decide' && cmd.type !== 'settle' && cmd.type !== 'baseline' && cmd.type !== 'correctSettlement') return;
       const ref = this.checks.get(cmd.taskId);
       if (!ref) return;
       void this.updateCheck(cmd.taskId, ref).catch((e) => this.log(`check run update failed: ${(e as Error).message}`));

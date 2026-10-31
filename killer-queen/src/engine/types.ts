@@ -93,6 +93,8 @@ export interface Task {
   source: string | null;
   /** Private tasks (5.4): packet and markets visible only to the customer, admins, the house and vetted traders. */
   visibility: 'public' | 'private';
+  /** Settlement corrections (D36): each one reversed the previous payouts and re-settled on a corrected result. */
+  corrections: { at: number; from: RunOutcome; to: RunOutcome; runId: string | null; reason: string }[];
 }
 
 export interface Market {
@@ -202,6 +204,22 @@ export interface CreateAccountCommand extends Stamped {
   deviceHash?: string | null;
   personId?: string | null;
   vetted?: boolean;
+}
+
+/**
+ * Correct a wrong settlement (D36): reverse the chosen market's payouts and
+ * re-settle on the corrected result. Only possible while every account that
+ * received a payout still holds at least that much cash; otherwise rejected
+ * (`cannot_reverse`) and the operator falls back to compensation.
+ */
+export interface CorrectSettlementCommand extends Stamped {
+  type: 'correctSettlement';
+  taskId: string;
+  outcome: RunOutcome;
+  log: string;
+  reason: string;
+  runId?: string | null;
+  by?: string | null;
 }
 
 /** Owner-initiated deletion: cancels open orders, revokes the key, anonymises the name. Positions settle normally. */
@@ -345,7 +363,8 @@ export type Command =
   | PauseTradingCommand
   | BaselineCommand
   | ReviewAccountCommand
-  | CloseAccountCommand;
+  | CloseAccountCommand
+  | CorrectSettlementCommand;
 
 export type CommandType = Command['type'];
 
@@ -364,6 +383,7 @@ export const COMMAND_TYPES: readonly CommandType[] = [
   'baseline',
   'reviewAccount',
   'closeAccount',
+  'correctSettlement',
 ] as const;
 
 /** A command as callers build it: the Venue stamps `at` when missing. */
@@ -388,6 +408,7 @@ export interface CommandResults {
   baseline: { task: Task; opened: boolean; rejectedReason: RejectReason | null };
   reviewAccount: { account: Account };
   closeAccount: { account: Account; cancelledOrders: number };
+  correctSettlement: { task: Task; market: Market; reversed: { account: string; payout: Cents }[] };
 }
 
 export type EngineOk<T extends CommandType = CommandType> = { ok: true; seq: number; data: CommandResults[T] };

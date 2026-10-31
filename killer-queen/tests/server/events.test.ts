@@ -129,6 +129,26 @@ describe('live events (SSE)', () => {
     }
   });
 
+  it('pause/resume emit trading events to everyone; the tasks filter limits task and book events', async () => {
+    const s = await startTestServer();
+    try {
+      seedExecutors(s);
+      const cust = await s.signup('Filter customer', 'customer');
+      const t1 = (await s.api('POST', '/api/tasks', { token: cust.apiKey, body: { ...TASK, candidateAgents: ['codex'] } })).body.task.id;
+      const stream = await openStream(s, `?tasks=${encodeURIComponent(t1)}`);
+      await s.api('POST', '/api/tasks', { token: cust.apiKey, body: { ...TASK, candidateAgents: ['codex'] } }); // other task: filtered out
+      await s.api('POST', '/api/admin/trading', { headers: { 'x-admin-key': 'admin-key-for-tests' }, body: { paused: true, reason: 'test' } });
+      await s.api('POST', `/api/tasks/${t1}/close`, { token: cust.apiKey });
+      await stream.waitFor(3);
+      assert.deepEqual(stream.frames.map((f) => f.event), ['trading', 'task', 'book']);
+      assert.equal(stream.frames[0]!.data.paused, true);
+      assert.equal(stream.frames[1]!.data.taskId, t1);
+      stream.close();
+    } finally {
+      await s.stop();
+    }
+  });
+
   it('a client too far behind the buffer gets a reset', async () => {
     const s = await startTestServer({ env: { EVENTS_BUFFER_SIZE: '10' } });
     try {

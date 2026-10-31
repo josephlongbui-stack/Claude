@@ -43,7 +43,6 @@ export async function api<T = any>(method: string, path: string, body?: unknown)
   return json as T;
 }
 
-export const cents = (n: number | null | undefined): string => (n === null || n === undefined ? '—' : `${n}¢`);
 export const dollars = (n: number): string => `${n < 0 ? '-' : ''}$${(Math.abs(n) / 100).toFixed(2)}`;
 export const signed = (n: number): string => `${n > 0 ? '+' : ''}${dollars(n)}`;
 export const when = (ms: number | null): string => (ms ? new Date(ms).toLocaleString() : '—');

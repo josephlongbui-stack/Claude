@@ -38,6 +38,7 @@ type Intent =
   | { kind: 'pauseTrading'; paused: boolean; by: number }
   | { kind: 'baseline'; task: number; results: number; runId: number }
   | { kind: 'reviewAccount'; account: number; flagged: number; vetted: number; by: number }
+  | { kind: 'correctSettlement'; task: number; outcome: number; runId: number }
   | { kind: 'advance'; ms: number };
 
 const intentArb: fc.Arbitrary<Intent> = fc.oneof(
@@ -47,6 +48,7 @@ const intentArb: fc.Arbitrary<Intent> = fc.oneof(
   { weight: 3, arbitrary: fc.record({ kind: fc.constant('createTask' as const), customer: fc.nat(CUSTOMERS.length - 1), candidates: fc.array(fc.nat(CANDIDATES.length - 1), { maxLength: 3 }), window: fc.nat(3), auto: fc.boolean(), min: fc.nat(110), force: fc.nat(3), baseline: fc.boolean() }) },
   { weight: 3, arbitrary: fc.record({ kind: fc.constant('baseline' as const), task: fc.nat(5), results: fc.nat(4), runId: fc.nat(4) }) },
   { weight: 1, arbitrary: fc.record({ kind: fc.constant('reviewAccount' as const), account: fc.nat(ACCOUNTS.length - 1), flagged: fc.nat(2), vetted: fc.nat(2), by: fc.nat(BY.length - 1) }) },
+  { weight: 2, arbitrary: fc.record({ kind: fc.constant('correctSettlement' as const), task: fc.nat(5), outcome: fc.nat(3), runId: fc.nat(4) }) },
   { weight: 25, arbitrary: fc.record({ kind: fc.constant('placeOrder' as const), account: fc.nat(ORDER_ACCOUNTS.length - 1), market: fc.nat(8), side: fc.nat(2), action: fc.nat(2), type: fc.nat(2), price: fc.nat(101), qty: fc.nat(60), ioc: fc.boolean(), clientKey: fc.nat(6) }) },
   { weight: 5, arbitrary: fc.record({ kind: fc.constant('cancelOrder' as const), account: fc.nat(ORDER_ACCOUNTS.length - 1), order: fc.nat(40) }) },
   { weight: 2, arbitrary: fc.record({ kind: fc.constant('comment' as const), account: fc.nat(ORDER_ACCOUNTS.length - 1), market: fc.nat(8), prob: fc.nat(101) }) },
@@ -151,6 +153,8 @@ function resolve(venue: Venue, clock: FakeClock, it: Intent): CommandInput | nul
       return { type: 'settle', taskId: taskId(it.task), outcome: pick(['passed', 'failed', 'infra_error'] as const, it.outcome), log: 'log', runId: it.runId === 0 ? null : `run-${it.runId}` };
     case 'pauseTrading':
       return { type: 'pauseTrading', paused: it.paused, reason: 'test', by: by(it.by) };
+    case 'correctSettlement':
+      return { type: 'correctSettlement', taskId: taskId(it.task), outcome: pick(['passed', 'failed', 'infra_error'] as const, it.outcome), log: 'corrected', reason: 'property test', runId: it.runId === 0 ? null : `corr-${it.runId}` };
     case 'reviewAccount':
       return { type: 'reviewAccount', account: pick(ACCOUNTS, it.account), flagged: it.flagged === 2 ? undefined : it.flagged === 1, vetted: it.vetted === 2 ? undefined : it.vetted === 1, by: by(it.by) };
   }
@@ -173,6 +177,7 @@ describe(`property: random command sequences (${RUNS} runs)`, () => {
           { kind: 'decide', task: 0, executor: 0, by: 0 },
           { kind: 'decide', task: 1, executor: EXECUTORS.length, by: 0 },
           { kind: 'settle', task: 0, outcome: 0, runId: 1 },
+          { kind: 'correctSettlement', task: 0, outcome: 1, runId: 2 },
         ];
         for (const intent of [...intents, ...tail]) {
           const cmd = resolve(venue, clock, intent);

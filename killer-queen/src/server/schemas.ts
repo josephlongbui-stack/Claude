@@ -64,7 +64,7 @@ export const decideBody = z.object({ executorId: z.string().min(1).nullable() })
 
 export const resultBody = z
   .object({
-    kind: z.enum(['run', 'baseline']).default('run'),
+    kind: z.enum(['run', 'baseline', 'correction']).default('run'),
     taskId: z.string().min(1),
     passed: z.boolean().optional(),
     outcome: z.enum(['passed', 'failed', 'infra_error']).optional(),
@@ -73,10 +73,15 @@ export const resultBody = z
     logSha256: z.string().regex(/^[0-9a-f]{64}$/).optional(),
     runId: z.string().min(1).max(200).optional(),
     timestamp: z.number().int().optional(),
+    /** Corrections only: why the earlier result was wrong (incident reference). */
+    reason: z.string().trim().min(1).max(500).optional(),
   })
   .strict()
   .refine((b) => b.kind === 'baseline' || b.passed !== undefined || b.outcome !== undefined, { message: 'passed or outcome is required', path: ['outcome'] })
-  .refine((b) => b.kind !== 'baseline' || b.results !== undefined, { message: 'results is required for a baseline', path: ['results'] });
+  .refine((b) => b.kind !== 'baseline' || b.results !== undefined, { message: 'results is required for a baseline', path: ['results'] })
+  .refine((b) => b.kind !== 'correction' || b.reason !== undefined, { message: 'reason is required for a correction', path: ['reason'] });
+
+export const adminCorrectBody = z.object({ outcome: z.enum(['passed', 'failed', 'infra_error']), log: z.string().max(100_000).default('corrected by admin'), reason: z.string().trim().min(1).max(500) }).strict();
 
 export const adminTradingBody = z.object({ paused: z.boolean(), reason: z.string().max(500).optional() }).strict();
 export const adminSettleBody = z.object({ outcome: z.enum(['passed', 'failed', 'infra_error']), log: z.string().max(100_000).default('settled by admin') }).strict();

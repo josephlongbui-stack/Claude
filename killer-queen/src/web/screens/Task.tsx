@@ -91,7 +91,12 @@ export function Task({ ctx, id }: { ctx: Ctx; id: string }) {
           </div>
           {view.recommendation && (
             <p>
-              Market recommendation: <b class="mono">{view.recommendation.executorId}</b> at <span class="num">{view.recommendation.chance}¢</span>
+              {t.status === 'open' ? 'Market recommendation' : "Market's pick at close"}: <b class="mono">{view.recommendation.executorId}</b> at <span class="num">{view.recommendation.chance}¢</span>
+            </p>
+          )}
+          {t.corrections?.length > 0 && (
+            <p class="warn-c" data-testid="corrections">
+              Settlement corrected {t.corrections.length}×: {t.corrections.map((c: any) => `${c.from} → ${c.to} (${c.reason})`).join('; ')}
             </p>
           )}
         </div>

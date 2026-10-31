@@ -3,6 +3,23 @@
 Newest first. Each prompt appends what it did, what it decided, and anything
 blocked (with exactly what the owner needs to provide).
 
+## 2026-10-31 — Polish pass
+- Re-verified every scope item against the product doc (engine commands,
+  journal + golden, API, bots, LLM adapters, simulated runner, web app,
+  INVARIANTS, SSE, SDK, runner protocol, surveillance, private tasks, GitHub
+  app, load/incident scripts, mobile app): all present and under test.
+- `correctSettlement` (15th command, D36) with a reversibility guard;
+  runner-signed `kind: "correction"` and sandbox admin route; the incident
+  drill now corrects instead of compensating when it can; docs updated.
+- Coverage tightened: executor records per version, replay of a journal with
+  a rejected command fails loudly, `trading` events and task filters on the
+  stream, LLM trader accounts created by boot only with key + model, the
+  correction's guards and money flow, a runner-signed correction over HTTP.
+- Dead code removed (`fillsBetween`, unused fixture helpers); Market page no
+  longer prints a missing timestamp; the task page labels the recommendation
+  "pick at close" once trading ended and shows corrections.
+- Golden journal regenerated (Task gained `corrections`).
+
 ## 2026-10-31 — Store readiness follow-ups (account deletion, thesis reports)
 - `closeAccount` command (14th) + `POST /api/me/delete`; thesis report route
   and `GET /api/admin/reports`; mobile Profile deletion and Report buttons
