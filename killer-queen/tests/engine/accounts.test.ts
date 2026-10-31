@@ -17,6 +17,19 @@ describe('accounts, deposits, executors', () => {
     assert.equal(account.locked, 0);
   });
 
+  it('counter ids skip ids that were supplied explicitly', () => {
+    const f = seedExchange(); // tsk_1 exists with an explicit id
+    const t = must(f.venue, { type: 'createTask', customer: 'cust', title: 't', prompt: 'p', repo: 'r', commit: 'c', testCommand: 'npm test', candidateAgents: ['codex'] });
+    assert.equal(t.task.id, 'tsk_2');
+    assert.equal(f.venue.engine.task('tsk_1')!.title, 'Reject negative quantities in the cart API');
+    must(f.venue, { type: 'createAccount', id: 'acc_1', name: 'x', kind: 'human', role: 'trader', org: '', keyHash: null, startingCash: 0 });
+    const a = must(f.venue, { type: 'createAccount', name: 'y', kind: 'human', role: 'trader', org: '', keyHash: null, startingCash: 0 });
+    assert.equal(a.account.id, 'acc_2');
+    must(f.venue, { type: 'placeOrder', id: 'o1', account: 'alice', market: f.markets[0]!, side: 'yes', action: 'buy', orderType: 'limit', price: 10, quantity: 1 });
+    const o = must(f.venue, { type: 'placeOrder', account: 'alice', market: f.markets[0]!, side: 'yes', action: 'buy', orderType: 'limit', price: 10, quantity: 1 });
+    assert.equal(o.order.id, 'o2');
+  });
+
   it('engine assigns counter ids when none is given', () => {
     const { venue } = makeVenue();
     const a = must(venue, { type: 'createAccount', name: 'A', kind: 'human', role: 'trader', org: '', keyHash: null, startingCash: 0 });

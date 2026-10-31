@@ -66,6 +66,16 @@ function positionKey(market: string, account: string): string {
   return `${market}|${account}`;
 }
 
+/** Next counter-based id that is not already taken (explicit ids may have used some). */
+function nextId(counters: EngineState['counters'], key: 'account' | 'task' | 'order' | 'comment', prefix: string, taken: (id: string) => boolean): string {
+  let id: string;
+  do {
+    counters[key] += 1;
+    id = `${prefix}${counters[key]}`;
+  } while (taken(id));
+  return id;
+}
+
 function sortBook(side: Order[]): void {
   side.sort((a, b) => (b.price - a.price) || (a.seq - b.seq));
 }
@@ -238,7 +248,7 @@ export class Engine {
     if (c.keyHash !== null && this.accountByKeyHash(c.keyHash)) reject('duplicate_key', 'an account with that key already exists');
     if (c.role === 'house' && this.houseAccount()) reject('duplicate_house', 'there is already a house account');
 
-    const id = c.id ?? `acc_${++s.counters.account}`;
+    const id = c.id ?? nextId(s.counters, 'account', 'acc_', (x) => s.accounts.has(x));
     const account: Account = {
       id,
       name: c.name.trim(),
@@ -322,7 +332,7 @@ export class Engine {
       reject('bad_protected_paths', 'protectedPaths must be strings');
     }
 
-    const id = c.id ?? `tsk_${++s.counters.task}`;
+    const id = c.id ?? nextId(s.counters, 'task', 'tsk_', (x) => s.tasks.has(x));
     const candidateVersions: Record<string, string> = {};
     for (const execId of c.candidateAgents) candidateVersions[execId] = s.executors.get(execId)!.version;
     const task: Task = {
@@ -414,7 +424,7 @@ export class Engine {
     if (account.cash < lock) reject('insufficient_funds', `need ${lock}¢ but only ${account.cash}¢ available`);
 
     // ---- mutate ----
-    const id = c.id ?? `o${++s.counters.order}`;
+    const id = c.id ?? nextId(s.counters, 'order', 'o', (x) => s.orders.has(x));
     const order: Order = {
       id,
       market: market.id,
@@ -602,7 +612,7 @@ export class Engine {
     const probability = c.probability ?? null;
     if (probability !== null && !isPrice(probability)) reject('bad_probability', 'probability must be 1–99');
     if (c.id !== undefined && s.comments.some((x) => x.id === c.id)) reject('duplicate_id', `comment ${c.id} already exists`);
-    const comment = { id: c.id ?? `c${++s.counters.comment}`, market: market.id, account: account.id, text: c.text.trim(), probability, at: c.at };
+    const comment = { id: c.id ?? nextId(s.counters, 'comment', 'c', (x) => s.comments.some((y) => y.id === x)), market: market.id, account: account.id, text: c.text.trim(), probability, at: c.at };
     s.comments.push(comment);
     return { comment };
   }

@@ -64,11 +64,11 @@ describe('restart and scheduler', () => {
         await s.api('POST', '/api/orders', { token: bob.apiKey, body: { marketId: `${t}:claude-code`, side: 'no', price: 26, quantity: 5 } }); // mid 72
         await s.api('POST', '/api/orders', { token: alice.apiKey, body: { marketId: `${t}:codex`, side: 'yes', price: 40, quantity: 5 } });
       }
-      assert.deepEqual(s.booted.tick(), { closed: [], decided: [] });
+      assert.deepEqual(await s.booted.tick(), { closed: [], decided: [] });
       s.clock.advance(59_999);
-      assert.deepEqual(s.booted.tick(), { closed: [], decided: [] });
+      assert.deepEqual(await s.booted.tick(), { closed: [], decided: [] });
       s.clock.advance(1);
-      const t = s.booted.tick();
+      const t = await s.booted.tick();
       assert.deepEqual(t.closed.sort(), [runT, skipT].sort());
       assert.deepEqual(t.decided.sort(), [runT, skipT].sort());
       const run = (await s.api('GET', `/api/tasks/${runT}`)).body;

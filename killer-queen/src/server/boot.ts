@@ -30,7 +30,7 @@ export interface BootOptions {
 
 export interface BotHandle {
   name: string;
-  tick(): void;
+  tick(): Promise<void> | void;
   stop?(): void;
 }
 export type BotFactory = (ctx: { venue: Venue; config: Config; clock: Clock; log: (msg: string) => void }) => BotHandle | null;
@@ -45,8 +45,8 @@ export interface Booted {
   url: string | null;
   runner: SimulatedRunner | null;
   bots: BotHandle[];
-  /** Auto-close due tasks, auto-decide, then let every bot act once. */
-  tick(): { closed: string[]; decided: string[] };
+  /** Auto-close due tasks, auto-decide, then let every bot act once (in order). */
+  tick(): Promise<{ closed: string[]; decided: string[] }>;
   stop(): Promise<void>;
 }
 
@@ -79,7 +79,7 @@ export async function boot(opts: BootOptions = {}): Promise<Booted> {
     runner.start();
   }
 
-  const tick = (): { closed: string[]; decided: string[] } => {
+  const tick = async (): Promise<{ closed: string[]; decided: string[] }> => {
     const closed: string[] = [];
     const decided: string[] = [];
     const now = clock.now();
@@ -98,7 +98,7 @@ export async function boot(opts: BootOptions = {}): Promise<Booted> {
     }
     for (const b of bots) {
       try {
-        b.tick();
+        await b.tick();
       } catch (e) {
         log(`bot ${b.name} failed: ${(e as Error).message}`);
       }
@@ -113,11 +113,11 @@ export async function boot(opts: BootOptions = {}): Promise<Booted> {
       setInterval(() => {
         if (busy) return; // never overlap ticks
         busy = true;
-        try {
-          tick();
-        } finally {
-          busy = false;
-        }
+        tick()
+          .catch((e) => log(`tick failed: ${(e as Error).message}`))
+          .finally(() => {
+            busy = false;
+          });
       }, config.botTickMs),
     );
   }
