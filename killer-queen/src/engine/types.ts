@@ -41,6 +41,8 @@ export interface Account {
   flagged: boolean;
   /** Vetted traders may see and trade private tasks (5.4). */
   vetted: boolean;
+  /** Closed by the owner (store requirement): anonymised, key revoked, no trading, off the leaderboard. */
+  closed: boolean;
 }
 
 export interface Executor {
@@ -202,6 +204,14 @@ export interface CreateAccountCommand extends Stamped {
   vetted?: boolean;
 }
 
+/** Owner-initiated deletion: cancels open orders, revokes the key, anonymises the name. Positions settle normally. */
+export interface CloseAccountCommand extends Stamped {
+  type: 'closeAccount';
+  account: string;
+  /** The owner, or an admin acting on a request. */
+  by?: string | null;
+}
+
 /** Admin review (5.2/5.4): flag or clear an account, attach a verified person, vet for private tasks. */
 export interface ReviewAccountCommand extends Stamped {
   type: 'reviewAccount';
@@ -334,7 +344,8 @@ export type Command =
   | SettleCommand
   | PauseTradingCommand
   | BaselineCommand
-  | ReviewAccountCommand;
+  | ReviewAccountCommand
+  | CloseAccountCommand;
 
 export type CommandType = Command['type'];
 
@@ -352,6 +363,7 @@ export const COMMAND_TYPES: readonly CommandType[] = [
   'pauseTrading',
   'baseline',
   'reviewAccount',
+  'closeAccount',
 ] as const;
 
 /** A command as callers build it: the Venue stamps `at` when missing. */
@@ -375,6 +387,7 @@ export interface CommandResults {
   pauseTrading: { paused: boolean; reason: string };
   baseline: { task: Task; opened: boolean; rejectedReason: RejectReason | null };
   reviewAccount: { account: Account };
+  closeAccount: { account: Account; cancelledOrders: number };
 }
 
 export type EngineOk<T extends CommandType = CommandType> = { ok: true; seq: number; data: CommandResults[T] };

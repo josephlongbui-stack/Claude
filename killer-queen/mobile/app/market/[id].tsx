@@ -83,6 +83,7 @@ export default function MarketScreen() {
               {c.probability !== null ? ` · ${c.probability}%` : ''}
             </Text>
             <Text style={[type.body, { color: p.text }]}>{c.text}</Text>
+            {signedIn && <Button label="Report" kind="ghost" onPress={() => void kq.reportThesis(id, c.id, 'reported from the app').catch(() => undefined)} />}
           </View>
         ))}
       </Panel>

@@ -212,4 +212,12 @@ but land in a later phase (see docs/ROADMAP.md).
 - **D34 Live provisioning.** `POST /api/admin/accounts` (admin key) creates
   accounts with a `personId` (and optional vetting); it is the only way to get
   an account in live mode and credits no play money there.
+- **D35 Account deletion.** `closeAccount` (owner or admin) cancels open
+  orders, revokes the key, anonymises name/org/hashes and marks the account
+  closed: no trading, no faucet, off the leaderboard; open positions still
+  settle into the (unreachable) cash balance so conservation holds. The
+  journal keeps the original `createAccount` row, since rows are never
+  edited; nothing served after the command shows the old name. Thesis
+  reports (`POST /api/markets/:id/comments/:commentId/report`) are
+  operational data in memory for the admin queue, not exchange state.
 

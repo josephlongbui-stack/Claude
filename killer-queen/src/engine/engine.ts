@@ -12,6 +12,7 @@ import {
   type BaselineCommand,
   type Book,
   type CancelOrderCommand,
+  type CloseAccountCommand,
   type CloseTaskCommand,
   type Command,
   type CommandResults,
@@ -144,6 +145,8 @@ export class Engine {
         return this.baseline(cmd);
       case 'reviewAccount':
         return this.reviewAccount(cmd);
+      case 'closeAccount':
+        return this.closeAccount(cmd);
       default:
         return assertNever(cmd);
     }
@@ -306,6 +309,7 @@ export class Engine {
       personId: c.personId ?? null,
       flagged: false,
       vetted: c.vetted ?? false,
+      closed: false,
     };
     s.accounts.set(id, account);
     s.totals.deposited += c.startingCash;
@@ -320,6 +324,7 @@ export class Engine {
     if (!['signup', 'faucet', 'admin', 'seed'].includes(c.reason)) reject('bad_reason', `unknown reason ${String(c.reason)}`);
     if (c.reason === 'faucet') {
       if (account.role !== 'trader' && account.role !== 'market_maker') reject('forbidden_role', 'only traders use the faucet');
+      if (account.closed) reject('account_closed', 'this account was deleted');
       if (account.flagged) reject('account_flagged', 'this account is under review');
       // One faucet per person: every account of a verified person shares the cooldown (D8).
       let last = account.lastFaucetAt;
@@ -458,6 +463,7 @@ export class Engine {
     const s = this.state;
     const account = s.accounts.get(c.account);
     if (!account) reject('account_not_found', `no account ${c.account}`);
+    if (account.closed) reject('account_closed', 'this account was deleted');
     const market = s.markets.get(c.market);
     if (!market) reject('market_not_found', `no market ${c.market}`);
     const task = s.tasks.get(market.taskId)!;
@@ -684,6 +690,7 @@ export class Engine {
     const s = this.state;
     const account = s.accounts.get(c.account);
     if (!account) reject('account_not_found', `no account ${c.account}`);
+    if (account.closed) reject('account_closed', 'this account was deleted');
     const market = s.markets.get(c.market);
     if (!market) reject('market_not_found', `no market ${c.market}`);
     const task = s.tasks.get(market.taskId)!;
@@ -869,6 +876,37 @@ export class Engine {
     if (c.vetted !== undefined) account.vetted = c.vetted;
     if (c.personId !== undefined) account.personId = c.personId;
     return { account };
+  }
+
+  private closeAccount(c: CloseAccountCommand): CommandResults['closeAccount'] {
+    const s = this.state;
+    const account = s.accounts.get(c.account);
+    if (!account) reject('account_not_found', `no account ${c.account}`);
+    if (c.by !== undefined && c.by !== null) {
+      const by = s.accounts.get(c.by);
+      if (!by) reject('account_not_found', `no account ${c.by}`);
+      if (by.id !== account.id && by.role !== 'admin') reject('forbidden', 'only the owner or an admin closes an account');
+    }
+    if (account.closed) reject('account_closed', 'already closed');
+    if (account.role === 'house' || account.role === 'market_maker') reject('forbidden', 'house accounts cannot be closed');
+    // ---- mutate: cancel every open order, revoke the key, anonymise ----
+    let cancelledOrders = 0;
+    for (const order of [...s.orders.values()]) {
+      if (order.account !== account.id || order.status !== 'open') continue;
+      this.removeFromBook(order);
+      this.releaseLock(order, account);
+      order.status = 'cancelled';
+      order.cancelledAt = c.at;
+      order.cancelReason = 'user';
+      cancelledOrders += 1;
+    }
+    account.name = 'Deleted user';
+    account.org = '';
+    account.keyHash = null;
+    account.emailHash = null;
+    account.deviceHash = null;
+    account.closed = true;
+    return { account, cancelledOrders };
   }
 
   /** Pay every position at `price` for Yes (100 − price for No); escrow must reach exactly 0. */

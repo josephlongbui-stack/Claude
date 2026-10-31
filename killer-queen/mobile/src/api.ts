@@ -76,6 +76,8 @@ export const kq = {
   cancelOrder: (id: string) => api('DELETE', `/api/orders/${encodeURIComponent(id)}`),
   comment: (marketId: string, text: string, probability: number | null) => api('POST', `/api/markets/${encodeURIComponent(marketId)}/comments`, { text, probability }),
   faucet: () => api('POST', '/api/wallet/faucet'),
+  deleteAccount: () => api('POST', '/api/me/delete'),
+  reportThesis: (marketId: string, commentId: string, reason: string) => api('POST', `/api/markets/${encodeURIComponent(marketId)}/comments/${encodeURIComponent(commentId)}/report`, { reason }),
 };
 
 /** Server-sent events over fetch streaming; resumes with Last-Event-ID. Returns a stop function. */

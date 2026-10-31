@@ -3,6 +3,12 @@
 Newest first. Each prompt appends what it did, what it decided, and anything
 blocked (with exactly what the owner needs to provide).
 
+## 2026-10-31 — Store readiness follow-ups (account deletion, thesis reports)
+- `closeAccount` command (14th) + `POST /api/me/delete`; thesis report route
+  and `GET /api/admin/reports`; mobile Profile deletion and Report buttons
+  wired. docs/STORE_SUBMISSION.md rows now "code". Golden hash regenerated
+  (Account gained `closed`): 15d0f62f….
+
 ## 2026-10-31 — Phase 4 (mobile app)
 - mobile/: Expo SDK 58 app assembled by hand (the host could not run
   create-expo-app; versions taken from Expo's sdk-58 bundledNativeModules.json

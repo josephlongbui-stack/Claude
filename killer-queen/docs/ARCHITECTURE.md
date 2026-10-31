@@ -43,6 +43,7 @@ Pure TypeScript, no I/O, no clock, no randomness.
 | `pauseTrading` (D26, added in Phase 1) | boolean, short reason, `by` is an admin or null | `state.trading` flips; placeOrder rejects `trading_paused` while paused |
 | `baseline` (D2, added in Phase 2) | task pending, exactly 3 results, log, unused runId | all failed: task and markets open, `openedAt`, `closesAt = at + window`; else task `rejected` (trivial/flaky), markets `cancelled`; log hash stored |
 | `reviewAccount` (D8/D33, added in Phase 5) | account exists, `by` is an admin or null, at least one of flagged/vetted/personId | sets `flagged` (off the leaderboard, no faucet), `vetted` (private tasks), `personId` |
+| `closeAccount` (store requirement, Phase 4) | account exists and not closed, `by` is the owner or an admin, not a house account | cancels the account's open orders (locks returned), revokes the key, clears name/org/hashes, `closed = true` (no trading, off the leaderboard; positions still settle to cash) |
 
 Ids: `acc_n`, `tsk_n`, `o<n>`, `f<n>`, `c<n>` from engine counters that skip
 explicitly supplied ids; replay therefore reproduces them (D12). `placeOrder`

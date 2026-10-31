@@ -64,9 +64,13 @@ export default function Profile() {
         text: 'Delete',
         style: 'destructive',
         onPress: async () => {
-          // Server-side anonymisation is a follow-up route (docs/STORE_SUBMISSION.md); the key is revoked locally now.
-          await signout();
-          setMsg('Account removed from this device. Email abuse@killerqueen.dev to finish deletion until the in-app route ships.');
+          try {
+            await kq.deleteAccount(); // cancels open orders, revokes the key, anonymises the name (journaled)
+            await signout();
+            setMsg('Account deleted. Open positions settle normally; the name was anonymised and the key revoked.');
+          } catch (e) {
+            fail(e);
+          }
         },
       },
     ]);

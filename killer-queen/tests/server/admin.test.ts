@@ -68,3 +68,37 @@ describe('admin: alerts queue, review, provisioning', () => {
     }
   });
 });
+
+describe('store readiness: in-app deletion and thesis reports', () => {
+  it('POST /api/me/delete closes the account; reports reach the admin queue once per reporter', async () => {
+    const s = await startTestServer();
+    try {
+      seedExecutors(s);
+      const cust = await s.signup('Del customer', 'customer');
+      const alice = await s.signup('Del Alice', 'trader');
+      const bob = await s.signup('Del Bob', 'trader');
+      const created = await s.api('POST', '/api/tasks', { token: cust.apiKey, body: { ...TASK, candidateAgents: ['codex'] } });
+      const m = `${created.body.task.id}:codex`;
+      const c = await s.api('POST', `/api/markets/${m}/comments`, { token: alice.apiKey, body: { text: 'spammy thesis' } });
+      const r1 = await s.api('POST', `/api/markets/${m}/comments/${c.body.comment.id}/report`, { token: bob.apiKey, body: { reason: 'spam' } });
+      assert.equal(r1.status, 201);
+      const r2 = await s.api('POST', `/api/markets/${m}/comments/${c.body.comment.id}/report`, { token: bob.apiKey, body: { reason: 'spam again' } });
+      assert.equal(r2.body.duplicate, true);
+      assert.equal((await s.api('POST', `/api/markets/${m}/comments/nope/report`, { token: bob.apiKey, body: { reason: 'x' } })).status, 404);
+      const q = await s.api('GET', '/api/admin/reports', { headers: { 'x-admin-key': 'admin-key-for-tests' } });
+      assert.equal(q.body.reports.length, 1);
+      assert.equal(q.body.reports[0].comment.text, 'spammy thesis');
+      await s.api('POST', '/api/orders', { token: alice.apiKey, body: { marketId: m, side: 'yes', price: 20, quantity: 3 } });
+      const del = await s.api('POST', '/api/me/delete', { token: alice.apiKey });
+      assert.equal(del.status, 200);
+      assert.equal(del.body.account.name, 'Deleted user');
+      assert.equal(del.body.cancelledOrders, 1);
+      assert.equal((await s.api('GET', '/api/me', { token: alice.apiKey })).status, 401, 'key revoked');
+      assert.equal((await s.api('GET', '/api/leaderboard')).body.leaderboard.some((r: any) => r.id === alice.id), false);
+      const mv = await s.api('GET', `/api/markets/${m}`);
+      assert.equal(JSON.stringify(mv.body).includes('Del Alice'), false);
+    } finally {
+      await s.stop();
+    }
+  });
+});

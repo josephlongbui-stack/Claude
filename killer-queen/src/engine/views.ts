@@ -370,7 +370,7 @@ export function leaderboard(engine: Engine): LeaderboardRow[] {
   const rows: LeaderboardRow[] = [];
   for (const a of s.accounts.values()) {
     if (a.role !== 'trader') continue;
-    if (a.flagged) continue; // under review: off the board until cleared (5.2)
+    if (a.flagged || a.closed) continue; // under review or deleted: off the board (5.2)
     const p = portfolio(engine, a.id);
     let se = 0;
     let scored = 0;

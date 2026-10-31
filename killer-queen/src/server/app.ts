@@ -3,6 +3,7 @@
  * validate with zod, authenticate, and call the Venue; they never touch
  * engine state directly.
  */
+import { z } from 'zod';
 import express, { type NextFunction, type Request, type Response, type Express } from 'express';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -113,6 +114,35 @@ export function createApp(deps: AppDeps): Express {
     }),
   );
   api.get('/me', auth, limitReads, wrap((req, res) => res.json({ account: publicAccount(req.account!) })));
+  /** In-app account deletion (store requirement): cancels open orders, revokes the key, anonymises the name. */
+  api.post(
+    '/me/delete',
+    auth,
+    limitWrites,
+    wrap((req, res) => {
+      const data = unwrap(venue.apply({ type: 'closeAccount', account: req.account!.id, by: req.account!.id }));
+      res.json({ account: publicAccount(data.account), cancelledOrders: data.cancelledOrders });
+    }),
+  );
+  /** Thesis moderation: reports go to the admin queue (operational data, not exchange state). */
+  const reports: { id: number; marketId: string; commentId: string; by: string; reason: string; at: number }[] = [];
+  api.post(
+    '/markets/:id/comments/:commentId/report',
+    auth,
+    limitWrites,
+    wrap((req, res) => {
+      const body = z.object({ reason: z.string().trim().min(1).max(500) }).strict().parse(req.body);
+      const comment = venue.engine.state.comments.find((c) => c.id === req.params.commentId && c.market === req.params.id);
+      if (!comment) throw new HttpError(404, 'comment_not_found', 'no such thesis');
+      if (reports.some((r) => r.commentId === comment.id && r.by === req.account!.id)) return res.status(200).json({ ok: true, duplicate: true });
+      reports.push({ id: reports.length + 1, marketId: comment.market, commentId: comment.id, by: req.account!.id, reason: body.reason, at: clock.now() });
+      if (reports.length > 10_000) reports.shift();
+      res.status(201).json({ ok: true });
+    }),
+  );
+  api.get('/admin/reports', requireAdminKey(config.adminKey), (_req, res) => {
+    res.json({ reports: reports.map((r) => ({ ...r, comment: venue.engine.state.comments.find((c) => c.id === r.commentId) ?? null })) });
+  });
   api.get('/portfolio', auth, limitReads, wrap((req, res) => res.json(portfolio(venue.engine, req.account!.id))));
   api.post(
     '/wallet/faucet',

@@ -182,3 +182,34 @@ describe('identity limits and review (5.2)', () => {
     assert.ok(leaderboard(f.venue.engine).some((r) => r.id === 'alice'));
   });
 });
+
+describe('closeAccount (D35)', () => {
+  it('cancels open orders, revokes the key, anonymises, blocks trading and the leaderboard; positions still settle', () => {
+    const f = seedExchange();
+    const m = f.markets[0]!;
+    buy(f.venue, 'alice', m, 'no', 40, 10);
+    buy(f.venue, 'bob', m, 'yes', 60, 10); // bob holds 10 Yes
+    const resting = buy(f.venue, 'bob', m, 'yes', 20, 5);
+    mustReject(f.venue, { type: 'closeAccount', account: 'bob', by: 'alice' }, 'forbidden');
+    mustReject(f.venue, { type: 'closeAccount', account: 'mm', by: 'admin' }, 'forbidden');
+    const r = must(f.venue, { type: 'closeAccount', account: 'bob', by: 'bob' });
+    assert.equal(r.cancelledOrders, 1);
+    const bob = f.venue.engine.account('bob')!;
+    assert.equal(bob.closed, true);
+    assert.equal(bob.name, 'Deleted user');
+    assert.equal(bob.keyHash, null);
+    assert.equal(bob.locked, 0);
+    assert.equal(f.venue.engine.order(resting.order.id)!.status, 'cancelled');
+    assert.equal(f.venue.engine.accountByKeyHash(sha256(f.keys['bob']!)), undefined, 'the key no longer authenticates');
+    mustReject(f.venue, { type: 'placeOrder', account: 'bob', market: m, side: 'yes', action: 'buy', orderType: 'limit', price: 50, quantity: 1 }, 'account_closed');
+    mustReject(f.venue, { type: 'comment', account: 'bob', market: m, text: 'x' }, 'account_closed');
+    mustReject(f.venue, { type: 'deposit', account: 'bob', amount: 1, reason: 'faucet' }, 'account_closed');
+    mustReject(f.venue, { type: 'closeAccount', account: 'bob', by: 'admin' }, 'account_closed');
+    assert.equal(leaderboard(f.venue.engine).some((x) => x.id === 'bob'), false);
+    const cash = bob.cash;
+    must(f.venue, { type: 'closeTask', taskId: f.taskId });
+    must(f.venue, { type: 'decide', taskId: f.taskId, executorId: 'claude-code' });
+    must(f.venue, { type: 'settle', taskId: f.taskId, outcome: 'passed', log: '' });
+    assert.equal(f.venue.engine.account('bob')!.cash, cash + 1000, 'the position still settled');
+  });
+});
