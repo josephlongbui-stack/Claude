@@ -1,0 +1,4 @@
+@AGENTS.md
+@docs/SPEC_DECISIONS.md
+@docs/INVARIANTS.md
+@docs/AUTONOMY.md
