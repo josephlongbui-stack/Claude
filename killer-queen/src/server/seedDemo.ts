@@ -439,10 +439,11 @@ export function seedDemoExchange(venue: Venue, clock: SettableClock, opts: DemoO
     while (b === a) b = pick(traders);
     return [a, b];
   };
-  const record = (execId: string) => {
+  /** Finished runs of one agent on one version: the record a packet shows, so theses that cite it agree with it. */
+  const record = (execId: string, version: string) => {
     let n = 0;
     let k = 0;
-    for (const t of venue.engine.state.tasks.values()) if (t.chosenAgent === execId && t.passed !== null) { n += 1; if (t.passed) k += 1; }
+    for (const t of venue.engine.state.tasks.values()) if (t.chosenAgent === execId && t.passed !== null && t.candidateVersions[execId] === version) { n += 1; if (t.passed) k += 1; }
     return { n, k };
   };
 
@@ -510,7 +511,7 @@ export function seedDemoExchange(venue: Venue, clock: SettableClock, opts: DemoO
             const p = lastPrice[m] ?? price;
             const bullish = p >= 50 ? r() < 0.7 : r() < 0.35;
             const exec = DEFAULT_EXECUTORS.find((e) => e.id === execId)!;
-            const rec = record(execId);
+            const rec = record(execId, venue.engine.task(taskIds[t.slug]!)!.candidateVersions[execId] ?? exec.version);
             // A bull states more than the price, a bear less; the number is posted once, as the probability.
             const stated = clamp(bullish ? p + int(2, 12) : p - int(3, 15), 3, 97);
             const fits = (x: Thesis) => (!x.only || x.only.test(`${t.title} ${t.prompt}`)) && (!x.when || x.when(rec));

@@ -30,5 +30,5 @@
   .topbar-inner { gap: var(--sp-3); }
   .topbar .nav, .topbar-account, .topbar .theme-btn, .topbar-demo { display: none; }
   .menu-btn { display: inline-flex; }
-  .balance .lbl { display: none; }
+  .balance .lbl { font-size: var(--t-caption); line-height: var(--t-caption-lh); }
 }

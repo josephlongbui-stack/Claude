@@ -91,9 +91,11 @@ describe('close, decide, settle', () => {
     assert.equal(e.market(claude)!.status, 'running');
     mustReject(f.venue, { type: 'decide', taskId: f.taskId, executorId: 'claude-code', by: 'cust' }, 'task_not_closed');
     mustReject(f.venue, { type: 'decide', taskId: f.taskId, executorId: null, by: 'cust' }, 'task_not_closed');
-    assert.equal(executorRecords(f.venue.engine).find((r) => r.id === 'claude-code')!.chosen, 1);
+    // A run in progress is not on the record yet; it lands there when the result arrives.
+    assert.equal(executorRecords(f.venue.engine).find((r) => r.id === 'claude-code')!.chosen, 0);
 
     const s = must(f.venue, { type: 'settle', taskId: f.taskId, outcome: 'passed', log: 'all green', runId: 'run-1' });
+    assert.equal(executorRecords(f.venue.engine).find((r) => r.id === 'claude-code')!.chosen, 1);
     assert.equal(s.task.status, 'resolved');
     assert.equal(s.task.passed, true);
     assert.equal(s.task.runLog, 'all green');

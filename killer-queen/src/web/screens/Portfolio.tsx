@@ -122,7 +122,7 @@ export function Portfolio({ ctx }: { ctx: Ctx }) {
                   {dollars(o.lockedRemaining ?? (o.quantity - o.filled) * (o.price + 1))}
                 </Td>
                 <Td align="right">
-                  <Button variant="quiet" class="compact" onClick={() => cancel(o.id)} aria-label={`Cancel ${o.quantity - o.filled} ${o.side === 'yes' ? 'Yes' : 'No'} at ${o.price} cents`}>
+                  <Button class="compact" onClick={() => cancel(o.id)} aria-label={`Cancel ${o.quantity - o.filled} ${o.side === 'yes' ? 'Yes' : 'No'} at ${o.price} cents`}>
                     Cancel
                   </Button>
                 </Td>

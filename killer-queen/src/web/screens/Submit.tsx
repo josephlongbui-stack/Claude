@@ -112,7 +112,7 @@ export function Submit({ ctx }: { ctx: Ctx }) {
                     label={
                       <span>
                         {e.name} <span class="ink-3">{e.version}</span>{' '}
-                        <span class="ink-2">{(e.byVersion?.[e.version]?.chosen ?? 0) === 0 ? 'no runs yet on this version' : `passed ${e.byVersion[e.version].passed} of ${e.byVersion[e.version].chosen} on this version`}</span>
+                        <span class="ink-2">{(e.byVersion?.[e.version]?.chosen ?? 0) === 0 ? 'No runs yet on this version' : `Passed ${e.byVersion[e.version].passed} of ${e.byVersion[e.version].chosen} on this version`}</span>
                       </span>
                     }
                   />
@@ -128,7 +128,7 @@ export function Submit({ ctx }: { ctx: Ctx }) {
                 <Field label="Minimum chance to run" htmlFor="f-min" help="Used only when auto-decide is on.">
                   <span class="input-suffix">
                     <Input id="f-min" type="number" inputMode="numeric" min={1} max={99} value={f.minimumChance} onInput={set('minimumChance')} />
-                    <span class="sfx">¢</span>
+                    <span class="sfx">%</span>
                   </span>
                 </Field>
               </div>

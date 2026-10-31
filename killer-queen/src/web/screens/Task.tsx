@@ -127,6 +127,7 @@ export function Task({ ctx, id }: { ctx: Ctx; id: string }) {
       <Panel>
         <Table
           caption="Candidate agents"
+          class="agent-table"
           testId="candidates"
           columns={[
             { key: 'agent', label: 'Agent' },
@@ -145,7 +146,7 @@ export function Task({ ctx, id }: { ctx: Ctx; id: string }) {
               chosen={t.chosenAgent === m.executorId}
               chanceSize="l"
               columns={t.status === 'open' ? ['agent', 'chance', 'bidask', 'volume', 'traders', 'record', 'quick'] : ['agent', 'chance', 'volume', 'traders', 'record']}
-              detail={`${m.executor.chosen === 0 ? 'No runs yet on this version' : `Passed ${m.executor.passed} of ${m.executor.chosen} on this version`}, ${count(m.quote.volume)} traded${m.status === 'open' && m.quote.yesBid !== null && m.quote.yesAsk !== null ? `, bid ${m.quote.yesBid}¢ ask ${m.quote.yesAsk}¢` : ''}`}
+              detail={`${m.executor.chosen === 0 ? 'No runs yet on this version' : `Passed ${m.executor.passed} of ${m.executor.chosen} on this version`}, ${count(m.quote.volume)} traded`}
             />
           ))}
         </Table>

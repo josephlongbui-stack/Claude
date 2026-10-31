@@ -52,7 +52,8 @@
 .kv dd.yes { color: var(--yes); } .kv dd.no { color: var(--no); }
 .summary-you { margin: 0 0 var(--sp-3); }
 .sticky-bar { display: none; }
-@media (max-width: 1000px) {
+/* Below 1200 px three columns would leave the centre narrower than its sidebars, so the packet moves under the centre. */
+@media (max-width: 1200px) {
   .market { grid-template-columns: minmax(0, 1fr) var(--side-col); grid-template-rows: auto auto auto; grid-template-areas: "centre ticket" "centre yours" "packet packet"; }
 }
 @media (max-width: 720px) {

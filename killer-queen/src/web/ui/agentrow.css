@@ -7,21 +7,21 @@
 .table .task-cell { vertical-align: top; }
 .table .closes-cell { vertical-align: top; white-space: nowrap; }
 @media (max-width: 720px) {
-  .arena-table thead { display: none; }
-  .arena-table, .arena-table tbody { display: block; }
-  .arena-table tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "task task" "agent chance" "agent change" "quick quick"; column-gap: var(--sp-3); align-items: center; padding: 0 var(--sp-3); }
+  .agent-table thead { display: none; }
+  .agent-table, .agent-table tbody { display: block; }
+  .agent-table tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "task task" "agent chance" "agent change" "quick quick"; column-gap: var(--sp-3); align-items: center; padding: 0 var(--sp-3); }
   /* In the grid, rules belong to the rows, not the cells: one strong rule above each task, one light rule between its agents. */
-  .arena-table td, .arena-table tr.group td { border: 0; padding: 0; }
-  .arena-table tr.group { border-top: var(--hairline) solid var(--rule-strong); }
-  .arena-table tbody tr:first-child.group { border-top: 0; }
-  .arena-table tr:not(.group) { border-top: var(--hairline) solid var(--rule); }
-  .arena-table td.task-cell { grid-area: task; padding: var(--sp-3) 0 var(--sp-2); }
-  .arena-table td.agent-cell { grid-area: agent; padding: var(--sp-2) 0; align-self: center; }
-  .arena-table td.chance-cell { grid-area: chance; text-align: right; padding: var(--sp-2) 0 0; align-self: end; }
-  .arena-table td.change-cell { grid-area: change; text-align: right; padding: 0 0 var(--sp-2); align-self: start; }
-  .arena-table td.closes-cell, .arena-table td.hide-sm { display: none; }
-  .arena-table td.quick-cell { grid-area: quick; padding: 0 0 var(--sp-2); }
-  .arena-table td.quick-cell:empty { display: none; }
-  .arena-table .quick { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); width: 100%; }
-  .arena-table .quick .btn { height: var(--touch); }
+  .agent-table td, .agent-table tr.group td { border: 0; padding: 0; }
+  .agent-table tr.group { border-top: var(--hairline) solid var(--rule-strong); }
+  .agent-table tbody tr:first-child.group { border-top: 0; }
+  .agent-table tr:not(.group) { border-top: var(--hairline) solid var(--rule); }
+  .agent-table td.task-cell { grid-area: task; padding: var(--sp-3) 0 var(--sp-2); }
+  .agent-table td.agent-cell { grid-area: agent; padding: var(--sp-2) 0; align-self: center; }
+  .agent-table td.chance-cell { grid-area: chance; text-align: right; padding: var(--sp-2) 0 0; align-self: end; }
+  .agent-table td.change-cell { grid-area: change; text-align: right; padding: 0 0 var(--sp-2); align-self: start; }
+  .agent-table td.closes-cell, .agent-table td.hide-sm { display: none; }
+  .agent-table td.quick-cell { grid-area: quick; padding: 0 0 var(--sp-2); }
+  .agent-table td.quick-cell:empty { display: none; }
+  .agent-table .quick { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); width: 100%; }
+  .agent-table .quick .btn { height: var(--touch); }
 }

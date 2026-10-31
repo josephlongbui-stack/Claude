@@ -188,3 +188,44 @@ Not changed, on purpose or deferred:
   line carries record and volume).
 - The right column below "Your position" on a 1440 open market is empty while
   the theses run on; the three-column layout is the brief's.
+
+## Round 3: 5 blockers, all fixed; the loop ends here
+
+Three rounds is the limit the design prompt sets. Round 3's blockers were
+fixed before closing; its risks are listed below as left.
+
+| # | Blocker | Fix |
+| --- | --- | --- |
+| B1 | Market page centre column narrower than its sidebars between 1001 and 1200 px | The packet stacks under the centre below 1200 px (`app.css`); the centre never drops below about 480 px |
+| B2 | A customer's top-bar link had no text on phones (axe `link-name`) | The top-bar label stays on phones at caption size: "Play money $990.22" for traders, "Customer" for customers |
+| B3 | Task table crammed the agent cell into 100 px on phones | The task table reflows like the Arena (`.agent-table` rules: agent line, chance on the right, Yes/No row below); the phone detail line drops bid/ask |
+| B4 | Numbers disagreed: Runs summed to 12 against "Settled on a test 10"; a thesis cited a lifetime record beside a packet showing the version's | Records count finished runs only (a run in progress is on no record yet; `lifecycle.test.ts`); demo theses cite the per-version record the packet shows |
+| B5 | Run log broke identifiers mid-word | Lines wrap only after `/`, `_`, `:` or `.` (`<wbr>`), never inside a word |
+
+Also from round 3: "Market is split at 60¢" when two agents tie instead of
+calling one the favourite; Submit's candidate record reads "Passed…" and the
+minimum chance is a percentage; the portfolio's Cancel is a bordered button;
+full-page captures show the sticky bar at rest instead of painted mid-page.
+
+Left after three rounds (recorded, not done):
+
+- "Closing soon" lists every open task soonest first rather than only those
+  closing within the hour.
+- The phone filter strip wraps to two rows rather than scrolling in one.
+- Two agents at the same price share one pin on the rail; the labels tell
+  them apart.
+- The chart marks the last trade, not the settlement, and "the last 12 lines"
+  of a log open mid-sentence on the market page (the task page has it all).
+- The leaderboard is one long table with no jump to the viewer's row.
+- On the Agents page the pass rate is table text while the exchange figures
+  below are larger.
+- Disabled buttons and the armed delete button change their label mid-flow
+  ("Not enough play money", "Press again to delete for good"), which the
+  Words rule frowns on; both say what the next press does, so they stay.
+- Inline code chips in the Account page's API note can wrap at a space
+  inside the chip.
+- Demo prices cluster in the high fifties and low sixties because the house
+  maker's prior and the simulated traders are conservative; a wider spread
+  of priors would make the demo read as more traded.
+- "Settled at 100¢" (paid out) and "Settled at 56¢" (closing price) share a
+  label in adjacent rows; the pill colour and the rail note distinguish them.

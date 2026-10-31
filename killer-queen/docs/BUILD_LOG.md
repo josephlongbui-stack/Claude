@@ -479,8 +479,8 @@ blocked (with exactly what the owner needs to provide).
   every screenshot and probed the running demo with Playwright). Round 1: 9
   blockers; round 2: 6 blockers; every blocker fixed, most risks fixed, the
   rest recorded with reasons in docs/design/REPORT.md ("Fresh-eyes review").
-  A third round is the last the prompt allows; whatever it leaves is logged
-  in REPORT.md.
+  Round 3 (the last the prompt allows): 5 blockers, fixed before closing;
+  what it left is logged in REPORT.md under "Left after three rounds".
 - Engine changes made for the review were themselves reviewed by the
   exchange-auditor role (no blockers; its risks fixed in the commit "Engine:
   version strings key per-version records safely"): task views and packets

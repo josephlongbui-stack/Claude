@@ -216,7 +216,8 @@ export function executorRecords(engine: Engine): ExecutorRecord[] {
     const rec: ExecutorRecord = { ...e, chosen: 0, passed: 0, passRate: null, byVersion: {} };
     for (const t of s.tasks.values()) {
       if (t.chosenAgent !== id) continue;
-      if (t.status !== 'running' && t.status !== 'resolved') continue;
+      // A record is finished runs only: a run in progress is neither passed nor failed, so it counts nowhere yet.
+      if (t.status !== 'resolved') continue;
       if (t.outcome === 'infra_error') continue; // D6
       const v = t.candidateVersions[id] ?? e.version;
       // Own-property check: a version string must never reach Object.prototype (engine.ts rejects "__proto__"; this covers "constructor" and friends).

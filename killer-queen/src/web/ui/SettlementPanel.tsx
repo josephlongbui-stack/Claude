@@ -1,3 +1,4 @@
+import type { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { dollars } from './Price.js';
 import { when } from './PacketView.js';
@@ -6,6 +7,12 @@ import './settlement.css';
 export interface TestLine {
   name: string;
   ok: boolean;
+}
+
+/** A log line that may wrap only after a path or identifier separator, never inside a word. */
+function breakable(line: string): ComponentChildren {
+  const parts = line.split(/(?<=[/_:.])/);
+  return parts.map((part, i) => (i === 0 ? part : [<wbr key={i} />, part]));
 }
 
 /** Pull one line per test out of a run log (pytest, vitest, go test, cargo test); empty when the log has none. */
@@ -90,7 +97,7 @@ export function SettlementPanel({ outcome, agentName, log, settledAt, closingPri
           <pre class="settle-log" data-testid="run-log" tabIndex={0} aria-label="Run log">
             {tail.map((l, i) => (
               <span class={`ln ${i < linesShown ? 'in' : ''} ${/PASSED|✓|--- PASS|\.\.\. ok|passed \(exit 0\)/.test(l) ? 'ok' : /FAILED|×|✗|--- FAIL|failed \(exit 1\)/.test(l) ? 'bad' : ''}`} key={i}>
-                {l}
+                {breakable(l)}
               </span>
             ))}
           </pre>

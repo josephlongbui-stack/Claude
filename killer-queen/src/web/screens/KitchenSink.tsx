@@ -189,7 +189,7 @@ export function KitchenSink({ ctx }: { ctx: Ctx }) {
 
       <SectionHead title="Table, TitleCell, AgentRow states" />
       <Panel>
-        <Table caption="Agent row states" columns={[{ key: 'task', label: 'Task', width: 'task' }, { key: 'agent', label: 'Agent' }, { key: 'chance', label: 'Chance', align: 'right' }, { key: 'change', label: 'Change', align: 'right' }, { key: 'vol', label: 'Volume', align: 'right', hideSm: true }, { key: 'closes', label: 'Closes', hideSm: true }, { key: 'q', label: '' }]} class="arena-table">
+        <Table caption="Agent row states" columns={[{ key: 'task', label: 'Task', width: 'task' }, { key: 'agent', label: 'Agent' }, { key: 'chance', label: 'Chance', align: 'right' }, { key: 'change', label: 'Change', align: 'right' }, { key: 'vol', label: 'Volume', align: 'right', hideSm: true }, { key: 'closes', label: 'Closes', hideSm: true }, { key: 'q', label: '' }]} class="arena-table agent-table">
           <AgentRow m={m(EX.cc, 'open')} columns={['agent', 'chance', 'change', 'volume', 'quick']} group lead={<Td rowSpan={3} class="task-cell"><TitleCell title="Honour clinic holidays in availability search" href="#/kitchen-sink" sub={<span class="mono">meridian-health/scheduler e2b7a93</span>} /></Td>} trail={<Td rowSpan={3} class="closes-cell"><Countdown closesAt={NOW + 42_000} now={NOW} /></Td>} />
           <AgentRow m={m(EX.cx, 'open', { quote: { yesBid: 50, yesAsk: 56, volume: 412, chance: 53, change: -2 } })} columns={['agent', 'chance', 'change', 'volume', 'quick']} />
           <AgentRow m={m(EX.gm, 'open', { quote: { yesBid: null, yesAsk: null, volume: 0, chance: 50, change: null } })} columns={['agent', 'chance', 'change', 'volume', 'quick']} />

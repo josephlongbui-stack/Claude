@@ -103,7 +103,7 @@ export function Arena({ ctx }: { ctx: Ctx }) {
         <Panel>
           <Table
             caption={`${shown.length} tasks, one row per candidate agent`}
-            class="arena-table"
+            class="arena-table agent-table"
             testId="arena-table"
             columns={[
               { key: 'task', label: 'Task', width: 'task' },
@@ -163,7 +163,9 @@ export function Arena({ ctx }: { ctx: Ctx }) {
                         )}
                         {e.recommendation && n > 1 && e.task.status === 'open' && (
                           <div class="task-fav t-caption ink-3">
-                            Market favours {e.markets.find((x) => x.executorId === e.recommendation!.executorId)?.executor.name} at {e.recommendation.chance}¢ with {count(volume(e))} contracts traded
+                            {e.markets.filter((x) => x.status === 'open' && x.quote.chance === e.recommendation!.chance).length > 1
+                              ? `Market is split at ${e.recommendation.chance}¢ with ${count(volume(e))} contracts traded`
+                              : `Market favours ${e.markets.find((x) => x.executorId === e.recommendation!.executorId)?.executor.name} at ${e.recommendation.chance}¢ with ${count(volume(e))} contracts traded`}
                           </div>
                         )}
                       </Td>

@@ -48,6 +48,9 @@ const { chromium } = require('playwright');
       await page.goto(url);
       await page.reload();
       await page.waitForTimeout(1000);
+      // A full-page capture paints a sticky bar mid-page; show it at its resting place instead.
+      await page.addStyleTag({ content: '.sticky-bar { position: static; }' });
+      await page.waitForTimeout(100);
       await page.screenshot({ path: `${out}/${name}-${width}-${theme}.png`, fullPage: true });
       const [sw, cw] = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
       if (sw > cw + 1) problems.push(`${name} ${width}/${theme}: horizontal scroll ${sw}>${cw}`);
