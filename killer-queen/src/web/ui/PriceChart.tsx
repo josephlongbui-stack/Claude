@@ -4,6 +4,8 @@ import './chart.css';
 const PAD_R = 40;
 
 /** Yes price per trade as a step line on the full 1–99 axis, drawn at the container's real size so nothing stretches. */
+const whenShort = (ms: number): string => new Date(ms).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+
 export function PriceChart({ points, last, height }: { points: { at: number; price: number }[]; last?: number | null; height?: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 600, h: height ?? 180 });
@@ -44,6 +46,16 @@ export function PriceChart({ points, last, height }: { points: { at: number; pri
             </g>
           ))}
           {d && <path class="line" d={d} />}
+          {n >= 2 && (
+            <>
+              <text class="axis" x="0" y={H + 14}>
+                {whenShort(points[0]!.at)}
+              </text>
+              <text class="axis end" x={W} y={H + 14}>
+                {whenShort(points[n - 1]!.at)}
+              </text>
+            </>
+          )}
           {n === 1 && <circle class="last" cx={W / 2} cy={y(points[0]!.price)} r="4" />}
           {n >= 2 && last !== null && last !== undefined && <circle class="last" cx={W} cy={y(last)} r="3.5" />}
         </svg>

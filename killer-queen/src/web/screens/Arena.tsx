@@ -139,6 +139,7 @@ export function Arena({ ctx }: { ctx: Ctx }) {
                   group={i === 0}
                   chosen={e.task.chosenAgent === m.executorId}
                   columns={['agent', 'chance', 'change', 'volume', 'quick']}
+                  detail={`${count(m.quote.volume)} traded`}
                   lead={
                     i === 0 ? (
                       <Td rowSpan={n} class="task-cell">
@@ -155,6 +156,11 @@ export function Arena({ ctx }: { ctx: Ctx }) {
                             </span>
                           }
                         />
+                        {e.task.status === 'open' && (
+                          <div class="task-closes show-sm t-caption ink-3">
+                            <Countdown closesAt={e.task.closesAt} label="Closes in" />
+                          </div>
+                        )}
                         {e.recommendation && n > 1 && e.task.status === 'open' && (
                           <div class="task-fav t-caption ink-3">
                             Market favours {e.markets.find((x) => x.executorId === e.recommendation!.executorId)?.executor.name} at {e.recommendation.chance}¢ with {count(volume(e))} contracts traded

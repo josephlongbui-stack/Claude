@@ -43,10 +43,14 @@ export interface AgentRowProps {
   group?: boolean;
   chosen?: boolean;
   onQuick?: (side: 'yes' | 'no') => void;
+  /** 'l' on the task page, where the chance is the most important number on the screen. */
+  chanceSize?: 'm' | 'l';
+  /** Phone-only line under the agent name, carrying what hidden columns would have said. */
+  detail?: ComponentChildren;
 }
 
 /** One candidate agent as a table row. */
-export function AgentRow({ m, lead, trail, columns, group, chosen, onQuick }: AgentRowProps) {
+export function AgentRow({ m, lead, trail, columns, group, chosen, onQuick, chanceSize = 'm', detail }: AgentRowProps) {
   const chance = chanceOf(m);
   const st = marketStatus(m);
   const settled = m.status === 'settled';
@@ -70,12 +74,13 @@ export function AgentRow({ m, lead, trail, columns, group, chosen, onQuick }: Ag
                     <StatusPill status={m.status === 'running' ? 'running' : settled ? st : chosen ? 'running' : st}>{settled && st === 'settled' ? `Settled at ${m.closingPrice}¢` : undefined}</StatusPill>
                   </span>
                 )}
+                {detail && <span class="agent-detail show-sm t-caption ink-3">{detail}</span>}
               </Td>
             );
           case 'chance':
             return (
               <Td align="right" class="chance-cell">
-                <PriceCell cents={chance} size="m" side={tone} label="chance" />
+                <PriceCell cents={chance} size={chanceSize} side={tone} label="chance" />
               </Td>
             );
           case 'change':

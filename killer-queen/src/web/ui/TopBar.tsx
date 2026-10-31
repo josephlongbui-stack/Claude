@@ -74,7 +74,7 @@ export function TopBar({ me, hash, demo, dark, onTheme, onSignOut }: { me: TopBa
             <span class="lbl">Play money</span>
             <span class="amt">{dollars(me.cash)}</span>
           </a>
-        ) : (
+        ) : hash.startsWith('#/signin') ? null : (
           <Button href="#/signin" class="topbar-signin" data-testid="who">
             Sign in
           </Button>

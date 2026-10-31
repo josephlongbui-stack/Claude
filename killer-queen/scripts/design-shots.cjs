@@ -71,5 +71,7 @@ const { chromium } = require('playwright');
     await ctx.close();
   }
   await browser.close();
+  // The harness accounts close themselves (D35): off the leaderboard, open orders cancelled, nothing left behind.
+  for (const a of [trader, customer]) await api('/api/me/delete', { method: 'POST', headers: { authorization: `Bearer ${a.apiKey}` } }).catch(() => undefined);
   console.log(problems.length ? problems.join('\n') : 'no layout problems or page errors');
 })().catch((e) => { console.error('SHOTS FAILED', e); process.exit(1); });

@@ -100,6 +100,26 @@ export function rowPlan(l: RailLayout): RowPlan {
   return { rows: l.rows, legend: l.legend, rowOf: Object.fromEntries(l.placed.map((m) => [m.id, m.row])) };
 }
 
+/**
+ * The lower row (nearest the track) must never cover another marker's pin, or that marker's leader would run
+ * behind the label. Each lower label is centred on its pin when that is clear, else it ends at its pin on the
+ * side away from the crowding pin; when neither works the two-row layout is impossible and null comes back.
+ */
+export function placeLower(idx: number[], xs: number[], ws: number[], total: number): number[] | null {
+  const out: number[] = [];
+  let prevRight = -Infinity;
+  for (const i of idx) {
+    const w = ws[i]!;
+    const x = xs[i]!;
+    const clear = (lx: number) => lx - w / 2 >= 0 && lx + w / 2 <= total && lx - w / 2 >= prevRight + GAP && !xs.some((o, j) => j !== i && o > lx - w / 2 - GAP && o < lx + w / 2 + GAP);
+    const lx = [x, x + w / 2, x - w / 2].find(clear);
+    if (lx === undefined) return null;
+    out.push(lx);
+    prevRight = lx + w / 2;
+  }
+  return out;
+}
+
 export function layout(markers: RailMarker[], widthOf: (m: RailMarker) => number, railWidth: number, plan?: RowPlan): RailLayout {
   const sorted = [...markers].sort((a, b) => a.price - b.price || a.name.localeCompare(b.name));
   const xs = sorted.map((m) => priceToX(m.price, railWidth));
@@ -113,7 +133,8 @@ export function layout(markers: RailMarker[], widthOf: (m: RailMarker) => number
     const lx: number[] = [];
     for (let r = 0; r < plan.rows; r++) {
       const idx = sorted.map((_, i) => i).filter((i) => (plan.rowOf[sorted[i]!.id] ?? 0) === r);
-      const got = spread(idx.map((i) => xs[i]!), idx.map((i) => ws[i]!), railWidth);
+      // Row 1 is the lower row: keep it clear of pins while gliding too, falling back to a plain spread mid-motion.
+      const got = (r === 1 && plan.rows === 2 ? placeLower(idx, xs, ws, railWidth) : null) ?? spread(idx.map((i) => xs[i]!), idx.map((i) => ws[i]!), railWidth);
       idx.forEach((i, k) => (lx[i] = got[k]!));
     }
     return { placed: sorted.map((m, i) => ({ ...m, x: xs[i]!, lx: lx[i] ?? xs[i]!, row: plan.rowOf[m.id] ?? 0 })), rows: plan.rows, legend: false };
@@ -124,15 +145,20 @@ export function layout(markers: RailMarker[], widthOf: (m: RailMarker) => number
     const lx = spread(xs, ws, railWidth);
     return { placed: sorted.map((m, i) => ({ ...m, x: xs[i]!, lx: lx[i]!, row: 0 })), rows: 1, legend: false };
   }
+  // Two rows: alternate markers between the upper row (0) and the lower row (1); try both assignments, since
+  // the lower row must stay clear of every pin (D3: lower-row labels end at their pin so pins never cross labels).
   const even = all.filter((i) => i % 2 === 0);
   const odd = all.filter((i) => i % 2 === 1);
-  if (fits(even) && fits(odd)) {
-    const lxE = spread(even.map((i) => xs[i]!), even.map((i) => ws[i]!), railWidth);
-    const lxO = spread(odd.map((i) => xs[i]!), odd.map((i) => ws[i]!), railWidth);
+  for (const [upper, lower] of [[even, odd], [odd, even]] as [number[], number[]][]) {
+    if (!fits(upper) || !fits(lower)) continue;
+    const lxL = placeLower(lower, xs, ws, railWidth);
+    if (!lxL) continue;
+    const lxU = spread(upper.map((i) => xs[i]!), upper.map((i) => ws[i]!), railWidth);
     const lx: number[] = [];
-    even.forEach((i, k) => (lx[i] = lxE[k]!));
-    odd.forEach((i, k) => (lx[i] = lxO[k]!));
-    return { placed: sorted.map((m, i) => ({ ...m, x: xs[i]!, lx: lx[i]!, row: i % 2 })), rows: 2, legend: false };
+    const row: number[] = [];
+    upper.forEach((i, k) => ((lx[i] = lxU[k]!), (row[i] = 0)));
+    lower.forEach((i, k) => ((lx[i] = lxL[k]!), (row[i] = 1)));
+    return { placed: sorted.map((m, i) => ({ ...m, x: xs[i]!, lx: lx[i]!, row: row[i]! })), rows: 2, legend: false };
   }
   const lxN = spread(xs, sorted.map(() => LEGEND_W), railWidth);
   return { placed: sorted.map((m, i) => ({ ...m, x: xs[i]!, lx: lxN[i]!, row: 0 })), rows: 0, legend: true };

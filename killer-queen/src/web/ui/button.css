@@ -1,6 +1,7 @@
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2); height: var(--control-h); padding: 0 var(--sp-3); border: var(--hairline) solid var(--rule-strong); border-radius: var(--r-control); background: var(--surface); color: var(--ink); font-size: var(--t-ui); line-height: var(--t-ui-lh); font-weight: 500; cursor: pointer; white-space: nowrap; text-decoration: none; font-variant-numeric: tabular-nums; }
 .btn:hover { background: var(--surface-sunken); text-decoration: none; }
-.btn:disabled, .btn[aria-disabled="true"] { opacity: 0.5; cursor: default; pointer-events: none; }
+.btn:disabled, .btn[aria-disabled="true"] { background: var(--surface-sunken); color: var(--ink-3); border-color: var(--rule-strong); cursor: default; pointer-events: none; }
+.btn[data-armed="1"] { background: var(--no); color: var(--on-ink); border-color: var(--no); }
 .btn.lg { height: var(--control-h-lg); padding: 0 var(--sp-4); }
 .btn.primary { background: var(--ink); border-color: var(--ink); color: var(--on-ink); }
 .btn.primary:hover { background: var(--ink-2); border-color: var(--ink-2); }

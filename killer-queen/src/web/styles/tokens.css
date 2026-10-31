@@ -41,7 +41,7 @@
   --hairline: 1px; --tick: 2px; --track: 3px; --focus-w: 2px; --bar: 6px; --bar-lg: 10px;
   --control-h: 32px; --control-h-lg: 40px; --touch: 44px;
   --icon: 16px; --icon-lg: 20px;
-  --content-max: 1280px; --gutter: 24px; --gutter-mobile: 16px; --side-col: 320px; --measure: 75ch;
+  --content-max: 1280px; --gutter: 24px; --gutter-mobile: 16px; --side-col: 320px; --measure: 70ch; --measure-wide: 100ch;
   --topbar-h: 56px;
   --chart-h: 180px; --chart-h-sm: 140px;
 }

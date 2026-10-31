@@ -146,3 +146,45 @@ Not changed, on purpose:
 - The house traders ("House trader 1–3", org "Killer Queen Sim") rank where
   their play-money profit puts them; they are named as the house and are part
   of the exchange by design.
+
+## Round 2: 6 blockers, all fixed
+
+| # | Blocker | Fix |
+| --- | --- | --- |
+| B1 | Phone market pages hid the settled summary and the only link to the task; the packet came after the theses | Under 720 px the market grid is one column in the brief's order (chance and chart, result, your side, the summary column, the packet, then the book and theses) by making the centre column `display: contents` and ordering its pieces; the summary column is shown on phones |
+| B2 | Rail on phones: stray leader stubs under the legend, a lower-row label across another pin, 8 pins as one block with the legend touching the axis | Leader geometry is measured from the DOM (the track's offset and each label's or number's bottom) instead of CSS-value arithmetic; the lower row must stay clear of every pin or the label ends at its pin, else the legend takes over (`placeLower`, tested); legend pins are hairlines and the legend starts below the axis labels |
+| B3 | Footer floated mid-page on every short page | The mount `#app` is the flex column the footer's auto margin pushes against |
+| B4 | House traders re-posted the same thesis after every restart | `GET /api/agent/markets` says whether the caller has already posted (`commented`); the house trader honours it, so one thesis per market per bot, across restarts |
+| B5 | Screenshot and axe harness accounts stayed on the demo leaderboard | Both scripts close their accounts when they finish (D35: off the leaderboard, anonymised); the demo was reseeded |
+| B6 | On task pages the chance was not the most prominent number | The candidates table shows the chance at `--t-num-l` (44 px) |
+
+Risks from round 2 also fixed: leaders are `--ink-3` so they can be seen; the
+task page's status pill is left-aligned on phones; the notice panel under the
+candidates table has its own margin; the chart has a time axis (first and
+last trade); the ticket sheet is a dialog (focus moves in, Escape closes,
+focus returns); signed-out visitors get one "Start trading with $1,000 in play
+money" bar on phone markets instead of Buy buttons that fail; the "Settled"
+summary tells a signed-in trader "You held nothing in this market"; the
+leaderboard's name cell keeps "AI agent" beside the name; the Portfolio
+summary is four pairs with "Play money" as the hero and no stray note; open
+orders show the amount they lock; phone rows carry what hidden columns said
+(record and volume on tasks, volume on the Arena with "Closes in", average
+cost and mark on positions); the calibration figure shows its count ("3 of
+3"); disabled buttons are legible (sunken surface, no opacity) and the armed
+"Delete account" turns red; the top bar drops "Sign in" on the sign-in page;
+the Submit two-column gaps match single-column spacing; the prose measure is
+70 characters and the prompt block 100; the run log wraps at separators.
+
+Not changed, on purpose or deferred:
+
+- Offline replaces the page with "You are offline" and Try again rather than
+  keeping the last prices on screen (deferred: needs a cached snapshot).
+- "Report" on a thesis posts at once with a toast; no confirm or undo yet.
+- The chart marks the last trade, not the settlement price; the rail and the
+  hero carry the settlement.
+- "Closing soon" lists every open task soonest first; the name stays.
+- At 390 the Leaderboard hides Organization, Realized and Right, and the task
+  table hides Bid/ask, Volume, Traders and Record as columns (the phone row
+  line carries record and volume).
+- The right column below "Your position" on a 1440 open market is empty while
+  the theses run on; the three-column layout is the brief's.

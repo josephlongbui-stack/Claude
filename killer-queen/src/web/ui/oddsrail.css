@@ -1,9 +1,10 @@
 .rail { --row0: var(--sp-8); --row1: calc(var(--sp-8) + var(--t-ui-lh) + var(--sp-2)); --rail-foot: calc(var(--sp-3) + var(--t-caption-lh) + var(--sp-2)); position: relative; padding-top: calc(var(--sp-8) + var(--t-ui-lh) + var(--sp-2)); padding-bottom: var(--rail-foot); margin-bottom: var(--sp-2); }
 .rail.rows-2 { padding-top: calc(var(--sp-8) + 2 * (var(--t-ui-lh) + var(--sp-2))); }
 .rail.rows-2 { --row0: calc(var(--sp-8) + var(--t-ui-lh) + var(--sp-2)); --row1: var(--sp-8); }
-.rail.legend { --rowN: var(--sp-8); padding-top: calc(var(--sp-8) + var(--t-caption-lh)); }
-.rail .leaders { position: absolute; left: 0; top: 0; width: 100%; height: calc(100% - var(--rail-foot)); overflow: visible; pointer-events: none; }
-.rail .leader { stroke: var(--rule-strong); stroke-width: 1; }
+.rail.legend { --rowN: var(--sp-8); padding-top: calc(var(--sp-8) + var(--t-caption-lh)); padding-bottom: var(--sp-2); }
+.rail.legend .marker .pin { width: var(--hairline); }
+.rail .leaders { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.rail .leader { stroke: var(--ink-3); stroke-width: 1; }
 .rail .leader.settled-yes { stroke: var(--yes); } .rail .leader.settled-no { stroke: var(--no); }
 .rail .track { position: relative; height: var(--track); background: var(--rule-strong); border-radius: var(--track); }
 .rail .tickmark { position: absolute; top: calc(-1 * var(--sp-1)); width: var(--hairline); height: calc(var(--sp-2) + var(--track)); background: var(--rule-strong); }
@@ -26,7 +27,7 @@
 .rail .lbl.closed, .rail .lbl.closed b { color: var(--ink-3); }
 .rail .lbl.settled-yes, .rail .lbl.settled-yes b { color: var(--yes); }
 .rail .lbl.settled-no, .rail .lbl.settled-no b { color: var(--no); }
-.rail-legend { margin: var(--sp-4) 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-4); counter-reset: rail; font-size: var(--t-dense); line-height: var(--t-dense-lh); color: var(--ink-2); }
+.rail-legend { margin: calc(var(--sp-3) + var(--t-caption-lh) + var(--sp-3)) 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-4); counter-reset: rail; font-size: var(--t-dense); line-height: var(--t-dense-lh); color: var(--ink-2); }
 .rail-legend li { counter-increment: rail; }
 .rail-legend li::before { content: counter(rail) " "; font-weight: 600; color: var(--ink-2); }
 .rail-legend li b { color: var(--ink); }

@@ -43,23 +43,18 @@ export function Portfolio({ ctx }: { ctx: Ctx }) {
       toast(words(e), 'error');
     }
   };
-  const openValue = pf.positions.reduce((a: number, p: any) => a + p.quantity * (p.side === 'yes' ? p.mark : 100 - p.mark), 0);
   const agentOf = (executorId: string, market: string) => titles[market]?.agent ?? executorId;
   return (
     <>
       <PageHead title="Portfolio" />
       <div class="summary" data-testid="balances"><dl class="summary-list">
         <div class="hero">
-          <dt>Cash</dt>
+          <dt>Play money</dt>
           <dd>{dollars(pf.cash)}</dd>
         </div>
         <div>
           <dt>Locked in orders</dt>
           <dd>{dollars(pf.locked)}</dd>
-        </div>
-        <div>
-          <dt>Open positions</dt>
-          <dd>{dollars(openValue)}</dd>
         </div>
         <div>
           <dt>{pf.pnl.fees > 0 ? `Realized, after ${dollars(pf.pnl.fees)} in fees` : 'Realized P&L'}</dt>
@@ -74,7 +69,6 @@ export function Portfolio({ ctx }: { ctx: Ctx }) {
           </dd>
         </div>
         </dl>
-        <span class="note">Play money. No cash value.</span>
       </div>
 
       <SectionHead title="Positions" aside={pf.positions.length ? `${pf.positions.length} open` : undefined} />
@@ -90,6 +84,9 @@ export function Portfolio({ ctx }: { ctx: Ctx }) {
                 </Td>
                 <Td align="right" class="nowrap">
                   {count(p.quantity)} <span class={p.side === 'yes' ? 'yes' : 'no'}>{p.side === 'yes' ? 'Yes' : 'No'}</span>
+                  <span class="show-sm t-caption ink-3">
+                    at {p.avgCost}¢, mark {p.mark}¢
+                  </span>
                 </Td>
                 <Td align="right" hideSm>
                   {p.avgCost}¢
@@ -111,7 +108,7 @@ export function Portfolio({ ctx }: { ctx: Ctx }) {
         {pf.openOrders.length === 0 ? (
           <EmptyState title="No resting orders" hint="Limit orders that do not fill at once wait here until they fill or you cancel them." />
         ) : (
-          <Table caption="Open orders" columns={[{ key: 'm', label: 'Market', width: 'task' }, { key: 'l', label: 'Resting', align: 'right' }, { key: 'p', label: 'Price', align: 'right' }, { key: 'a', label: '', sr: 'Cancel' }]}>
+          <Table caption="Open orders" columns={[{ key: 'm', label: 'Market', width: 'task' }, { key: 'l', label: 'Resting', align: 'right' }, { key: 'p', label: 'Price', align: 'right' }, { key: 'k', label: 'Locked', align: 'right', hideSm: true }, { key: 'a', label: '', sr: 'Cancel' }]}>
             {pf.openOrders.map((o: any) => (
               <Tr key={o.id}>
                 <Td>
@@ -121,6 +118,9 @@ export function Portfolio({ ctx }: { ctx: Ctx }) {
                   {count(o.quantity - o.filled)} <span class={o.side === 'yes' ? 'yes' : 'no'}>{o.side === 'yes' ? 'Yes' : 'No'}</span>
                 </Td>
                 <Td align="right">{o.price}¢</Td>
+                <Td align="right" hideSm>
+                  {dollars(o.lockedRemaining ?? (o.quantity - o.filled) * (o.price + 1))}
+                </Td>
                 <Td align="right">
                   <Button variant="quiet" class="compact" onClick={() => cancel(o.id)} aria-label={`Cancel ${o.quantity - o.filled} ${o.side === 'yes' ? 'Yes' : 'No'} at ${o.price} cents`}>
                     Cancel

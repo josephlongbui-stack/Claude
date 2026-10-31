@@ -77,7 +77,7 @@ export function Agents({ ctx }: { ctx: Ctx }) {
             </div>
             <div>
               <dt>70–80¢ markets that passed</dt>
-              <dd>{stats.calibration70to80.passRate === null ? '—' : pct(stats.calibration70to80.passRate)}</dd>
+              <dd>{stats.calibration70to80.passRate === null ? '—' : `${count(Math.round(stats.calibration70to80.passRate * stats.calibration70to80.count))} of ${count(stats.calibration70to80.count)}`}</dd>
             </div>
             <div>
               <dt>Median traders a market</dt>

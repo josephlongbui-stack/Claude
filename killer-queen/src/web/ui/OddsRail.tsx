@@ -51,17 +51,15 @@ function useSpringPrices(markers: RailMarker[]): Record<string, number> {
 export function OddsRail({ markers, width: fixedWidth }: { markers: RailMarker[]; width?: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(fixedWidth ?? 800);
-  const [height, setHeight] = useState(0);
+  const trackRef = useRef<HTMLDivElement>(null);
   const [measured, setMeasured] = useState<Record<string, number>>({});
+  // Leader geometry comes from the DOM: the track's top within the rail and each label's bottom within the track.
+  const [geom, setGeom] = useState<{ trackTop: number; bottoms: Record<string, number> }>({ trackTop: 0, bottoms: {} });
   useLayoutEffect(() => {
     const el = ref.current;
-    if (!el) return;
-    const read = () => {
-      if (fixedWidth === undefined) setWidth(el.clientWidth);
-      setHeight(el.clientHeight);
-    };
-    const ro = new ResizeObserver(read);
-    read();
+    if (!el || fixedWidth !== undefined) return;
+    const ro = new ResizeObserver(() => setWidth(el.clientWidth));
+    setWidth(el.clientWidth);
     ro.observe(el);
     return () => ro.disconnect();
   }, [fixedWidth]);
@@ -69,12 +67,18 @@ export function OddsRail({ markers, width: fixedWidth }: { markers: RailMarker[]
     const el = ref.current;
     if (!el) return;
     const next: Record<string, number> = {};
+    const bottoms: Record<string, number> = {};
     let changed = false;
     el.querySelectorAll<HTMLElement>('[data-lbl]').forEach((n) => {
       next[n.dataset.lbl!] = n.offsetWidth;
       if (measured[n.dataset.lbl!] !== n.offsetWidth) changed = true;
     });
+    el.querySelectorAll<HTMLElement>('[data-lbl], [data-num]').forEach((n) => {
+      bottoms[n.dataset.lbl ?? n.dataset.num!] = n.offsetTop + n.offsetHeight;
+    });
+    const trackTop = trackRef.current?.offsetTop ?? 0;
     if (changed) setMeasured(next);
+    if (trackTop !== geom.trackTop || JSON.stringify(bottoms) !== JSON.stringify(geom.bottoms)) setGeom({ trackTop, bottoms });
   });
   const prices = useSpringPrices(markers);
   const animated = markers.map((m) => ({ ...m, price: prices[m.id] ?? m.price }));
@@ -85,21 +89,15 @@ export function OddsRail({ markers, width: fixedWidth }: { markers: RailMarker[]
   const sr = markers.map((m) => `${m.name}, ${m.note ?? `${m.price} cents`}`).join('. ');
   const labelOf = (m: RailMarker) => m.note ?? `${m.price}¢`;
   const byId = Object.fromEntries(markers.map((m) => [m.id, m]));
-  // Leader geometry in px, from the same values oddsrail.css uses (--sp-*, --t-ui-lh, --t-caption-lh, --track).
-  const G = { sp2: 8, sp3: 12, sp8: 32, uiLh: 20, capLh: 16, track: 3 };
-  const foot = G.sp3 + G.capLh + G.sp2;
-  const rowBottom = (row: number) => (legend ? G.sp8 : rows === 2 && row === 0 ? G.sp8 + G.uiLh + G.sp2 : G.sp8);
-  const y1 = Math.max(0, height - foot);
-  const y2 = (row: number) => Math.max(0, height - rowBottom(row) - G.track);
+  const y1 = geom.trackTop;
+  const y2 = (id: string) => geom.trackTop + (geom.bottoms[id] ?? 0);
   return (
     <div class={`rail rows-${rows} ${legend ? 'legend' : ''}`} ref={ref} role="img" aria-label={`Odds rail: ${sr}`} data-testid="odds-rail">
       <svg class="leaders" aria-hidden="true">
-        {height > 0 &&
-          placed.map((m) => (
-            <line key={m.id} class={`leader ${m.state}`} x1={m.x} x2={m.lx} y1={y1} y2={y2(m.row)} />
-          ))}
+        {geom.trackTop > 0 &&
+          placed.map((m) => geom.bottoms[m.id] !== undefined && <line key={m.id} class={`leader ${m.state}`} x1={m.x} x2={m.lx} y1={y1} y2={y2(m.id)} />)}
       </svg>
-      <div class="track">
+      <div class="track" ref={trackRef}>
         {[1, 25, 50, 75, 99].map((p) => (
           <span class="tickmark" key={p} style={{ left: `${PAD_X(p, width)}px` }}>
             <span>{p}¢</span>
@@ -113,7 +111,7 @@ export function OddsRail({ markers, width: fixedWidth }: { markers: RailMarker[]
         ))}
         {legend &&
           placed.map((m, i) => (
-            <span key={`n${m.id}`} class={`num ${m.lead ? 'lead' : ''} ${m.state}`} style={{ left: `${m.lx}px` }}>
+            <span key={`n${m.id}`} class={`num ${m.lead ? 'lead' : ''} ${m.state}`} style={{ left: `${m.lx}px` }} data-num={m.id}>
               {i + 1}
             </span>
           ))}

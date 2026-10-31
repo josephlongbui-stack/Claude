@@ -523,6 +523,8 @@ export interface AgentMarket {
   openOrders: Order[];
   canTrade: boolean;
   conflict: string | null;
+  /** Whether this account has already posted a thesis here (so a restarted bot does not post again). */
+  commented: boolean;
 }
 
 /** Every open market with packet, book and the caller's position (GET /api/agent/markets). */
@@ -545,6 +547,7 @@ export function agentMarkets(engine: Engine, accountId: string): AgentMarket[] {
       openOrders: [...engine.state.orders.values()].filter((o) => o.market === m.id && o.account === accountId && o.status === 'open'),
       canTrade: conflict === null,
       conflict,
+      commented: engine.state.comments.some((c) => c.market === m.id && c.account === accountId),
     });
   }
   return out;

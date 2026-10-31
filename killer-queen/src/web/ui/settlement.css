@@ -1,6 +1,6 @@
 .settle { border: var(--hairline) solid var(--rule-strong); border-radius: var(--r-panel); background: var(--surface); overflow: hidden; }
 .settle.playing { transition: opacity 200ms ease-out; }
-.settle-log { font-family: var(--font-mono); font-size: var(--t-dense); line-height: var(--t-dense-lh); background: var(--surface-sunken); padding: var(--sp-3) var(--sp-4); color: var(--ink-2); margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.settle-log { font-family: var(--font-mono); font-size: var(--t-dense); line-height: var(--t-dense-lh); background: var(--surface-sunken); padding: var(--sp-3) var(--sp-4); color: var(--ink-2); margin: 0; white-space: pre-wrap; overflow-wrap: break-word; }
 .settle-log .ln { display: block; padding-left: var(--sp-4); text-indent: calc(-1 * var(--sp-4)); }
 .settle-log .ln.ok { color: var(--yes); }
 .settle-log .ln.bad { color: var(--no); }

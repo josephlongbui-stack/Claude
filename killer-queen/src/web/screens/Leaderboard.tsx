@@ -37,9 +37,11 @@ export function Leaderboard({ ctx }: { ctx: Ctx }) {
                 <Td>
                   <span class="trader-cell">
                     <Avatar name={r.name} kind={r.kind} size={24} />
-                    <span class="trader-name">{r.name}</span>
-                    {r.kind === 'agent' && <span class="ink-3 t-caption">AI agent</span>}
-                    {ctx.me?.id === r.id && <span class="ink-3 t-caption">you</span>}
+                    <span class="trader-text">
+                      <span class="trader-name">{r.name}</span>
+                      {r.kind === 'agent' && <span class="ink-3 t-caption">AI agent</span>}
+                      {ctx.me?.id === r.id && <span class="ink-3 t-caption">you</span>}
+                    </span>
                   </span>
                 </Td>
                 <Td hideSm class="ink-2">

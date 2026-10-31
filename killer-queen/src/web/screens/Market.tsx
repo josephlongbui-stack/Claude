@@ -11,6 +11,15 @@ export function Market({ ctx, id }: { ctx: Ctx; id: string }) {
   const [error, setError] = useState<any | null>(null);
   const [tab, setTab] = useState<'theses' | 'trades'>('theses');
   const [sheet, setSheet] = useState<null | 'yes' | 'no'>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  // The sheet is a dialog: focus moves in when it opens and back to the bar when it closes.
+  useEffect(() => {
+    if (!sheet) return;
+    const opener = document.activeElement as HTMLElement | null;
+    const first = sheetRef.current?.querySelector<HTMLElement>('button, input, [tabindex="0"]');
+    first?.focus();
+    return () => opener?.focus();
+  }, [sheet]);
   // The one animation runs only when this viewer saw the market move from unsettled to settled.
   const seenUnsettled = useRef(false);
   const [animateSettle, setAnimateSettle] = useState(false);
@@ -291,7 +300,7 @@ export function Market({ ctx, id }: { ctx: Ctx; id: string }) {
           </aside>
         ) : (
           !(pos || closed || myOrders.length > 0) && (
-            <aside class="col-ticket" aria-label="Market summary">
+            <aside class="col-ticket summary-col" aria-label="Market summary">
               <Panel testId="market-summary">
                 <PanelHead title={m.status === 'settled' ? 'Settled' : 'Trading closed'} aside={<StatusPill status={st} />} />
                 <PanelBody>
@@ -317,6 +326,7 @@ export function Market({ ctx, id }: { ctx: Ctx; id: string }) {
                       </>
                     )}
                   </dl>
+                  {me && me.role === 'trader' && <p class="t-dense ink-2 summary-you">You held nothing in this market.</p>}
                   <Button href={`#/task/${encodeURIComponent(m.taskId)}`} block>
                     See the task
                   </Button>
@@ -327,7 +337,14 @@ export function Market({ ctx, id }: { ctx: Ctx; id: string }) {
         )}
         {(pos || closed || myOrders.length > 0) && <div class={`col-yours ${open ? '' : 'in-ticket-col'}`}>{yourSide}</div>}
       </div>
-      {open && (
+      {open && !me && (
+        <div class="sticky-bar one">
+          <Button variant="primary" href="#/signin" data-testid="sheet-signin">
+            Start trading with $1,000 in play money
+          </Button>
+        </div>
+      )}
+      {open && me && (
         <div class="sticky-bar">
           <Button variant="yes" solid onClick={() => setSheet('yes')} data-testid="sheet-yes">
             Buy Yes {v.quote.yesAsk === null ? '' : `${v.quote.yesAsk}¢`}
@@ -339,7 +356,7 @@ export function Market({ ctx, id }: { ctx: Ctx; id: string }) {
       )}
       {sheet && (
         <div class="sheet-scrim" onClick={() => setSheet(null)}>
-          <div class="sheet" role="dialog" aria-label={`Trade ${name}`} onClick={(e) => e.stopPropagation()}>
+          <div class="sheet" role="dialog" aria-modal="true" aria-label={`Trade ${name}`} onClick={(e) => e.stopPropagation()} ref={sheetRef} onKeyDown={(e) => e.key === 'Escape' && setSheet(null)}>
             <div class="sheet-head">
               <span class="t-h3">{name}</span>
               <IconButton onClick={() => setSheet(null)} aria-label="Close">

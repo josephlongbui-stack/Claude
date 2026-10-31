@@ -111,6 +111,8 @@ const api = async (path, opts = {}) => {
     await ctx.close();
   }
   await browser.close();
+  // The harness account closes itself (D35) so it never shows on the leaderboard.
+  await api('/api/me/delete', { method: 'POST', headers: { authorization: `Bearer ${trader.apiKey}` } }).catch(() => undefined);
   const byRule = {};
   for (const v of results.violations) (byRule[v.id] ??= []).push(`${v.route}/${v.theme} ×${v.count}`);
   console.log(`axe violations: ${results.violations.length} (${Object.keys(byRule).length} rules)`);

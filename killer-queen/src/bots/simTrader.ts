@@ -86,6 +86,7 @@ export class AgentTrader {
       if (!mem.estimate) mem.skipped = true;
     }
     if (mem.skipped || !mem.estimate) return;
+    if (!mem.commented && m.commented) mem.commented = true; // posted before a restart; the journal remembers
     if (!mem.commented) {
       mem.commented = true;
       const r = await this.client.comment(id, mem.estimate.rationale, mem.estimate.probability);

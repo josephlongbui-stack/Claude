@@ -2,6 +2,8 @@
 *, *::before, *::after { box-sizing: border-box; }
 html { background: var(--canvas); color: var(--ink); font-family: var(--font-sans); font-size: var(--t-ui); line-height: var(--t-ui-lh); font-variant-numeric: tabular-nums lining-nums; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
 body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; }
+/* The mount is the column the footer's auto margin pushes against. */
+#app { flex: 1; display: flex; flex-direction: column; }
 h1, h2, h3, h4, p, ul, ol, dl, dd, figure { margin: 0; }
 h1 { font-size: var(--t-h1); line-height: var(--t-h1-lh); font-weight: 600; letter-spacing: var(--tracking-tight); }
 h2 { font-size: var(--t-h2); line-height: var(--t-h2-lh); font-weight: 600; letter-spacing: var(--tracking-tight); }
@@ -106,5 +108,7 @@ textarea.input { height: auto; min-height: calc(var(--control-h) * 3); padding: 
 .grow { flex: 1 1 auto; min-width: 0; }
 .ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 720px) { .wrap { padding: 0 var(--gutter-mobile); } }
+.show-sm { display: none; }
+@media (max-width: 720px) { .show-sm { display: block; } }
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }

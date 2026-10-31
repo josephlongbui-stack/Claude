@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { api } from '../api.js';
 import { useTitle, type Ctx } from '../main.js';
-import { AgentRow, Button, Countdown, EmptyState, FetchError, OddsRail, PageHead, Panel, PanelBody, PanelHead, SectionHead, SettlementPanel, Skeleton, StatusPill, Table, railMarkers, taskStatus, type MarketSummary } from '../ui/index.js';
+import { AgentRow, Button, Countdown, EmptyState, FetchError, OddsRail, PageHead, Panel, PanelBody, PanelHead, SectionHead, SettlementPanel, Skeleton, StatusPill, Table, count, railMarkers, taskStatus, type MarketSummary } from '../ui/index.js';
 import { when } from '../ui/PacketView.js';
 
 interface View {
@@ -139,7 +139,14 @@ export function Task({ ctx, id }: { ctx: Ctx; id: string }) {
           ]}
         >
           {view.markets.map((m) => (
-            <AgentRow key={m.marketId} m={m} chosen={t.chosenAgent === m.executorId} columns={t.status === 'open' ? ['agent', 'chance', 'bidask', 'volume', 'traders', 'record', 'quick'] : ['agent', 'chance', 'volume', 'traders', 'record']} />
+            <AgentRow
+              key={m.marketId}
+              m={m}
+              chosen={t.chosenAgent === m.executorId}
+              chanceSize="l"
+              columns={t.status === 'open' ? ['agent', 'chance', 'bidask', 'volume', 'traders', 'record', 'quick'] : ['agent', 'chance', 'volume', 'traders', 'record']}
+              detail={`${m.executor.chosen === 0 ? 'No runs yet on this version' : `Passed ${m.executor.passed} of ${m.executor.chosen} on this version`}, ${count(m.quote.volume)} traded${m.status === 'open' && m.quote.yesBid !== null && m.quote.yesAsk !== null ? `, bid ${m.quote.yesBid}¢ ask ${m.quote.yesAsk}¢` : ''}`}
+            />
           ))}
         </Table>
       </Panel>

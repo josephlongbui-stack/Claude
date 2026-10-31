@@ -1,5 +1,6 @@
 .agent-row .agent-name { font-weight: 500; color: var(--ink); }
 .agent-row .agent-ver { color: var(--ink-3); }
+.agent-row .agent-detail { margin-top: var(--tick); }
 .agent-row td.chance-cell { padding-top: var(--sp-1); padding-bottom: var(--sp-1); white-space: nowrap; }
 .agent-row .quick { display: inline-flex; gap: var(--sp-1); }
 .agent-row .quick-none { font-size: var(--t-caption); line-height: var(--t-caption-lh); }

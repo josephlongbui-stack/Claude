@@ -20,7 +20,9 @@
 .task-meta { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-4); color: var(--ink-2); margin-top: var(--sp-2); align-items: center; font-size: var(--t-dense); line-height: var(--t-dense-lh); }
 .task-meta .mono { color: var(--ink); }
 .task-when { display: inline-flex; flex-direction: column; align-items: flex-end; gap: var(--tick); }
-.task-note { margin-bottom: var(--sp-4); }
+@media (max-width: 720px) { .task-when { align-items: flex-start; } }
+.task-note { margin: var(--sp-4) 0; }
+.task-prompt { max-width: var(--measure-wide); }
 .task-note .pill { margin-right: var(--sp-1); }
 .task-decide { margin-top: var(--sp-4); }
 .decide-body { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
@@ -48,16 +50,25 @@
 .kv { display: grid; grid-template-columns: 1fr auto; gap: var(--sp-1) var(--sp-4); font-size: var(--t-dense); line-height: var(--t-dense-lh); color: var(--ink-2); margin-bottom: var(--sp-3); }
 .kv dd { text-align: right; color: var(--ink); font-variant-numeric: tabular-nums; }
 .kv dd.yes { color: var(--yes); } .kv dd.no { color: var(--no); }
+.summary-you { margin: 0 0 var(--sp-3); }
 .sticky-bar { display: none; }
 @media (max-width: 1000px) {
   .market { grid-template-columns: minmax(0, 1fr) var(--side-col); grid-template-rows: auto auto auto; grid-template-areas: "centre ticket" "centre yours" "packet packet"; }
 }
 @media (max-width: 720px) {
-  .market { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "centre" "yours" "packet"; }
+  /* One column, in the brief's phone order: chance and chart, the result, your side, the packet, then the book and theses. */
+  .market { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: none; }
+  .market .col-centre { display: contents; }
+  .market .col-centre > * { order: 1; min-width: 0; }
+  .market .col-yours, .market .col-ticket, .market .col-packet { grid-area: auto; }
+  .market .col-yours, .market .col-yours.in-ticket-col { order: 2; position: static; }
   .market .col-ticket { display: none; }
-  .market .col-yours.in-ticket-col { grid-area: yours; position: static; }
+  .market .col-ticket.summary-col { display: block; order: 3; position: static; }
+  .market .col-packet { order: 4; }
+  .market .col-centre > .book-panel, .market .col-centre > .market-tabs { order: 5; }
   .sticky-bar { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); position: sticky; bottom: 0; z-index: 5; padding: var(--sp-2) var(--gutter-mobile); background: var(--surface); border-top: var(--hairline) solid var(--rule-strong); box-shadow: var(--shadow-float); margin: var(--sp-4) calc(-1 * var(--gutter-mobile)) calc(-1 * var(--sp-8)); width: calc(100% + 2 * var(--gutter-mobile)); }
   .sticky-bar .btn { height: var(--touch); }
+  .sticky-bar.one { grid-template-columns: 1fr; }
 }
 
 /* Portfolio, Agents, Leaderboard */
@@ -69,8 +80,9 @@
 .summary .hero dd { font-size: var(--t-num-l); line-height: var(--t-num-l-lh); letter-spacing: -0.01em; }
 .summary .note { align-self: flex-end; margin-left: auto; font-size: var(--t-caption); line-height: var(--t-caption-lh); color: var(--ink-3); }
 .foot-note { margin-top: var(--sp-3); max-width: var(--measure); }
-.trader-cell { display: inline-flex; align-items: center; flex-wrap: wrap; gap: var(--sp-1) var(--sp-2); }
-.trader-cell > span { white-space: nowrap; }
+.trader-cell { display: inline-flex; align-items: center; gap: var(--sp-2); }
+.trader-text { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--sp-2); min-width: 0; }
+.trader-text > span { white-space: nowrap; }
 .trader-name { font-weight: 500; color: var(--ink); }
 .table tr.me td { background: var(--surface-sunken); }
 .agent-title { font-size: var(--t-ui); line-height: var(--t-ui-lh); font-weight: 500; }
@@ -79,7 +91,7 @@
 /* Submit, Sign in, Account */
 .submit-grid { display: grid; grid-template-columns: minmax(0, 1fr) var(--side-col); gap: var(--sp-6); align-items: start; }
 .submit-form .checks { margin-bottom: 0; }
-.two-up { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); }
+.two-up { display: grid; grid-template-columns: 1fr 1fr; gap: 0 var(--sp-4); }
 .candidates { border: 0; padding: 0; margin: 0 0 var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-2); }
 .candidates legend { padding: 0; }
 .checks { display: flex; flex-direction: column; gap: var(--sp-2); }

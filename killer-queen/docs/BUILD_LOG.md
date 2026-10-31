@@ -473,3 +473,25 @@ blocked (with exactly what the owner needs to provide).
   simulator (no Mac or Android emulator on this host) and `expo-glass-effect`
   surfaces beyond the system tab bar; both wait on a Mac. `npx expo install
   --check` after cloning confirms the SDK 58 versions.
+
+## 2026-10-31 — D9 Fresh-eyes review and compare page
+- `design-critic` ran twice over docs/design/after (no Figma; the critic read
+  every screenshot and probed the running demo with Playwright). Round 1: 9
+  blockers; round 2: 6 blockers; every blocker fixed, most risks fixed, the
+  rest recorded with reasons in docs/design/REPORT.md ("Fresh-eyes review").
+  A third round is the last the prompt allows; whatever it leaves is logged
+  in REPORT.md.
+- Engine changes made for the review were themselves reviewed by the
+  exchange-auditor role (no blockers; its risks fixed in the commit "Engine:
+  version strings key per-version records safely"): task views and packets
+  show the version frozen at task creation with the record on that version
+  (D4), `GET /api/agent/markets` carries `commented`, `upsertExecutor`
+  rejects versions that are not plain identifiers.
+- `scripts/design-compare.cjs` builds docs/design/compare.html: every screen
+  before (D1) and after, 1440 and 390, light and dark. `scripts/design-shots.cjs`
+  now reloads per route, uses a customer account for Submit, captures every
+  task state and the 404, and closes its accounts afterwards; the a11y sweep
+  closes its account too.
+- Verified after round 2: 0 axe violations on every route in both themes and
+  widths, no horizontal scroll at 390, the browser click path (sign up, trade,
+  decide, settle) with no page errors, `npm test` green.
