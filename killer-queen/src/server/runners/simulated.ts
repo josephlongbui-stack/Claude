@@ -19,7 +19,14 @@ export function simulatedOutcome(taskId: string, executorId: string, forceOutcom
   return nibble % 2 === 0 ? 'passed' : 'failed';
 }
 
+export function simulatedBaseline(forceBaseline: 'trivial' | 'flaky' | null): ('passed' | 'failed')[] {
+  if (forceBaseline === 'trivial') return ['passed', 'passed', 'passed'];
+  if (forceBaseline === 'flaky') return ['failed', 'passed', 'failed'];
+  return ['failed', 'failed', 'failed'];
+}
+
 export class SimulatedRunner {
+  /** keyed `run:<taskId>` or `baseline:<taskId>` */
   private readonly pending = new Map<string, () => void>();
   private unsubscribe: (() => void) | null = null;
   private runs = 0;
@@ -32,10 +39,17 @@ export class SimulatedRunner {
 
   start(): void {
     if (this.unsubscribe) return;
-    // Tasks already running when we start (after a restart) still need a result.
-    for (const t of this.venue.engine.state.tasks.values()) if (t.status === 'running') this.enqueue(t.id);
+    // Tasks already waiting when we start (after a restart) still need a result.
+    for (const t of this.venue.engine.state.tasks.values()) {
+      if (t.status === 'running') this.enqueue('run', t.id);
+      if (t.status === 'pending') this.enqueue('baseline', t.id);
+    }
     this.unsubscribe = this.venue.onApplied((cmd, result) => {
-      if (cmd.type === 'decide' && result.ok && cmd.executorId !== null) this.enqueue(cmd.taskId);
+      if (!result.ok) return;
+      if (cmd.type === 'decide' && cmd.executorId !== null) this.enqueue('run', cmd.taskId);
+      if (cmd.type === 'createTask' && (result.data as { task: { status: string; id: string } }).task.status === 'pending') {
+        this.enqueue('baseline', (result.data as { task: { id: string } }).task.id);
+      }
     });
   }
 
@@ -45,7 +59,7 @@ export class SimulatedRunner {
     this.pending.clear();
   }
 
-  /** Tasks queued but not yet settled. */
+  /** Jobs queued but not yet reported, as `run:<taskId>` / `baseline:<taskId>`. */
   get queued(): string[] {
     return [...this.pending.keys()];
   }
@@ -61,17 +75,34 @@ export class SimulatedRunner {
     return n;
   }
 
-  private enqueue(taskId: string): void {
-    if (this.pending.has(taskId)) return;
-    const run = () => this.run(taskId);
-    this.pending.set(taskId, run);
+  private enqueue(kind: 'run' | 'baseline', taskId: string): void {
+    const key = `${kind}:${taskId}`;
+    if (this.pending.has(key)) return;
+    const run = () => (kind === 'run' ? this.run(taskId) : this.baseline(taskId));
+    this.pending.set(key, run);
     const schedule = this.opts.schedule ?? ((fn, ms) => setTimeout(fn, ms));
     schedule(() => {
-      if (this.pending.get(taskId) === run) {
-        this.pending.delete(taskId);
+      if (this.pending.get(key) === run) {
+        this.pending.delete(key);
         run();
       }
     }, this.opts.delayMs);
+  }
+
+  private baseline(taskId: string): void {
+    const task = this.venue.engine.task(taskId);
+    if (!task || task.status !== 'pending') return;
+    const results = simulatedBaseline(task.forceBaseline);
+    this.runs += 1;
+    const log = [
+      `[simulated runner] baseline ${new Date(this.clock.now()).toISOString()}`,
+      `repo ${task.repo} @ ${task.commit}`,
+      ...results.map((r, i) => `run ${i + 1}: $ ${task.testCommand} → ${r === 'failed' ? 'exit 1' : 'exit 0'}`),
+      'note: no code was run; this is the sandbox simulation (D20)',
+    ].join('\n');
+    const r = this.venue.apply({ type: 'baseline', taskId: task.id, results, log, runId: `sim-base-${task.id}-${this.runs}` });
+    if (!r.ok) this.opts.log?.(`simulated runner: baseline ${task.id} rejected: ${r.code} ${r.error}`);
+    else this.opts.log?.(`simulated runner: baseline ${task.id} ${r.data.opened ? 'opened markets' : `rejected (${r.data.rejectedReason})`}`);
   }
 
   private run(taskId: string): void {

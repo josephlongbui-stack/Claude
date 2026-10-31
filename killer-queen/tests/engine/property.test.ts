@@ -28,7 +28,7 @@ type Intent =
   | { kind: 'createAccount'; id: number; role: number; kindIx: number; org: number; cash: number }
   | { kind: 'deposit'; account: number; amount: number; reason: number }
   | { kind: 'upsertExecutor'; id: number; version: number }
-  | { kind: 'createTask'; customer: number; candidates: number[]; window: number; auto: boolean; min: number; force: number }
+  | { kind: 'createTask'; customer: number; candidates: number[]; window: number; auto: boolean; min: number; force: number; baseline: boolean }
   | { kind: 'placeOrder'; account: number; market: number; side: number; action: number; type: number; price: number; qty: number; ioc: boolean; clientKey: number }
   | { kind: 'cancelOrder'; account: number; order: number }
   | { kind: 'comment'; account: number; market: number; prob: number }
@@ -36,13 +36,15 @@ type Intent =
   | { kind: 'decide'; task: number; executor: number; by: number }
   | { kind: 'settle'; task: number; outcome: number; runId: number }
   | { kind: 'pauseTrading'; paused: boolean; by: number }
+  | { kind: 'baseline'; task: number; results: number; runId: number }
   | { kind: 'advance'; ms: number };
 
 const intentArb: fc.Arbitrary<Intent> = fc.oneof(
   { weight: 2, arbitrary: fc.record({ kind: fc.constant('createAccount' as const), id: fc.nat(12), role: fc.nat(5), kindIx: fc.nat(3), org: fc.nat(4), cash: fc.oneof(fc.constant(0), fc.constant(100_000), fc.constant(-1), fc.constant(2.5)) }) },
   { weight: 2, arbitrary: fc.record({ kind: fc.constant('deposit' as const), account: fc.nat(ACCOUNTS.length - 1), amount: fc.oneof(fc.constant(100_000), fc.constant(1), fc.constant(0), fc.constant(-5), fc.constant(0.5)), reason: fc.nat(REASONS.length - 1) }) },
   { weight: 1, arbitrary: fc.record({ kind: fc.constant('upsertExecutor' as const), id: fc.nat(EXECUTORS.length - 1), version: fc.nat(3) }) },
-  { weight: 3, arbitrary: fc.record({ kind: fc.constant('createTask' as const), customer: fc.nat(CUSTOMERS.length - 1), candidates: fc.array(fc.nat(CANDIDATES.length - 1), { maxLength: 3 }), window: fc.nat(3), auto: fc.boolean(), min: fc.nat(110), force: fc.nat(3) }) },
+  { weight: 3, arbitrary: fc.record({ kind: fc.constant('createTask' as const), customer: fc.nat(CUSTOMERS.length - 1), candidates: fc.array(fc.nat(CANDIDATES.length - 1), { maxLength: 3 }), window: fc.nat(3), auto: fc.boolean(), min: fc.nat(110), force: fc.nat(3), baseline: fc.boolean() }) },
+  { weight: 3, arbitrary: fc.record({ kind: fc.constant('baseline' as const), task: fc.nat(5), results: fc.nat(4), runId: fc.nat(4) }) },
   { weight: 25, arbitrary: fc.record({ kind: fc.constant('placeOrder' as const), account: fc.nat(ORDER_ACCOUNTS.length - 1), market: fc.nat(8), side: fc.nat(2), action: fc.nat(2), type: fc.nat(2), price: fc.nat(101), qty: fc.nat(60), ioc: fc.boolean(), clientKey: fc.nat(6) }) },
   { weight: 5, arbitrary: fc.record({ kind: fc.constant('cancelOrder' as const), account: fc.nat(ORDER_ACCOUNTS.length - 1), order: fc.nat(40) }) },
   { weight: 2, arbitrary: fc.record({ kind: fc.constant('comment' as const), account: fc.nat(ORDER_ACCOUNTS.length - 1), market: fc.nat(8), prob: fc.nat(101) }) },
@@ -107,6 +109,15 @@ function resolve(venue: Venue, clock: FakeClock, it: Intent): CommandInput | nul
         autoDecide: it.auto,
         minimumChance: it.min,
         forceOutcome: pick([null, 'pass', 'fail', 'maybe' as never], it.force),
+        requireBaseline: it.baseline,
+      };
+    case 'baseline':
+      return {
+        type: 'baseline',
+        taskId: taskId(it.task),
+        results: pick([['failed', 'failed', 'failed'], ['passed', 'passed', 'passed'], ['failed', 'passed', 'failed'], ['failed'], ['failed', 'failed', 'bogus' as never]] as const, it.results) as never,
+        log: 'baseline log',
+        runId: it.runId === 0 ? null : `base-${it.runId}`,
       };
     case 'placeOrder':
       return {
@@ -149,6 +160,8 @@ describe(`property: random command sequences (${RUNS} runs)`, () => {
         const { venue, clock, journal } = baseVenue();
         // Finish with a close/decide/settle sweep so settlement paths run often.
         const tail: Intent[] = [
+          { kind: 'baseline', task: 0, results: 0, runId: 3 },
+          { kind: 'baseline', task: 1, results: 0, runId: 2 },
           { kind: 'advance', ms: 700_000 },
           { kind: 'closeTask', task: 0, by: 0 },
           { kind: 'closeTask', task: 1, by: 0 },

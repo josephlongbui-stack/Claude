@@ -50,7 +50,7 @@ export function Arena({ ctx }: { ctx: Ctx }) {
               <td>
                 {t.markets.map((m: any) => (
                   <div>
-                    <span class="mono">{m.executorId}</span> <b class="num">{m.status === 'settled' ? m.settlementPrice : m.quote.chance}¢</b>{' '}
+                    <span class="mono">{m.executorId}</span> <b class="num">{m.status === 'pending' || m.status === 'cancelled' ? '—' : `${m.status === 'settled' ? m.settlementPrice : m.quote.chance}¢`}</b>{' '}
                     <span class="muted num">
                       {m.quote.yesBid ?? '–'}/{m.quote.yesAsk ?? '–'}
                     </span>

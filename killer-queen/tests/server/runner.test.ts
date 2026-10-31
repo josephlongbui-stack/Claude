@@ -142,7 +142,7 @@ describe('runner protocol', () => {
         await s.api('POST', '/api/orders', { token: alice.apiKey, body: { marketId: m, side: 'yes', price: 50, quantity: 10 } });
         await s.api('POST', `/api/tasks/${taskId}/close`, { token: cust.apiKey });
         await s.api('POST', `/api/tasks/${taskId}/decide`, { token: cust.apiKey, body: { executorId: 'codex' } });
-        assert.deepEqual(s.booted.runner!.queued, [taskId]);
+        assert.deepEqual(s.booted.runner!.queued, [`run:${taskId}`]);
         assert.equal(s.booted.runner!.flush(), 1);
         const t = await s.api('GET', `/api/tasks/${taskId}`);
         assert.equal(t.body.task.status, 'resolved');
@@ -151,6 +151,76 @@ describe('runner protocol', () => {
         assert.equal(t.body.markets[0].settlementPrice, force === 'pass' ? 100 : 0);
       }
       assertInvariants(s.booted.venue.engine, 'after simulated runs');
+    } finally {
+      await s.stop();
+    }
+  });
+});
+
+describe('baseline over HTTP (D2)', () => {
+  it('external runner: baseline job listed, signed 3-fail result opens the markets; trivial and flaky reject; log hash checked', async () => {
+    const s = await startTestServer({ env: { RUNNER: 'external', BASELINE_CHECK: 'true' } });
+    try {
+      seedExecutors(s);
+      const cust = await s.signup('Baseline customer', 'customer');
+      const alice = await s.signup('Baseline Alice', 'trader');
+      const mk = async () => (await s.api('POST', '/api/tasks', { token: cust.apiKey, body: { ...TASK, candidateAgents: ['codex'] } })).body.task.id as string;
+      const good = await mk();
+      const trivial = await mk();
+      const flaky = await mk();
+      const pendingView = await s.api('GET', `/api/tasks/${good}`);
+      assert.equal(pendingView.body.task.status, 'pending');
+      assert.equal(pendingView.body.markets[0].status, 'pending');
+      const refused = await s.api('POST', '/api/orders', { token: alice.apiKey, body: { marketId: `${good}:codex`, side: 'yes', price: 50, quantity: 1 } });
+      assert.equal(refused.status, 409);
+      assert.equal(refused.body.code, 'market_pending');
+      const jobs = await s.api('GET', '/api/runner/jobs', { token: RUNNER_SECRET });
+      assert.deepEqual(jobs.body.jobs.map((j: any) => j.kind), ['baseline', 'baseline', 'baseline']);
+      assert.equal(jobs.body.jobs[0].testCommand, TASK.testCommand);
+      const { sha256 } = await import('../../src/engine/index.js');
+      const bad = await s.signedResult({ kind: 'baseline', taskId: good, results: ['failed', 'failed', 'failed'], log: 'red', logSha256: 'a'.repeat(64) });
+      assert.equal(bad.status, 400);
+      assert.equal(bad.body.code, 'log_hash_mismatch');
+      s.clock.advance(4_000);
+      const ok = await s.signedResult({ kind: 'baseline', taskId: good, results: ['failed', 'failed', 'failed'], log: 'red', logSha256: sha256('red'), runId: 'base-good', timestamp: s.clock.now() });
+      assert.equal(ok.status, 200, JSON.stringify(ok.body));
+      assert.equal(ok.body.opened, true);
+      assert.equal(ok.body.task.status, 'open');
+      assert.equal(ok.body.task.closesAt, s.clock.now() + 600_000);
+      assert.equal((await s.api('POST', '/api/orders', { token: alice.apiKey, body: { marketId: `${good}:codex`, side: 'yes', price: 50, quantity: 1 } })).status, 201);
+      const t = await s.signedResult({ kind: 'baseline', taskId: trivial, results: ['passed', 'passed', 'passed'], log: 'green' });
+      assert.equal(t.body.rejectedReason, 'trivial');
+      assert.equal(t.body.task.status, 'rejected');
+      const f = await s.signedResult({ kind: 'baseline', taskId: flaky, results: ['passed', 'failed', 'failed'], log: 'flap' });
+      assert.equal(f.body.rejectedReason, 'flaky');
+      const again = await s.signedResult({ kind: 'baseline', taskId: good, results: ['failed', 'failed', 'failed'], log: 'red' });
+      assert.equal(again.status, 409);
+      const shape = await s.signedResult({ kind: 'baseline', taskId: good, log: 'red' });
+      assert.equal(shape.status, 400);
+      assert.equal((await s.api('GET', '/api/runner/jobs', { token: RUNNER_SECRET })).body.jobs.length, 0);
+      assert.equal((await s.api('GET', '/api/stats')).body.medianMsToTradable, 4_000);
+      assert.equal((await s.api('GET', `/api/markets/${good}:codex`)).body.packet.baseline, 'failing 3/3');
+      assertInvariants(s.booted.venue.engine, 'after baselines');
+    } finally {
+      await s.stop();
+    }
+  });
+
+  it('simulated runner: baseline opens markets after the delay; forceBaseline makes trivial/flaky rejections', async () => {
+    const s = await startTestServer({ env: { BASELINE_CHECK: 'true' } });
+    try {
+      seedExecutors(s);
+      const cust = await s.signup('Sim baseline customer', 'customer');
+      const mk = async (forceBaseline: 'trivial' | 'flaky' | null) => (await s.api('POST', '/api/tasks', { token: cust.apiKey, body: { ...TASK, candidateAgents: ['codex'], forceBaseline } })).body.task.id as string;
+      const good = await mk(null);
+      const trivial = await mk('trivial');
+      const flaky = await mk('flaky');
+      assert.deepEqual(s.booted.runner!.queued.sort(), [`baseline:${flaky}`, `baseline:${good}`, `baseline:${trivial}`].sort());
+      assert.equal(s.booted.runner!.flush(), 3);
+      assert.equal((await s.api('GET', `/api/tasks/${good}`)).body.task.status, 'open');
+      assert.equal((await s.api('GET', `/api/tasks/${trivial}`)).body.task.rejectedReason, 'trivial');
+      assert.equal((await s.api('GET', `/api/tasks/${flaky}`)).body.task.rejectedReason, 'flaky');
+      assert.equal((await s.api('GET', `/api/tasks/${good}`)).body.task.baseline.results.length, 3);
     } finally {
       await s.stop();
     }

@@ -93,8 +93,9 @@ deployment and real tasks.)
       `fuzz.test.ts`)
 - [x] Gate metrics in `/api/stats`: Brier of closing prices vs base rate,
       calibration of 70–80¢ markets, median spread at close, median distinct
-      traders per market, time to tradable market, settled count.
-      (`views.test.ts`) Decision lift needs a customer default agent (v1).
+      traders per market, time to tradable market (baseline duration), settled
+      count. (`views.test.ts`, `runner.test.ts`) Decision lift needs a
+      customer default agent (v1).
 - [ ] Server-sent events instead of polling (prompt 3.1).
 - [ ] Deploy: Dockerfile, persistent volume for the journal, nightly backup and
       restore drill (prompt 3.6).
@@ -106,12 +107,15 @@ checks in exchange for weekly feedback.
 
 **Gate:** first paid checks, and legal review of the real-money path complete.
 
-- [ ] Container runner: fresh non-root container per job, CPU/memory/process
-      limits, egress allowlist, spend-capped keys redacted from logs (D3, D5).
-- [ ] Protected paths restored before tests run; an agent that edits a test
-      still fails (D1).
-- [ ] Baseline check: 3 runs at the pinned commit must all fail; trivial and
-      flaky tasks are rejected (D2).
+- [x] Runner service with FakeDriver and DockerDriver: fresh non-root
+      container per job, CPU/memory/pids limits, egress allowlist, keys
+      redacted from logs (D3, D5). (`runner/tests`, `tests/runner/contract.test.ts`;
+      the Docker path itself is not exercised on the build host)
+- [x] Protected paths restored before tests run; an agent that edits a test
+      still fails (D1). (`runner/tests/runner.test.ts`)
+- [x] Baseline check: 3 runs at the pinned commit must all fail; trivial and
+      flaky tasks are rejected (D2). (`lifecycle.test.ts`, `runner.test.ts`,
+      contract test)
 - [x] Signed results carry runId and timestamp; replays and stale results are
       refused (D9). (`runner.test.ts`; required in live mode)
 - [x] Rate limits per API key: 429 with `code: rate_limited`. (Phase 1.5;

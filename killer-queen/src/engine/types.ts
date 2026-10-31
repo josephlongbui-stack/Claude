@@ -10,8 +10,10 @@ export type AccountRole = 'trader' | 'customer' | 'admin' | 'market_maker' | 'ho
 export type Side = 'yes' | 'no';
 export type Tif = 'gtc' | 'ioc';
 export type OrderStatus = 'open' | 'filled' | 'cancelled';
-export type TaskStatus = 'open' | 'closed' | 'running' | 'resolved' | 'skipped';
-export type MarketStatus = 'open' | 'closed' | 'running' | 'settled';
+export type TaskStatus = 'pending' | 'open' | 'closed' | 'running' | 'resolved' | 'skipped' | 'rejected';
+export type MarketStatus = 'pending' | 'open' | 'closed' | 'running' | 'settled' | 'cancelled';
+export type BaselineRun = 'passed' | 'failed';
+export type RejectReason = 'trivial' | 'flaky';
 /** What the runner reports for the chosen market. */
 export type RunOutcome = 'passed' | 'failed' | 'infra_error';
 /** How a market was settled. */
@@ -54,6 +56,9 @@ export interface Task {
   protectedPaths: string[];
   status: TaskStatus;
   createdAt: number;
+  /** When markets opened (after the baseline, or at creation). */
+  openedAt: number | null;
+  tradingWindowMs: number;
   closesAt: number;
   closedAt: number | null;
   decidedAt: number | null;
@@ -65,9 +70,17 @@ export interface Task {
   passed: boolean | null;
   outcome: RunOutcome | null;
   runLog: string | null;
+  runLogSha256: string | null;
   runId: string | null;
+  /** Baseline check (D2): null until the runner reports; results must all fail to open the markets. */
+  baseline: { results: BaselineRun[]; log: string; logSha256: string; runId: string | null; at: number } | null;
+  rejectedReason: RejectReason | null;
   /** Sandbox-only override for the simulated runner (D20). Never in packets. */
   forceOutcome: 'pass' | 'fail' | null;
+  /** Sandbox-only: make the simulated baseline come back trivial or flaky. Never in packets. */
+  forceBaseline: RejectReason | null;
+  /** Where an imported task came from (issue URL); unique per source for idempotent imports. */
+  source: string | null;
 }
 
 export interface Market {
@@ -204,6 +217,10 @@ export interface CreateTaskCommand extends Stamped {
   minimumChance?: number;
   protectedPaths?: string[];
   forceOutcome?: 'pass' | 'fail' | null;
+  forceBaseline?: RejectReason | null;
+  /** D2: start `pending` and wait for a baseline result before the markets open. */
+  requireBaseline?: boolean;
+  source?: string | null;
 }
 
 export interface PlaceOrderCommand extends Stamped {
@@ -258,6 +275,15 @@ export interface SettleCommand extends Stamped {
   runId?: string | null;
 }
 
+/** Baseline result (D2): three agent-free test runs at the pinned commit. */
+export interface BaselineCommand extends Stamped {
+  type: 'baseline';
+  taskId: string;
+  results: BaselineRun[];
+  log: string;
+  runId?: string | null;
+}
+
 /** Admin switch (D26): while paused, no new orders rest or fill; cancels and settlement continue. */
 export interface PauseTradingCommand extends Stamped {
   type: 'pauseTrading';
@@ -278,7 +304,8 @@ export type Command =
   | CloseTaskCommand
   | DecideCommand
   | SettleCommand
-  | PauseTradingCommand;
+  | PauseTradingCommand
+  | BaselineCommand;
 
 export type CommandType = Command['type'];
 
@@ -294,6 +321,7 @@ export const COMMAND_TYPES: readonly CommandType[] = [
   'decide',
   'settle',
   'pauseTrading',
+  'baseline',
 ] as const;
 
 /** A command as callers build it: the Venue stamps `at` when missing. */
@@ -315,6 +343,7 @@ export interface CommandResults {
   decide: { task: Task; settled: Market[] };
   settle: { task: Task; market: Market };
   pauseTrading: { paused: boolean; reason: string };
+  baseline: { task: Task; opened: boolean; rejectedReason: RejectReason | null };
 }
 
 export type EngineOk<T extends CommandType = CommandType> = { ok: true; seq: number; data: CommandResults[T] };

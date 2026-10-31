@@ -54,13 +54,14 @@ describe('cents and prices', () => {
         case 'decide':
         case 'settle':
         case 'pauseTrading':
+        case 'baseline':
           return c.type;
         default:
           return assertNever(c);
       }
     };
     for (const t of COMMAND_TYPES) assert.equal(name({ type: t } as Command), t);
-    assert.equal(COMMAND_TYPES.length, 11); // the spec's ten plus pauseTrading (D26)
+    assert.equal(COMMAND_TYPES.length, 12); // the spec's ten plus pauseTrading (D26) and baseline (D2)
     assert.throws(() => assertNever({ type: 'bogus' } as never), /Unhandled case/);
   });
 });

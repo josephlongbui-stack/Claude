@@ -40,6 +40,7 @@ export async function startTestServer(opts: { env?: Record<string, string>; dir?
     RATE_LIMIT_WRITES_PER_MIN: '0',
     RATE_LIMIT_READS_PER_MIN: '0',
     RATE_LIMIT_ANON_PER_MIN: '0',
+    BASELINE_CHECK: 'false',
     ...opts.env,
   });
   const booted = await boot({ config, clock, listen: 0, timers: false, publicDir: join(dir, 'no-public'), bots: opts.bots ?? [], seedExecutors: false });

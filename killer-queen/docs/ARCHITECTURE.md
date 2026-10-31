@@ -41,6 +41,7 @@ Pure TypeScript, no I/O, no clock, no randomness.
 | `decide` | task closed, `by` is customer/admin or null, candidate or null | null: skipped, all markets settle at closing price; else chosen market → running, others settle at closing price (D14) |
 | `settle` | task running, outcome, log string, unused runId | chosen market pays 100/0 or closing price (infra_error); task resolved |
 | `pauseTrading` (D26, added in Phase 1) | boolean, short reason, `by` is an admin or null | `state.trading` flips; placeOrder rejects `trading_paused` while paused |
+| `baseline` (D2, added in Phase 2) | task pending, exactly 3 results, log, unused runId | all failed: task and markets open, `openedAt`, `closesAt = at + window`; else task `rejected` (trivial/flaky), markets `cancelled`; log hash stored |
 
 Ids: `acc_n`, `tsk_n`, `o<n>`, `f<n>`, `c<n>` from engine counters that skip
 explicitly supplied ids; replay therefore reproduces them (D12). `placeOrder`
@@ -92,9 +93,10 @@ requires 4xx `{ error, code }` with an unchanged state hash.
   5-minute timestamp window, and pass `runId` to the engine for single use
   (D9). `POST /api/admin/trading` (admin key) journals `pauseTrading`.
   Static `public/` is served with an SPA fallback when it exists.
-- `runners/simulated.ts`: listens to venue `decide` events, queues the task,
-  settles after a delay with the deterministic outcome (D20); `flush()` for
-  tests; never trades.
+- `runners/simulated.ts`: listens to venue `createTask` (pending → baseline
+  job) and `decide` (run job) events, reports after a delay: baselines are 3
+  fails unless `forceBaseline`, runs use the deterministic outcome (D20);
+  `flush()` for tests; never trades.
 - `seed.ts`: default executors (sandbox boot) and demo tasks (`npm run seed`).
 - `boot.ts`: config → `openVenue` (replay) → house + market maker accounts →
   bot factories → simulated runner → `tick()` scheduler (auto-close due
@@ -102,6 +104,25 @@ requires 4xx `{ error, code }` with an unchanged state hash.
   each bot once, ticks never overlap) → listen → graceful stop (timers, bots,
   runner, HTTP, journal).
 - `main.ts`: `boot({ bots: houseBotFactories() })` with SIGINT/SIGTERM.
+
+## Runner service (`runner/`)
+
+A separate package with no dependency on `src/`. `ExchangeClient` polls
+`GET /api/runner/jobs` with the bearer secret and posts results signed over the
+exact bytes (HMAC-SHA256) with `logSha256` and a timestamp. `Runner.poll()`
+processes each job once: a `baseline` job runs the test command three times
+with no agent; a `run` job renders the executor's command from
+`runner/agents.json` (the prompt is one argv element, never a shell string),
+executes it with the provider key in the container env, restores protected
+paths (`protectedPaths` or the repo's default test set), runs the tests once,
+and classifies the result (timeouts are `failed`; `InfraError` retries twice,
+then `infra_error`). Logs are redacted of injected secrets and key-shaped
+strings. `ContainerDriver` has two implementations: `FakeDriver` (scripted,
+used by every test) and `DockerDriver` (fresh container on an internal network
+behind an egress-allowlist proxy, non-root, capability-dropped, resource
+limited; not run on this build host). `runner/SANDBOX.md` is the threat list.
+The sandbox exchange keeps its in-process `SimulatedRunner` for the laptop
+loop, which now also answers baseline jobs.
 
 ## House bots (`src/bots`)
 

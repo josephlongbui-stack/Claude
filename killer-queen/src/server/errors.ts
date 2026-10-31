@@ -17,7 +17,7 @@ export function statusForCode(code: string): number {
   if (code.endsWith('_not_found') || code === 'not_a_candidate') return 404;
   if (code === 'conflict' || code.startsWith('forbidden')) return 403;
   if (code === 'unauthorized' || code === 'bad_signature') return 401;
-  if (code === 'duplicate_id' || code === 'duplicate_key' || code.startsWith('task_not_') || code === 'market_closed' || code === 'order_not_open' || code === 'run_id_used' || code === 'faucet_cooldown' || code === 'trading_paused' || code === 'duplicate_client_key') return 409;
+  if (code === 'duplicate_id' || code === 'duplicate_key' || code.startsWith('task_not_') || code === 'market_closed' || code === 'order_not_open' || code === 'run_id_used' || code === 'faucet_cooldown' || code === 'trading_paused' || code === 'duplicate_client_key' || code === 'market_pending') return 409;
   if (code === 'rate_limited') return 429;
   return 400;
 }

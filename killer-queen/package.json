@@ -11,10 +11,12 @@
     "dev": "npm run build:web && tsx src/server/main.ts",
     "start": "tsx src/server/main.ts",
     "dev:web": "tsx scripts/build-web.ts --watch",
-    "test": "node --import tsx --test --test-concurrency=1 \"tests/**/*.test.ts\"",
-    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test --test-concurrency=1 \"tests/**/*.test.ts\" \"runner/tests/**/*.test.ts\"",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p runner/tsconfig.json",
     "build:web": "tsx scripts/build-web.ts",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx scripts/seed.ts",
+    "runner": "tsx runner/src/main.ts",
+    "import:arena": "tsx scripts/import-arena.ts"
   },
   "license": "UNLICENSED",
   "dependencies": {

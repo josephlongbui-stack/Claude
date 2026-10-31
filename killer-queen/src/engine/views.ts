@@ -37,6 +37,8 @@ export interface ExecutorRecord {
 export interface Packet {
   marketId: string;
   title: string;
+  /** D2: "failing 3/3" once the baseline ran, "pending" while waiting, "not run" when not required. */
+  baseline: string;
   prompt: string;
   repo: string;
   commit: string;
@@ -77,7 +79,7 @@ export interface TaskView {
   recommendation: { executorId: string; chance: number } | null;
 }
 
-export type PublicTask = Omit<Task, 'forceOutcome'>;
+export type PublicTask = Omit<Task, 'forceOutcome' | 'forceBaseline'>;
 
 export interface PortfolioPosition {
   market: string;
@@ -127,7 +129,7 @@ export interface LeaderboardRow {
 
 export interface Stats {
   accounts: number;
-  tasks: { total: number; open: number; closed: number; running: number; resolved: number; skipped: number };
+  tasks: { total: number; pending: number; open: number; closed: number; running: number; resolved: number; skipped: number; rejected: number };
   markets: { total: number; open: number; settled: number; settledOnTests: number };
   volume: number;
   fees: number;
@@ -148,7 +150,7 @@ export function publicAccount(a: Account): PublicAccount {
 }
 
 export function publicTask(t: Task): PublicTask {
-  const { forceOutcome: _f, ...rest } = t;
+  const { forceOutcome: _f, forceBaseline: _b, ...rest } = t;
   return rest;
 }
 
@@ -218,9 +220,11 @@ export function packet(engine: Engine, marketId: string): Packet {
   const task = engine.task(market.taskId)!;
   const rec = executorRecord(engine, market.executorId)!;
   const q = engine.quoteSides(marketId);
+  const baseline = task.baseline ? `failing ${task.baseline.results.filter((r) => r === 'failed').length}/${task.baseline.results.length}` : task.status === 'pending' ? 'pending' : 'not run';
   return {
     marketId,
     title: task.title,
+    baseline,
     prompt: task.prompt,
     repo: task.repo,
     commit: task.commit,
@@ -285,9 +289,11 @@ export function taskView(engine: Engine, taskId: string): TaskView {
     };
   });
   let recommendation: TaskView['recommendation'] = null;
-  for (const m of markets) {
-    const chance = m.status === 'open' ? m.quote.chance : (m.closingPrice ?? m.quote.chance);
-    if (!recommendation || chance > recommendation.chance) recommendation = { executorId: m.executorId, chance };
+  if (task.status !== 'pending' && task.status !== 'rejected') {
+    for (const m of markets) {
+      const chance = m.status === 'open' ? m.quote.chance : (m.closingPrice ?? m.quote.chance);
+      if (!recommendation || chance > recommendation.chance) recommendation = { executorId: m.executorId, chance };
+    }
   }
   return { task: publicTask(task), markets, recommendation };
 }
@@ -408,10 +414,12 @@ function median(xs: number[]): number | null {
 
 export function stats(engine: Engine): Stats {
   const s = engine.state;
-  const tasks = { total: 0, open: 0, closed: 0, running: 0, resolved: 0, skipped: 0 };
+  const tasks = { total: 0, pending: 0, open: 0, closed: 0, running: 0, resolved: 0, skipped: 0, rejected: 0 };
+  const msToTradable: number[] = [];
   for (const t of s.tasks.values()) {
     tasks.total += 1;
     tasks[t.status] += 1;
+    if (t.openedAt !== null) msToTradable.push(t.openedAt - t.createdAt);
   }
   const markets = { total: 0, open: 0, settled: 0, settledOnTests: 0 };
   let volume = 0;
@@ -461,8 +469,8 @@ export function stats(engine: Engine): Stats {
     calibration70to80: { count: cal.count, passRate: cal.count ? cal.passed / cal.count : null },
     medianSpreadAtClose: median(spreads),
     medianTradersPerMarket: median(traders),
-    // v0 opens markets in the createTask command itself, so submission-to-tradable is 0 ms.
-    medianMsToTradable: s.tasks.size ? 0 : null,
+    // Time from submission to tradable: 0 without a baseline check, the baseline's duration with one (D2).
+    medianMsToTradable: median(msToTradable),
   };
 }
 

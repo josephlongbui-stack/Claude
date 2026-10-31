@@ -10,7 +10,8 @@ describe('views', () => {
     buy(f.venue, 'alice', codex, 'yes', 66, 10);
     buy(f.venue, 'bob', codex, 'no', 29, 10);
     const p = packet(f.venue.engine, codex);
-    assert.deepEqual(Object.keys(p).sort(), ['closesAt', 'commit', 'executor', 'lastPrice', 'marketId', 'prompt', 'quote', 'repo', 'testCommand', 'title'].sort());
+    assert.deepEqual(Object.keys(p).sort(), ['baseline', 'closesAt', 'commit', 'executor', 'lastPrice', 'marketId', 'prompt', 'quote', 'repo', 'testCommand', 'title'].sort());
+    assert.equal(p.baseline, 'not run');
     assert.deepEqual(Object.keys(p.executor).sort(), ['chosen', 'id', 'name', 'org', 'passed', 'version'].sort());
     assert.deepEqual(p.quote, { yesBid: 66, yesAsk: 71, noBid: 29, noAsk: 34 });
     assert.equal(p.marketId, 'tsk_1:codex');

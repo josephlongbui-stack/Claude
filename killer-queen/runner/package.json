@@ -1,0 +1,13 @@
+{
+  "name": "killer-queen-runner",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Killer Queen runner service: polls the exchange for jobs, executes them in a sandbox, posts signed results. Never trades.",
+  "engines": { "node": ">=22.13" },
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "test": "node --import tsx --test \"tests/**/*.test.ts\""
+  },
+  "license": "UNLICENSED"
+}

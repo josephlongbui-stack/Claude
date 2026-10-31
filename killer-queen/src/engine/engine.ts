@@ -3,12 +3,13 @@
  * randomness, no I/O. Every command is validated completely before any
  * mutation; a rejected command leaves the state untouched.
  */
-import { CONTRACT_VALUE, isCents, isPrice, marketId as makeMarketId, midHalfUp, otherSide } from './money.js';
+import { CONTRACT_VALUE, isCents, isPrice, marketId as makeMarketId, midHalfUp, otherSide, sha256 } from './money.js';
 import { createState } from './state.js';
 import {
   COMMAND_TYPES,
   assertNever,
   type Account,
+  type BaselineCommand,
   type Book,
   type CancelOrderCommand,
   type CloseTaskCommand,
@@ -32,6 +33,7 @@ import {
   type PauseTradingCommand,
   type PlaceOrderCommand,
   type Position,
+  type RejectReason,
   type SettleCommand,
   type Side,
   type Task,
@@ -135,6 +137,8 @@ export class Engine {
         return this.settle(cmd);
       case 'pauseTrading':
         return this.pauseTrading(cmd);
+      case 'baseline':
+        return this.baseline(cmd);
       default:
         return assertNever(cmd);
     }
@@ -339,6 +343,15 @@ export class Engine {
     if (c.protectedPaths !== undefined && (!Array.isArray(c.protectedPaths) || c.protectedPaths.some((p) => typeof p !== 'string'))) {
       reject('bad_protected_paths', 'protectedPaths must be strings');
     }
+    if (c.forceBaseline !== undefined && c.forceBaseline !== null && c.forceBaseline !== 'trivial' && c.forceBaseline !== 'flaky') {
+      reject('bad_force_baseline', 'forceBaseline must be trivial, flaky or null');
+    }
+    if (c.requireBaseline !== undefined && typeof c.requireBaseline !== 'boolean') reject('bad_require_baseline', 'requireBaseline must be boolean');
+    const requireBaseline = c.requireBaseline ?? false;
+    const source = c.source ?? null;
+    if (source !== null && (typeof source !== 'string' || source === '' || source.length > 500)) reject('bad_source', 'source must be a short string');
+    if (source !== null) for (const t of s.tasks.values()) if (t.source === source) reject('duplicate_source', `task ${t.id} was already imported from ${source}`);
+    const tradingWindowMs = c.closesAt !== undefined ? c.closesAt - c.at : (c.tradingWindowMs ?? DEFAULT_TRADING_WINDOW_MS);
 
     const id = c.id ?? nextId(s.counters, 'task', 'tsk_', (x) => s.tasks.has(x));
     const candidateVersions: Record<string, string> = {};
@@ -354,9 +367,11 @@ export class Engine {
       candidateAgents: [...c.candidateAgents],
       candidateVersions,
       protectedPaths: c.protectedPaths ? [...c.protectedPaths] : [],
-      status: 'open',
+      status: requireBaseline ? 'pending' : 'open',
       createdAt: c.at,
-      closesAt: c.closesAt ?? c.at + (c.tradingWindowMs ?? DEFAULT_TRADING_WINDOW_MS),
+      openedAt: requireBaseline ? null : c.at,
+      tradingWindowMs,
+      closesAt: c.closesAt ?? c.at + tradingWindowMs,
       closedAt: null,
       decidedAt: null,
       resolvedAt: null,
@@ -366,8 +381,13 @@ export class Engine {
       passed: null,
       outcome: null,
       runLog: null,
+      runLogSha256: null,
       runId: null,
+      baseline: null,
+      rejectedReason: null,
       forceOutcome: c.forceOutcome ?? null,
+      forceBaseline: c.forceBaseline ?? null,
+      source,
     };
     s.tasks.set(id, task);
     const markets: Market[] = [];
@@ -376,7 +396,7 @@ export class Engine {
         id: makeMarketId(id, execId),
         taskId: id,
         executorId: execId,
-        status: 'open',
+        status: requireBaseline ? 'pending' : 'open',
         closingPrice: null,
         closingSpread: null,
         settlementPrice: null,
@@ -404,6 +424,7 @@ export class Engine {
     const executor = s.executors.get(market.executorId)!;
     const conflict = this.conflictReason(account, task, executor);
     if (conflict) reject('conflict', conflict);
+    if (market.status === 'pending') reject('market_pending', `market ${market.id} is waiting for the baseline check`);
     if (market.status !== 'open' || task.status !== 'open') reject('market_closed', `market ${market.id} is ${market.status}`);
     if (s.trading.paused) reject('trading_paused', `trading is paused${s.trading.reason ? `: ${s.trading.reason}` : ''}`);
     if (c.side !== 'yes' && c.side !== 'no') reject('bad_side', 'side must be yes or no');
@@ -622,6 +643,7 @@ export class Engine {
     const executor = s.executors.get(market.executorId)!;
     const conflict = this.conflictReason(account, task, executor);
     if (conflict) reject('conflict', conflict);
+    if (market.status === 'pending') reject('market_pending', `market ${market.id} is waiting for the baseline check`);
     if (typeof c.text !== 'string' || c.text.trim() === '') reject('bad_text', 'text is required');
     if (c.text.length > 4000) reject('bad_text', 'text is too long (max 4000)');
     const probability = c.probability ?? null;
@@ -726,9 +748,43 @@ export class Engine {
     task.outcome = c.outcome;
     task.passed = c.outcome === 'infra_error' ? null : c.outcome === 'passed';
     task.runLog = c.log;
+    task.runLogSha256 = sha256(c.log);
     task.runId = runId;
     if (runId !== null) s.usedRunIds.add(runId);
     return { task, market };
+  }
+
+  /** D2: three agent-free runs must all fail; all pass = trivial, mixed = flaky; both reject the task. */
+  private baseline(c: BaselineCommand): CommandResults['baseline'] {
+    const s = this.state;
+    const task = s.tasks.get(c.taskId);
+    if (!task) reject('task_not_found', `no task ${c.taskId}`);
+    if (task.status !== 'pending') reject('task_not_pending', `task ${task.id} is ${task.status}; baseline needs pending`);
+    if (!Array.isArray(c.results) || c.results.length !== 3 || c.results.some((r) => r !== 'passed' && r !== 'failed')) {
+      reject('bad_results', 'results must be exactly three of passed | failed');
+    }
+    if (typeof c.log !== 'string') reject('bad_log', 'log must be a string');
+    const runId = c.runId ?? null;
+    if (runId !== null) {
+      if (typeof runId !== 'string' || runId === '') reject('bad_run_id', 'runId must be a non-empty string');
+      if (s.usedRunIds.has(runId)) reject('run_id_used', `runId ${runId} was already used`);
+    }
+    const passes = c.results.filter((r) => r === 'passed').length;
+    const rejectedReason: RejectReason | null = passes === 0 ? null : passes === 3 ? 'trivial' : 'flaky';
+    task.baseline = { results: [...c.results], log: c.log, logSha256: sha256(c.log), runId, at: c.at };
+    if (runId !== null) s.usedRunIds.add(runId);
+    if (rejectedReason === null) {
+      task.status = 'open';
+      task.openedAt = c.at;
+      task.closesAt = c.at + task.tradingWindowMs;
+      for (const execId of task.candidateAgents) s.markets.get(makeMarketId(task.id, execId))!.status = 'open';
+    } else {
+      task.status = 'rejected';
+      task.rejectedReason = rejectedReason;
+      task.resolvedAt = c.at;
+      for (const execId of task.candidateAgents) s.markets.get(makeMarketId(task.id, execId))!.status = 'cancelled';
+    }
+    return { task, opened: rejectedReason === null, rejectedReason };
   }
 
   private pauseTrading(c: PauseTradingCommand): CommandResults['pauseTrading'] {

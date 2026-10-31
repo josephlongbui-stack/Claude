@@ -77,7 +77,7 @@ describe('restart and scheduler', () => {
       const skip = (await s.api('GET', `/api/tasks/${skipT}`)).body;
       assert.equal(skip.task.status, 'skipped');
       // the simulated runner picked up the running task
-      assert.deepEqual(s.booted.runner!.queued, [runT]);
+      assert.deepEqual(s.booted.runner!.queued, [`run:${runT}`]);
       s.booted.runner!.flush();
       assert.equal((await s.api('GET', `/api/tasks/${runT}`)).body.task.status, 'resolved');
     } finally {

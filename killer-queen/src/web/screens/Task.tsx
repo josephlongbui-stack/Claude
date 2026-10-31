@@ -51,8 +51,12 @@ export function Task({ ctx, id }: { ctx: Ctx; id: string }) {
               <td class="mono">{t.testCommand}</td>
             </tr>
             <tr>
+              <th>Baseline</th>
+              <td>{t.baseline ? `failing ${t.baseline.results.filter((r: string) => r === 'failed').length}/${t.baseline.results.length}` : t.status === 'pending' ? 'running (3 agent-free test runs must fail)' : 'not run'}</td>
+            </tr>
+            <tr>
               <th>Trading</th>
-              <td class="num">{t.status === 'open' ? `closes in ${countdown(t.closesAt, Date.now())}` : `closed ${when(t.closedAt)}`}</td>
+              <td class="num">{t.status === 'pending' ? 'opens after the baseline' : t.status === 'rejected' ? 'never opened' : t.status === 'open' ? `closes in ${countdown(t.closesAt, Date.now())}` : `closed ${when(t.closedAt)}`}</td>
             </tr>
             <tr>
               <th>Auto-decide</th>
@@ -85,7 +89,7 @@ export function Task({ ctx, id }: { ctx: Ctx; id: string }) {
                     {m.outcome && <span class={`pill ${m.status}`}>{m.outcome}</span>}
                     {t.chosenAgent === m.executorId && <span class="pill running">chosen</span>}
                   </td>
-                  <td class="r num chance">{m.status === 'settled' ? m.settlementPrice : m.status === 'open' ? m.quote.chance : m.closingPrice}¢</td>
+                  <td class="r num chance">{m.status === 'pending' || m.status === 'cancelled' ? '—' : `${m.status === 'settled' ? m.settlementPrice : m.status === 'open' ? m.quote.chance : m.closingPrice}¢`}</td>
                   <td class="r num">
                     {m.quote.yesBid ?? '–'}/{m.quote.yesAsk ?? '–'}
                   </td>
@@ -103,6 +107,14 @@ export function Task({ ctx, id }: { ctx: Ctx; id: string }) {
         </div>
         <div class="panel">
           <h2>Decision</h2>
+          {t.status === 'pending' && <p class="warn-c" data-testid="baseline-pending">Baseline check running: the runner confirms the test command fails at {t.commit} three times before trading opens.</p>}
+          {t.status === 'rejected' && (
+            <div data-testid="rejected">
+              <p class="no-c" style="font-size:16px;font-weight:700">Rejected: {t.rejectedReason === 'trivial' ? 'the tests already pass at the pinned commit' : 'the tests are flaky at the pinned commit'}</p>
+              <h2>Baseline log</h2>
+              <div class="mono" style="max-height:300px;overflow:auto">{t.baseline?.log}</div>
+            </div>
+          )}
           {!isCustomer && <p class="muted">Only the customer ({t.customer}) can close trading and decide. The customer never trades its own task.</p>}
           {isCustomer && t.status === 'open' && (
             <p>

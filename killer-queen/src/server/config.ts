@@ -29,6 +29,10 @@ const envSchema = z.object({
   RATE_LIMIT_WRITES_PER_MIN: z.coerce.number().int().nonnegative().default(60),
   RATE_LIMIT_READS_PER_MIN: z.coerce.number().int().nonnegative().default(120),
   RATE_LIMIT_ANON_PER_MIN: z.coerce.number().int().nonnegative().default(300),
+  BASELINE_CHECK: z
+    .string()
+    .default('true')
+    .transform((v) => !['false', '0', 'no', 'off'].includes(v.trim().toLowerCase())),
 });
 
 export interface Config {
@@ -53,6 +57,8 @@ export interface Config {
   logLevel: 'silent' | 'info' | 'debug';
   /** Per API key (orders, tasks, writes, reads) and per IP for unauthenticated calls; 0 disables. */
   rateLimits: { orders: number; tasks: number; writes: number; reads: number; anon: number };
+  /** D2: new tasks wait for a 3-run baseline before their markets open. */
+  baselineCheck: boolean;
 }
 
 export class ConfigError extends Error {}
@@ -97,6 +103,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     mmCashCents: e.MM_CASH_CENTS,
     simTraders: e.SIM_TRADERS,
     logLevel: e.LOG_LEVEL,
+    baselineCheck: e.BASELINE_CHECK,
     rateLimits: { orders: e.RATE_LIMIT_ORDERS_PER_MIN, tasks: e.RATE_LIMIT_TASKS_PER_MIN, writes: e.RATE_LIMIT_WRITES_PER_MIN, reads: e.RATE_LIMIT_READS_PER_MIN, anon: e.RATE_LIMIT_ANON_PER_MIN },
   };
 }

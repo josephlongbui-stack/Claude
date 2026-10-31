@@ -18,6 +18,7 @@ import {
   portfolio,
   publicAccount,
   publicTask,
+  sha256,
   stats,
   taskView,
   type Clock,
@@ -93,6 +94,7 @@ const taskBody = z
     minimumChance: z.number().int().min(1).max(99).optional(),
     protectedPaths: z.array(z.string().min(1)).max(50).optional(),
     forceOutcome: z.enum(['pass', 'fail']).nullable().optional(),
+    forceBaseline: z.enum(['trivial', 'flaky']).nullable().optional(),
   })
   .strict();
 
@@ -100,15 +102,19 @@ const decideBody = z.object({ executorId: z.string().min(1).nullable() }).strict
 
 const resultBody = z
   .object({
+    kind: z.enum(['run', 'baseline']).default('run'),
     taskId: z.string().min(1),
     passed: z.boolean().optional(),
     outcome: z.enum(['passed', 'failed', 'infra_error']).optional(),
+    results: z.array(z.enum(['passed', 'failed'])).length(3).optional(),
     log: z.string().max(5_000_000).default(''),
+    logSha256: z.string().regex(/^[0-9a-f]{64}$/).optional(),
     runId: z.string().min(1).max(200).optional(),
     timestamp: z.number().int().optional(),
   })
   .strict()
-  .refine((b) => b.passed !== undefined || b.outcome !== undefined, { message: 'passed or outcome is required', path: ['outcome'] });
+  .refine((b) => b.kind === 'baseline' || b.passed !== undefined || b.outcome !== undefined, { message: 'passed or outcome is required', path: ['outcome'] })
+  .refine((b) => b.kind !== 'baseline' || b.results !== undefined, { message: 'results is required for a baseline', path: ['results'] });
 
 export function createApp(deps: AppDeps): Express {
   const { venue, config, clock } = deps;
@@ -191,8 +197,8 @@ export function createApp(deps: AppDeps): Express {
     limitTasks,
     wrap((req, res) => {
       const body = taskBody.parse(req.body);
-      if (body.forceOutcome !== undefined && body.forceOutcome !== null && config.mode === 'live') {
-        throw new HttpError(400, 'validation', 'forceOutcome is sandbox-only');
+      if (config.mode === 'live' && ((body.forceOutcome !== undefined && body.forceOutcome !== null) || (body.forceBaseline !== undefined && body.forceBaseline !== null))) {
+        throw new HttpError(400, 'validation', 'forceOutcome and forceBaseline are sandbox-only');
       }
       const { task } = unwrap(
         venue.apply({
@@ -209,6 +215,8 @@ export function createApp(deps: AppDeps): Express {
           minimumChance: body.minimumChance,
           protectedPaths: body.protectedPaths,
           forceOutcome: body.forceOutcome ?? null,
+          forceBaseline: body.forceBaseline ?? null,
+          requireBaseline: config.baselineCheck,
         }),
       );
       res.status(201).json(taskView(venue.engine, task.id));
@@ -297,11 +305,16 @@ export function createApp(deps: AppDeps): Express {
     '/runner/jobs',
     requireSecret(config.runnerSecret, 'runner'),
     wrap((_req, res) => {
-      const jobs = [];
+      const jobs: unknown[] = [];
       for (const t of venue.engine.state.tasks.values()) {
+        if (t.status === 'pending') {
+          jobs.push({ kind: 'baseline', taskId: t.id, repo: t.repo, commit: t.commit, testCommand: t.testCommand, protectedPaths: t.protectedPaths, createdAt: t.createdAt });
+          continue;
+        }
         if (t.status !== 'running' || !t.chosenAgent) continue;
         const executor = venue.engine.state.executors.get(t.chosenAgent)!;
         jobs.push({
+          kind: 'run',
           taskId: t.id,
           executorId: t.chosenAgent,
           executor: { ...executor, version: t.candidateVersions[t.chosenAgent] ?? executor.version },
@@ -332,6 +345,14 @@ export function createApp(deps: AppDeps): Express {
       }
       if (body.timestamp !== undefined && Math.abs(clock.now() - body.timestamp) > RESULT_TIMESTAMP_WINDOW_MS) {
         throw new HttpError(401, 'stale_result', 'timestamp is outside the 5-minute window');
+      }
+      if (body.logSha256 !== undefined && body.logSha256 !== sha256(body.log)) {
+        throw new HttpError(400, 'log_hash_mismatch', 'logSha256 does not match the log');
+      }
+      if (body.kind === 'baseline') {
+        const data = unwrap(venue.apply({ type: 'baseline', taskId: body.taskId, results: body.results!, log: body.log, runId: body.runId ?? null }));
+        res.json({ task: publicTask(data.task), opened: data.opened, rejectedReason: data.rejectedReason });
+        return;
       }
       const outcome: RunOutcome = body.outcome ?? (body.passed ? 'passed' : 'failed');
       const data = unwrap(venue.apply({ type: 'settle', taskId: body.taskId, outcome, log: body.log, runId: body.runId ?? null }));

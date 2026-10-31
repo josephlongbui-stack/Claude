@@ -59,7 +59,7 @@ export interface SeedResult {
 }
 
 /** Create the demo customer (if missing) and one demo task per entry; returns the customer key when newly created. */
-export function seedDemo(venue: Venue, opts: { tradingWindowMs?: number; customerId?: string } = {}): SeedResult {
+export function seedDemo(venue: Venue, opts: { tradingWindowMs?: number; customerId?: string; requireBaseline?: boolean } = {}): SeedResult {
   const executorsCreated = ensureExecutors(venue);
   const customerId = opts.customerId ?? 'demo-customer';
   let customerKey: string | null = null;
@@ -70,7 +70,7 @@ export function seedDemo(venue: Venue, opts: { tradingWindowMs?: number; custome
     customerKey = key.raw;
   }
   const taskIds: string[] = [];
-  const existingTitles = new Set([...venue.engine.state.tasks.values()].filter((t) => t.customer === customerId && t.status === 'open').map((t) => t.title));
+  const existingTitles = new Set([...venue.engine.state.tasks.values()].filter((t) => t.customer === customerId && (t.status === 'open' || t.status === 'pending')).map((t) => t.title));
   for (const t of DEMO_TASKS) {
     if (existingTitles.has(t.title)) continue; // idempotent while the demo task is still open
     const r = venue.apply({
@@ -81,6 +81,7 @@ export function seedDemo(venue: Venue, opts: { tradingWindowMs?: number; custome
       tradingWindowMs: opts.tradingWindowMs ?? 30 * 60_000,
       autoDecide: true,
       minimumChance: 55,
+      requireBaseline: opts.requireBaseline ?? false,
     });
     if (!r.ok) throw new Error(`seed task "${t.title}": ${r.error}`);
     taskIds.push(r.data.task.id);

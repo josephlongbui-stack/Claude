@@ -38,7 +38,7 @@ th { color: var(--muted); font-weight: 500; font-size: 11px; text-transform: upp
 td.r, th.r { text-align: right; }
 tr.click { cursor: pointer; } tr.click:hover td { background: var(--panel-2); }
 .pill { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 11px; border: 1px solid var(--line); color: var(--muted); }
-.pill.open { color: var(--yes); border-color: var(--yes); } .pill.running { color: var(--warn); border-color: var(--warn); } .pill.settled, .pill.resolved { color: var(--accent); border-color: var(--accent); }
+.pill.open { color: var(--yes); border-color: var(--yes); } .pill.pending { color: var(--warn); border-color: var(--warn); } .pill.rejected, .pill.cancelled { color: var(--no); border-color: var(--no); } .pill.running { color: var(--warn); border-color: var(--warn); } .pill.settled, .pill.resolved { color: var(--accent); border-color: var(--accent); }
 .chance { font-size: 20px; font-weight: 700; }
 .ladder { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .ladder .side h3 { margin: 0 0 4px; font-size: 11px; text-transform: uppercase; }

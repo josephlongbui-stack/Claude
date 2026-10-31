@@ -1,6 +1,30 @@
 {
-  "_comment": "Command templates per executor for the external runner (product spec: 'check each CLI's flags for the version you install'). {prompt} is shell-quoted by the runner. The gemini entry is a placeholder to verify against its docs before use (Phase 2.2).",
-  "claude-code": { "command": "claude -p {prompt}", "versionFlag": "--version" },
-  "codex": { "command": "codex exec {prompt}", "versionFlag": "--version" },
-  "gemini-cli": { "command": "gemini -p {prompt}", "versionFlag": "--version", "verify": true }
+  "_comment": "Command templates per executor id. {prompt} is passed as one shell argument by the runner (never interpolated into a shell string). Versions are pinned per the spec: a version change starts a new track record (D4). Flags were looked up on 2026-10-31; entries marked verify:true came from third-party pages only. Run each CLI's --help on the installed version before relying on them.",
+  "claude-code": {
+    "version": "2.1.0",
+    "install": "npm install -g @anthropic-ai/claude-code@2.1.0",
+    "command": ["claude", "-p", "{prompt}", "--permission-mode", "bypassPermissions", "--output-format", "text", "--max-turns", "60"],
+    "apiHost": "api.anthropic.com",
+    "keyEnv": "ANTHROPIC_API_KEY",
+    "sources": ["https://docs.anthropic.com/en/docs/claude-code/cli-reference"],
+    "verify": false
+  },
+  "codex": {
+    "version": "0.48.0",
+    "install": "npm install -g @openai/codex@0.48.0",
+    "command": ["codex", "exec", "--sandbox", "workspace-write", "{prompt}"],
+    "apiHost": "api.openai.com",
+    "keyEnv": "OPENAI_API_KEY",
+    "sources": ["https://developers.openai.com/docs/non-interactive-mode"],
+    "verify": false
+  },
+  "gemini-cli": {
+    "version": "0.14.0",
+    "install": "npm install -g @google/gemini-cli@0.14.0",
+    "command": ["gemini", "-p", "{prompt}", "--approval-mode", "yolo"],
+    "apiHost": "generativelanguage.googleapis.com",
+    "keyEnv": "GEMINI_API_KEY",
+    "sources": ["https://gemini-cli.gh.miniasp.com/headless.html"],
+    "verify": true
+  }
 }

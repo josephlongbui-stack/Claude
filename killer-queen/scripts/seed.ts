@@ -14,7 +14,7 @@ if (config.mode !== 'sandbox') {
   process.exit(2);
 }
 const { venue, journal } = openVenue(config.dbPath);
-const r = seedDemo(venue);
+const r = seedDemo(venue, { requireBaseline: config.baselineCheck });
 journal.close();
 console.log(`executors created: ${r.executorsCreated}`);
 console.log(`demo customer: ${r.customerId}${r.customerKey ? ` (API key, shown once): ${r.customerKey}` : ' (already existed)'}`);

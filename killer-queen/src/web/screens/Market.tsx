@@ -73,7 +73,7 @@ export function Market({ ctx, id }: { ctx: Ctx; id: string }) {
       </h1>
       <p class="muted">
         <a href={`#/task/${encodeURIComponent(m.taskId)}`}>{p.title}</a> · {p.repo} @ {p.commit} · {p.executor.org} v{p.executor.version} · record {p.executor.passed}/{p.executor.chosen} ·{' '}
-        {open ? `closes in ${countdown(p.closesAt, Date.now())}` : m.outcome ? `settled ${m.outcome} at ${m.settlementPrice}¢` : `closed at ${m.closingPrice}¢`}
+        baseline {p.baseline} · {open ? `closes in ${countdown(p.closesAt, Date.now())}` : m.status === 'pending' ? 'not open yet' : m.status === 'cancelled' ? 'cancelled' : m.outcome ? `settled ${m.outcome} at ${m.settlementPrice}¢` : `closed at ${m.closingPrice}¢`}
       </p>
       <div class="grid cols-3">
         <div class="panel">
@@ -155,7 +155,7 @@ export function Market({ ctx, id }: { ctx: Ctx; id: string }) {
               <a href="#/account">Sign in</a> to trade.
             </p>
           )}
-          {ctx.me && !open && <p class="muted">Trading is closed.</p>}
+          {ctx.me && !open && <p class="muted">{m.status === 'pending' ? 'Trading opens after the baseline check.' : m.status === 'cancelled' ? 'This task was rejected at the baseline check; the market never opened.' : 'Trading is closed.'}</p>}
           {ctx.me && open && (
             <form onSubmit={place} data-testid="ticket">
               <div class="row">

@@ -3,6 +3,41 @@
 Newest first. Each prompt appends what it did, what it decided, and anything
 blocked (with exactly what the owner needs to provide).
 
+## 2026-10-31 — Phase 2: the runner (prompts 2.1–2.5)
+- 2.1 docs/RUNNER_PROTOCOL.md (job types baseline/run, job states, signed
+  result with logSha256 + timestamp + runId, HMAC rules, skew window,
+  retries, limits). Server verifies logSha256 (D30); the engine journals
+  sha256(log) for settle and baseline.
+- 2.2/2.3 runner/ package (no dependency on src/): ExchangeClient (signed
+  posts), Runner loop, ContainerDriver with FakeDriver (tests) and
+  DockerDriver (internal network + egress proxy allowlist, non-root, cap-drop,
+  limits, protected-path restore, default test-path detection), log
+  redaction, runner/agents.json with pinned versions and the CLI flags looked
+  up today (gemini marked verify:true, third-party sources only),
+  runner/SANDBOX.md threat list. Docker path is NOT exercised here (no Docker
+  on the build host); FakeDriver covers the logic.
+- 2.4 Baseline check (D2): tasks start pending with BASELINE_CHECK=true; the
+  journaled `baseline` command opens or rejects (trivial/flaky); packet shows
+  the baseline; simulated runner answers baseline jobs; web shows
+  pending/rejected states; medianMsToTradable now measures the baseline.
+- 2.5 src/importer/arena.ts + scripts/import-arena.ts: merged PRs that closed
+  an issue and changed tests + code become candidates at the PR base commit
+  with the test files as protected paths; test command limited to them;
+  dry run by default; rate-limit aware; `--verify fake|docker` runs the tests
+  at base (must fail) and merge (must pass) through the runner driver; apply
+  is idempotent on the issue URL (`task.source`, `duplicate_source`).
+- Golden journal hash changed twice: 37053eb6… (Task gained openedAt,
+  tradingWindowMs, runLogSha256, baseline, rejectedReason, forceBaseline;
+  Market statuses) and then 6081d78c… (Task.source). Golden commands unchanged.
+- CLI flag sources: Claude Code docs.anthropic.com cli-reference (-p,
+  --output-format, --max-turns, --permission-mode); Codex
+  developers.openai.com non-interactive-mode (codex exec --sandbox
+  workspace-write, --full-auto deprecated); Gemini CLI: third-party mirrors
+  only (-p, --approval-mode yolo) — verify before use.
+- Owner actions: build the runner image (`kq-runner`) and egress proxy image,
+  decide registries, provision per-run spend-capped provider keys; run
+  `docker` on a host with Docker to exercise DockerDriver.
+
 ## 2026-10-31 — Phase 1: harden the exchange (prompts 1.1–1.5)
 - 1.1 `tests/engine/property.test.ts`: fast-check sequences over every command
   (weighted toward valid traders/markets so most sequences trade), invariants

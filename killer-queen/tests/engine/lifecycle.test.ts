@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { executorRecords, quote } from '../../src/engine/index.js';
+import { executorRecords, packet, quote, sha256, stats, taskView } from '../../src/engine/index.js';
 import { START_CASH, buy, must, mustReject, seedExchange } from '../helpers/fixtures.js';
 
 describe('close, decide, settle', () => {
@@ -231,5 +231,65 @@ describe('pause trading (D26) and client keys (D27)', () => {
     // a rejected order does not consume its key
     mustReject(f.venue, { type: 'placeOrder', account: 'carol', market: m, side: 'yes', action: 'buy', orderType: 'limit', price: 0, quantity: 5, clientKey: 'k2' }, 'bad_price');
     must(f.venue, { type: 'placeOrder', account: 'carol', market: m, side: 'yes', action: 'buy', orderType: 'limit', price: 10, quantity: 5, clientKey: 'k2' });
+  });
+});
+
+describe('baseline check (D2)', () => {
+  const mk = (f: ReturnType<typeof seedExchange>, force: 'trivial' | 'flaky' | null = null) =>
+    must(f.venue, { type: 'createTask', customer: 'cust', title: 'b', prompt: 'p', repo: 'r', commit: 'c', testCommand: 'npm test', candidateAgents: ['codex'], tradingWindowMs: 60_000, requireBaseline: true, forceBaseline: force });
+
+  it('a task with requireBaseline starts pending; nobody can trade or comment until the baseline opens it', () => {
+    const f = seedExchange();
+    const t = mk(f);
+    assert.equal(t.task.status, 'pending');
+    assert.equal(t.markets[0]!.status, 'pending');
+    assert.equal(t.task.openedAt, null);
+    const m = t.markets[0]!.id;
+    mustReject(f.venue, { type: 'placeOrder', account: 'alice', market: m, side: 'yes', action: 'buy', orderType: 'limit', price: 50, quantity: 1 }, 'market_pending');
+    mustReject(f.venue, { type: 'comment', account: 'alice', market: m, text: 'x' }, 'market_pending');
+    mustReject(f.venue, { type: 'closeTask', taskId: t.task.id }, 'task_not_open');
+    mustReject(f.venue, { type: 'baseline', taskId: t.task.id, results: ['failed', 'failed'], log: '' }, 'bad_results');
+    mustReject(f.venue, { type: 'baseline', taskId: f.taskId, results: ['failed', 'failed', 'failed'], log: '' }, 'task_not_pending');
+    f.clock.advance(5_000);
+    const b = must(f.venue, { type: 'baseline', taskId: t.task.id, results: ['failed', 'failed', 'failed'], log: 'all red', runId: 'base-1' });
+    assert.equal(b.opened, true);
+    assert.equal(b.task.status, 'open');
+    assert.equal(b.task.openedAt, f.clock.now());
+    assert.equal(b.task.closesAt, f.clock.now() + 60_000, 'the trading window starts when the markets open');
+    assert.equal(b.task.baseline!.logSha256.length, 64);
+    assert.equal(f.venue.engine.market(m)!.status, 'open');
+    buy(f.venue, 'alice', m, 'yes', 50, 1);
+    mustReject(f.venue, { type: 'baseline', taskId: t.task.id, results: ['failed', 'failed', 'failed'], log: '' }, 'task_not_pending');
+    mustReject(f.venue, { type: 'settle', taskId: t.task.id, outcome: 'passed', log: '', runId: 'base-1' }, 'task_not_running');
+  });
+
+  it('all three passing rejects the task as trivial; a mix rejects it as flaky; markets are cancelled', () => {
+    const f = seedExchange();
+    const a = mk(f);
+    const ra = must(f.venue, { type: 'baseline', taskId: a.task.id, results: ['passed', 'passed', 'passed'], log: 'green' });
+    assert.equal(ra.opened, false);
+    assert.equal(ra.rejectedReason, 'trivial');
+    assert.equal(ra.task.status, 'rejected');
+    assert.equal(f.venue.engine.market(a.markets[0]!.id)!.status, 'cancelled');
+    const b = mk(f);
+    const rb = must(f.venue, { type: 'baseline', taskId: b.task.id, results: ['failed', 'passed', 'failed'], log: 'flap' });
+    assert.equal(rb.rejectedReason, 'flaky');
+    mustReject(f.venue, { type: 'placeOrder', account: 'alice', market: b.markets[0]!.id, side: 'yes', action: 'buy', orderType: 'limit', price: 50, quantity: 1 }, 'market_closed');
+    const view = taskView(f.venue.engine, b.task.id);
+    assert.equal(view.recommendation, null);
+    assert.equal('forceBaseline' in view.task, false);
+  });
+
+  it('packet shows the baseline; settle records the log hash', () => {
+    const f = seedExchange();
+    const t = mk(f);
+    assert.equal(packet(f.venue.engine, t.markets[0]!.id).baseline, 'pending');
+    must(f.venue, { type: 'baseline', taskId: t.task.id, results: ['failed', 'failed', 'failed'], log: 'x' });
+    assert.equal(packet(f.venue.engine, t.markets[0]!.id).baseline, 'failing 3/3');
+    must(f.venue, { type: 'closeTask', taskId: t.task.id });
+    must(f.venue, { type: 'decide', taskId: t.task.id, executorId: 'codex' });
+    must(f.venue, { type: 'settle', taskId: t.task.id, outcome: 'passed', log: 'hello' });
+    assert.equal(f.venue.engine.task(t.task.id)!.runLogSha256, sha256('hello'));
+    assert.equal(stats(f.venue.engine).medianMsToTradable, 0);
   });
 });
