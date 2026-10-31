@@ -3,6 +3,21 @@
 Newest first. Each prompt appends what it did, what it decided, and anything
 blocked (with exactly what the owner needs to provide).
 
+## 2026-10-31 — Phase 5 (5.3 GitHub app)
+- `src/server/github.ts`: RS256 app JWT, installation tokens (cached),
+  webhook signature verification (constant time), delivery de-dup,
+  `/kq task` (PR head or default-branch head, --test/--agents/--minutes/
+  --private, reply comment, check run on PRs) and `/kq decide` (only the
+  submitting installation; closes then decides), check-run updates on task
+  events, no trading path. Config: GITHUB_APP_ID / GITHUB_PRIVATE_KEY /
+  GITHUB_WEBHOOK_SECRET / GITHUB_INSTALLATIONS / PUBLIC_URL.
+- Fixtures in tests/fixtures/github (hand-written in GitHub's delivery shape;
+  record real deliveries from a test installation to replace them).
+- docs/GITHUB_APP.md: install steps and the minimum scopes with reasons.
+- Owner needs: create the GitHub App, install it, map installation ids to
+  customer accounts; check-run state is in memory (restart stops updates for
+  earlier tasks; a journaled mapping is a follow-up).
+
 ## 2026-10-31 — Phase 5 (5.1 surveillance, 5.2 identity limits, 5.4 private tasks)
 - 5.1 `src/engine/surveillance.ts`: alerts derived from state (D32): wash
   trades between linked accounts, spoofing (orders now carry cancelledAt and

@@ -1,0 +1,7 @@
+{
+  "action": "created",
+  "installation": { "id": 41234 },
+  "repository": { "full_name": "example-org/shop-api", "html_url": "https://github.com/example-org/shop-api", "default_branch": "main", "owner": { "login": "example-org" }, "name": "shop-api" },
+  "issue": { "number": 12, "title": "CSV export quoting", "body": "Commas in customer names break the CSV export.", "html_url": "https://github.com/example-org/shop-api/issues/12" },
+  "comment": { "id": 9002, "body": "Looks bad.\n\n/kq task --private", "html_url": "https://github.com/example-org/shop-api/issues/12#issuecomment-9002", "user": { "login": "cora", "type": "User" } }
+}

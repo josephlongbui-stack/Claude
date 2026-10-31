@@ -30,6 +30,13 @@ const envSchema = z.object({
   RATE_LIMIT_READS_PER_MIN: z.coerce.number().int().nonnegative().default(120),
   RATE_LIMIT_ANON_PER_MIN: z.coerce.number().int().nonnegative().default(300),
   EVENTS_BUFFER_SIZE: z.coerce.number().int().min(10).default(5000),
+  PUBLIC_URL: z.string().default('http://localhost:3000'),
+  GITHUB_APP_ID: z.string().optional(),
+  GITHUB_PRIVATE_KEY: z.string().optional(),
+  GITHUB_WEBHOOK_SECRET: z.string().optional(),
+  GITHUB_INSTALLATIONS: z.string().default('{}'),
+  GITHUB_DEFAULT_TEST_COMMAND: z.string().default('npm test'),
+  GITHUB_DEFAULT_AGENTS: z.string().default('claude-code,codex,gemini-cli'),
   BASELINE_CHECK: z
     .string()
     .default('true')
@@ -61,6 +68,9 @@ export interface Config {
   /** D2: new tasks wait for a 3-run baseline before their markets open. */
   baselineCheck: boolean;
   eventsBufferSize: number;
+  publicUrl: string;
+  /** GitHub app (5.3); null when GITHUB_WEBHOOK_SECRET is unset. */
+  github: { appId: string; privateKey: string; webhookSecret: string; installations: Record<string, string>; defaultTestCommand: string; defaultAgents: string[] } | null;
 }
 
 export class ConfigError extends Error {}
@@ -85,6 +95,17 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     if (!(BOT_NAMES as readonly string[]).includes(name)) throw new ConfigError(`unknown house bot "${name}" in HOUSE_BOTS`);
     houseBots.add(name as BotName);
   }
+  let github: Config['github'] = null;
+  if (e.GITHUB_WEBHOOK_SECRET) {
+    if (!e.GITHUB_APP_ID || !e.GITHUB_PRIVATE_KEY) throw new ConfigError('GITHUB_WEBHOOK_SECRET needs GITHUB_APP_ID and GITHUB_PRIVATE_KEY');
+    let installations: Record<string, string>;
+    try {
+      installations = JSON.parse(e.GITHUB_INSTALLATIONS) as Record<string, string>;
+    } catch {
+      throw new ConfigError('GITHUB_INSTALLATIONS must be JSON like {"12345":"customer-account-id"}');
+    }
+    github = { appId: e.GITHUB_APP_ID, privateKey: e.GITHUB_PRIVATE_KEY, webhookSecret: e.GITHUB_WEBHOOK_SECRET, installations, defaultTestCommand: e.GITHUB_DEFAULT_TEST_COMMAND, defaultAgents: e.GITHUB_DEFAULT_AGENTS.split(',').map((a) => a.trim()).filter(Boolean) };
+  }
   return {
     mode: e.KQ_MODE,
     runner,
@@ -107,6 +128,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     logLevel: e.LOG_LEVEL,
     baselineCheck: e.BASELINE_CHECK,
     eventsBufferSize: e.EVENTS_BUFFER_SIZE,
+    publicUrl: e.PUBLIC_URL.replace(/\/$/, ''),
+    github,
     rateLimits: { orders: e.RATE_LIMIT_ORDERS_PER_MIN, tasks: e.RATE_LIMIT_TASKS_PER_MIN, writes: e.RATE_LIMIT_WRITES_PER_MIN, reads: e.RATE_LIMIT_READS_PER_MIN, anon: e.RATE_LIMIT_ANON_PER_MIN },
   };
 }

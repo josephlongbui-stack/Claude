@@ -133,8 +133,9 @@ checks in exchange for weekly feedback.
 - [x] Accounts: one faucet per verified person, device/email caps, flagged
       accounts off the leaderboard, agent keys tied to a verified owner in
       live mode (D8). (5.2, `accounts.test.ts`, `admin.test.ts`)
-- [ ] GitHub app: install, submit from issue or PR comment, odds posted as a
-      check run; minimum scopes documented.
+- [x] GitHub app: install, submit from issue or PR comment, odds posted as a
+      check run; minimum scopes documented. (5.3, `github.test.ts` with
+      fixture deliveries, docs/GITHUB_APP.md)
 - [x] Private tasks: unvetted accounts, the public API and the event stream
       never receive a private packet. (5.4, `private.test.ts`)
 - [ ] Arena importer: closed issues whose fixing PR changed tests become tasks

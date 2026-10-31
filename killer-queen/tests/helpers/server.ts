@@ -24,7 +24,7 @@ export interface TestServer {
 
 export const RUNNER_SECRET = 'test-runner-secret-0123456789';
 
-export async function startTestServer(opts: { env?: Record<string, string>; dir?: string; dbName?: string; clock?: FakeClock; bots?: BootOptions['bots'] } = {}): Promise<TestServer> {
+export async function startTestServer(opts: { env?: Record<string, string>; dir?: string; dbName?: string; clock?: FakeClock; bots?: BootOptions['bots']; githubFetch?: typeof fetch } = {}): Promise<TestServer> {
   const dir = opts.dir ?? mkdtempSync(join(tmpdir(), 'kq-http-'));
   const clock = opts.clock ?? new FakeClock();
   const config = loadConfig({
@@ -43,7 +43,7 @@ export async function startTestServer(opts: { env?: Record<string, string>; dir?
     BASELINE_CHECK: 'false',
     ...opts.env,
   });
-  const booted = await boot({ config, clock, listen: 0, timers: false, publicDir: join(dir, 'no-public'), bots: opts.bots ?? [], seedExecutors: false });
+  const booted = await boot({ config, clock, listen: 0, timers: false, publicDir: join(dir, 'no-public'), bots: opts.bots ?? [], seedExecutors: false, githubFetch: opts.githubFetch });
   const url = booted.url!;
   const api: TestServer['api'] = async (method, path, o = {}) => {
     const headers: Record<string, string> = { ...(o.headers ?? {}) };

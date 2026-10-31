@@ -1,0 +1,7 @@
+{
+  "action": "created",
+  "installation": { "id": 41234 },
+  "repository": { "full_name": "example-org/shop-api", "html_url": "https://github.com/example-org/shop-api", "default_branch": "main", "owner": { "login": "example-org" }, "name": "shop-api" },
+  "issue": { "number": 77, "title": "Reject negative quantities in the cart API", "body": "…", "html_url": "https://github.com/example-org/shop-api/pull/77", "pull_request": { "url": "https://api.github.com/repos/example-org/shop-api/pulls/77" } },
+  "comment": { "id": 9003, "body": "/kq decide codex", "html_url": "https://github.com/example-org/shop-api/pull/77#issuecomment-9003", "user": { "login": "cora", "type": "User" } }
+}

@@ -144,6 +144,18 @@ every read of a private task: the task and market routes (optional Bearer
 viewer → 404), `allTasks`, `agentMarkets`, the event stream (`canSeeTask`
 filter), and the engine rejects orders/comments with `private_task`.
 
+## GitHub app (`src/server/github.ts`)
+
+`POST /api/github/webhook` (mounted only when `GITHUB_WEBHOOK_SECRET` is set)
+verifies `X-Hub-Signature-256` over the raw body, de-duplicates deliveries,
+and handles `issue_comment` events carrying `/kq task` or `/kq decide`. The
+installation id maps to a customer account (`GITHUB_INSTALLATIONS`); the app
+authenticates with an RS256 JWT exchanged for a cached installation token,
+reads the PR head (or default-branch head), creates the task (baseline
+required, `source` = issue URL, optional `--private`), posts a reply comment
+and a check run, and patches the check run on close/decide/settle. The GitHub
+identity never trades. `docs/GITHUB_APP.md` lists the minimum scopes.
+
 ## Live events (`src/server/events.ts`)
 
 `EventHub` listens to the Venue: each applied command becomes events (`book`

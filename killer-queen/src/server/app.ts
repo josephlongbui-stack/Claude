@@ -33,6 +33,7 @@ import { HttpError, errorHandler, statusForCode } from './errors.js';
 import { accountBody, adminAccountBody, adminReviewBody, adminSettleBody, adminTradingBody, commentBody, decideBody, orderBody, resultBody, taskBody } from './schemas.js';
 import { RateLimiter, rateLimit } from './rateLimit.js';
 import type { EventHub } from './events.js';
+import { mountGitHubWebhook, type GitHubIntegration } from './github.js';
 
 export const RESULT_TIMESTAMP_WINDOW_MS = 5 * 60 * 1000;
 
@@ -42,6 +43,8 @@ export interface AppDeps {
   clock: Clock;
   /** Live event stream (GET /api/events); optional so bare apps still work. */
   events?: EventHub;
+  /** GitHub app webhook (POST /api/github/webhook) when configured. */
+  github?: GitHubIntegration | null;
   /** Directory with the built web app (index.html); served when present. */
   publicDir?: string;
 }
@@ -67,6 +70,7 @@ export function createApp(deps: AppDeps): Express {
   };
   // Runner logs may be large; everything else is small.
   app.use('/api/runner/results', express.json({ limit: '6mb', verify }));
+  app.use('/api/github/webhook', express.json({ limit: '1mb', verify }));
   app.use(express.json({ limit: '64kb', verify }));
   const auth = requireAccount(venue);
   const limiter = new RateLimiter(clock);
@@ -387,6 +391,8 @@ export function createApp(deps: AppDeps): Express {
       res.json({ trading: venue.engine.state.trading });
     }),
   );
+
+  if (deps.github && config.github) mountGitHubWebhook(api, deps.github, config.github.webhookSecret);
 
   api.use((_req, _res, next) => next(new HttpError(404, 'not_found', 'no such route')));
   app.use('/api', api);

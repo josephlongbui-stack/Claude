@@ -13,6 +13,7 @@ import { SimulatedRunner } from './runners/simulated.js';
 import { ensureExecutors } from './seed.js';
 import { EventHub } from './events.js';
 import { createLogger } from './log.js';
+import { GitHubIntegration } from './github.js';
 
 export const HOUSE_ACCOUNT_ID = 'house';
 export const MM_ACCOUNT_ID = 'mm';
@@ -31,6 +32,8 @@ export interface BootOptions {
   bots?: BotFactory[];
   /** Sandbox: register the default executors when none exist (default true). */
   seedExecutors?: boolean;
+  /** Tests: fetch used for GitHub API calls. */
+  githubFetch?: typeof fetch;
 }
 
 export interface BotHandle {
@@ -51,6 +54,7 @@ export interface Booted {
   runner: SimulatedRunner | null;
   bots: BotHandle[];
   events: EventHub;
+  github: GitHubIntegration | null;
   /** Auto-close due tasks, auto-decide, then let every bot act once (in order). */
   tick(): Promise<{ closed: string[]; decided: string[] }>;
   stop(): Promise<void>;
@@ -135,7 +139,13 @@ export async function boot(opts: BootOptions = {}): Promise<Booted> {
 
   const events = new EventHub(venue, config.eventsBufferSize);
   events.start();
-  const app = createApp({ venue, config, clock, events, publicDir: opts.publicDir ?? resolve(process.cwd(), 'public') });
+  let github: GitHubIntegration | null = null;
+  if (config.github) {
+    github = new GitHubIntegration({ ...config.github, publicUrl: config.publicUrl, log, ...(opts.githubFetch ? { fetchImpl: opts.githubFetch } : {}) }, venue, clock);
+    github.start();
+    log(`github app ${config.github.appId}: ${Object.keys(config.github.installations).length} installation(s)`);
+  }
+  const app = createApp({ venue, config, clock, events, github, publicDir: opts.publicDir ?? resolve(process.cwd(), 'public') });
   let server: Server | null = null;
   let url: string | null = null;
   if (opts.listen !== false) {
@@ -156,6 +166,7 @@ export async function boot(opts: BootOptions = {}): Promise<Booted> {
     runner?.stop();
     for (const b of bots) b.stop?.();
     events.stop();
+    github?.stop();
     if (server) {
       await new Promise<void>((r) => {
         server!.close(() => r());
@@ -165,7 +176,7 @@ export async function boot(opts: BootOptions = {}): Promise<Booted> {
     journal.close();
   };
 
-  return { config, venue, journal, clock, app, server, url, runner, bots, events, tick, stop };
+  return { config, venue, journal, clock, app, server, url, runner, bots, events, github, tick, stop };
 }
 
 /** House fee account and the market maker exist on every boot (idempotent). */
