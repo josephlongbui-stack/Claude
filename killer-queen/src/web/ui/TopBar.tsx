@@ -66,7 +66,7 @@ export function TopBar({ me, hash, demo, dark, onTheme, onSignOut }: { me: TopBa
         {demo && <StatusPill status="demo" class="topbar-demo" title="Filled by the demo seed; nothing here is a real result" />}
         <span class="spacer" />
         {me && me.role !== 'trader' ? (
-          <a class="balance" href="#/account" data-testid="who">
+          <a class="balance role" href="#/account" data-testid="who">
             <span class="lbl">{me.role === 'customer' ? 'Customer' : me.role === 'admin' ? 'Admin' : 'Staff'}</span>
           </a>
         ) : me ? (

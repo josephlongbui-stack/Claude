@@ -32,3 +32,7 @@
   .menu-btn { display: inline-flex; }
   .balance .lbl { font-size: var(--t-caption); line-height: var(--t-caption-lh); }
 }
+/* The narrowest phones keep the amount and drop the word; a role link keeps its word, it is the link's only text. */
+@media (max-width: 360px) {
+  .balance:not(.role) .lbl { display: none; }
+}
