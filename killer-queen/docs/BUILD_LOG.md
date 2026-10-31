@@ -3,6 +3,18 @@
 Newest first. Each prompt appends what it did, what it decided, and anything
 blocked (with exactly what the owner needs to provide).
 
+## 2026-10-31 — Real-money rehearsal, push, deployment check
+- `tests/server/live-rehearsal.test.ts`: the exchange in KQ_MODE=live (no
+  play money, no open sign-up, no faucet, simulated runner refused,
+  sandbox-only knobs rejected, results need runId + timestamp), driven end
+  to end through the public API and the real runner service with FakeDriver:
+  admin-provisioned accounts with personIds, admin deposits standing in for
+  payments, baseline → house quotes → trades → close → decide → signed
+  settlement → signed correction, conservation and replay hash checked.
+  No real money moves anywhere in the codebase; real payments, identity
+  verification and the DCM listing remain the v2 gate items.
+- Pushed the branch to origin on the owner's instruction.
+
 ## 2026-10-31 — Polish pass
 - Re-verified every scope item against the product doc (engine commands,
   journal + golden, API, bots, LLM adapters, simulated runner, web app,
