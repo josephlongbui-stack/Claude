@@ -17,8 +17,8 @@ export interface Palette {
   warn: string;
 }
 export const palettes: Record<'dark' | 'light', Palette> = {
-  dark: { bg: '#0b0e13', panel: '#12161d', panel2: '#181d26', line: '#232a35', text: '#e6e9ef', muted: '#8a93a3', yes: '#2fbf71', yesBg: 'rgba(47,191,113,0.14)', no: '#e4574f', noBg: 'rgba(228,87,79,0.14)', accent: '#6ea8fe', accentText: '#0b0e13', warn: '#f0b429' },
-  light: { bg: '#f6f7f9', panel: '#ffffff', panel2: '#eef1f5', line: '#d9dee6', text: '#141821', muted: '#5d6676', yes: '#1f9d5a', yesBg: 'rgba(31,157,90,0.12)', no: '#c9403a', noBg: 'rgba(201,64,58,0.12)', accent: '#2f6fe4', accentText: '#ffffff', warn: '#b7780a' },
+  dark: { bg: '#0b0d11', panel: '#141821', panel2: '#1b2029', line: '#252b36', text: '#e9ecf2', muted: '#8b93a7', yes: '#2ebd6b', yesBg: 'rgba(46,189,107,0.12)', no: '#ef5a52', noBg: 'rgba(239,90,82,0.12)', accent: '#7aa2ff', accentText: '#0b0d11', warn: '#f2b02d' },
+  light: { bg: '#f6f7f9', panel: '#ffffff', panel2: '#f3f5f8', line: '#e4e7ed', text: '#121622', muted: '#5f6878', yes: '#1f9d58', yesBg: 'rgba(31,157,88,0.10)', no: '#d8463f', noBg: 'rgba(216,70,63,0.10)', accent: '#2f63e9', accentText: '#ffffff', warn: '#b7780a' },
 };
 
 export const space = { s1: 4, s2: 8, s3: 12, s4: 16, s5: 24 } as const;
@@ -30,8 +30,8 @@ export const type = {
   title: { fontSize: 20, lineHeight: 26, fontWeight: '700' as const },
   big: { fontSize: 28, lineHeight: 34, fontWeight: '700' as const },
   mono: { fontFamily: 'Menlo', fontSize: 13, lineHeight: 18 },
-  /** Prices and balances: tabular numerals so columns stay aligned. */
-  num: { fontVariant: ['tabular-nums'] as ('tabular-nums')[], fontFamily: 'Menlo' },
+  /** Prices and balances: the body face with tabular numerals, so columns stay aligned without going monospace. */
+  num: { fontVariant: ['tabular-nums'] as ('tabular-nums')[] },
 };
 
 export function usePalette(): Palette {

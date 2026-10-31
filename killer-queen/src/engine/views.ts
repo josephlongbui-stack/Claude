@@ -55,7 +55,7 @@ export interface MarketView {
   book: { yes: BookLevel[]; no: BookLevel[] };
   trades: Fill[];
   priceHistory: { at: number; price: number; quantity: number }[];
-  theses: Comment[];
+  theses: (Comment & { accountName: string })[];
   packet: Packet;
   traders: number;
 }
@@ -263,7 +263,11 @@ export function marketView(engine: Engine, marketId: string, limit = 50): Market
     book: bookLevels(engine, marketId),
     trades: fills.slice(-limit).reverse(),
     priceHistory: fills.map((f) => ({ at: f.at, price: f.yesPrice, quantity: f.quantity })),
-    theses: engine.state.comments.filter((c) => c.market === marketId).slice().reverse(),
+    theses: engine.state.comments
+      .filter((c) => c.market === marketId)
+      .slice()
+      .reverse()
+      .map((c) => ({ ...c, accountName: engine.account(c.account)?.name ?? c.account })),
     packet: packet(engine, marketId),
     traders: distinctTraders(engine, marketId),
   };

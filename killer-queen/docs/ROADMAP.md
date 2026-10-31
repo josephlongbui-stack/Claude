@@ -79,8 +79,9 @@ deployment and real tasks.)
       the local server. (Headless-browser run recorded in `MANUAL.md`)
 - [x] Design system (docs/DESIGN_SYSTEM.md), tokens for dark and light,
       components with every state in `#/kitchen-sink`, 390 px layout with no
-      horizontal page scroll (prompts 3.2–3.3). ui-reviewer subagent not run
-      (no Playwright MCP in this session); checked by hand from screenshots.
+      horizontal page scroll (prompts 3.2–3.3); visual rework with reference
+      renders in docs/design/. ui-reviewer subagent not run (no Playwright
+      MCP in this session); checked by hand from screenshots.
 
 ### Operations
 - [x] Journal in WAL mode, synchronous=FULL; a command is acknowledged only

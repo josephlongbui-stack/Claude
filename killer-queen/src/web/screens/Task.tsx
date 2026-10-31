@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
 import { api, countdown, when } from '../api.js';
-import { AgentRow, ErrorState, Pill, Skeleton } from '../components/index.js';
+import { AgentRow, Card, ErrorState, Pill, Skeleton } from '../components/index.js';
 import type { Ctx } from '../main.js';
 
 export function Task({ ctx, id }: { ctx: Ctx; id: string }) {
@@ -20,8 +20,8 @@ export function Task({ ctx, id }: { ctx: Ctx; id: string }) {
   if (err) return <ErrorState message={err} retry={() => void load()} />;
   if (!view)
     return (
-      <div class="panel">
-        <Skeleton lines={5} />
+      <div class="card card-body">
+        <Skeleton lines={6} />
       </div>
     );
   const t = view.task;
@@ -38,127 +38,141 @@ export function Task({ ctx, id }: { ctx: Ctx; id: string }) {
       setBusy(false);
     }
   };
-  const baseline = t.baseline ? `failing ${t.baseline.results.filter((r: string) => r === 'failed').length}/${t.baseline.results.length}` : t.status === 'pending' ? 'running (3 agent-free test runs must fail)' : 'not run';
-  const trading = t.status === 'pending' ? 'opens after the baseline' : t.status === 'rejected' ? 'never opened' : t.status === 'open' ? `closes in ${countdown(t.closesAt, Date.now())}` : `closed ${when(t.closedAt)}`;
+  const baseline = t.baseline ? `failing ${t.baseline.results.filter((r: string) => r === 'failed').length}/${t.baseline.results.length} before any agent` : t.status === 'pending' ? 'running now' : 'not required';
+  const timing = t.status === 'pending' ? 'Trading opens after the baseline check' : t.status === 'rejected' ? 'Trading never opened' : t.status === 'open' ? `Trading closes in ${countdown(t.closesAt, Date.now())}` : `Trading closed ${when(t.closedAt)}`;
+  const rec = view.recommendation ? view.markets.find((m: any) => m.executorId === view.recommendation.executorId) : null;
   return (
-    <div>
-      <h1>
-        {t.title} <Pill status={t.status} /> {t.visibility === 'private' && <Pill status="pending">private</Pill>}
-        <span class="sr-only" data-testid="task-status">
-          {t.status}
-        </span>
-      </h1>
-      <div class="grid cols-3">
-        <div class="panel packet">
-          <h2>Packet</h2>
-          <div class="mono">{t.prompt}</div>
-          <dl>
-            <dt>Repo</dt>
-            <dd class="mono">
-              {t.repo} @ {t.commit}
-            </dd>
-            <dt>Test command</dt>
-            <dd class="mono">{t.testCommand}</dd>
-            <dt>Protected</dt>
-            <dd class="mono">{t.protectedPaths?.length ? t.protectedPaths.join(', ') : 'default test paths'}</dd>
-            <dt>Baseline</dt>
-            <dd>{baseline}</dd>
-            <dt>Trading</dt>
-            <dd class="num">{trading}</dd>
-            <dt>Auto-decide</dt>
-            <dd>{t.autoDecide ? `yes, needs ≥ ${t.minimumChance}¢` : 'no'}</dd>
-          </dl>
-        </div>
-        <div class="panel">
-          <h2>Candidates</h2>
-          <div class="scroll-x">
-            <table data-testid="candidates" aria-label="Candidate agents">
-              <thead>
-                <tr>
-                  <th>Agent</th>
-                  <th class="r">Chance</th>
-                  <th class="r">Bid/Ask</th>
-                  <th class="r">Vol</th>
-                  <th class="r">Traders</th>
-                </tr>
-              </thead>
-              <tbody>
-                {view.markets.map((m: any) => (
-                  <AgentRow m={m} chosen={t.chosenAgent === m.executorId} onOpen={() => (location.hash = `#/market/${encodeURIComponent(m.marketId)}`)} />
-                ))}
-              </tbody>
-            </table>
+    <div class="stack" style="gap:20px">
+      <div class="page-head">
+        <div class="grow">
+          <div class="row wrap" style="margin-bottom:8px">
+            <Pill status={t.status} />
+            {t.visibility === 'private' && <Pill status="private">private</Pill>}
+            <span class="sr-only" data-testid="task-status">
+              {t.status}
+            </span>
           </div>
-          {view.recommendation && (
-            <p>
-              {t.status === 'open' ? 'Market recommendation' : "Market's pick at close"}: <b class="mono">{view.recommendation.executorId}</b> at <span class="num">{view.recommendation.chance}¢</span>
-            </p>
-          )}
-          {t.corrections?.length > 0 && (
-            <p class="warn-c" data-testid="corrections">
-              Settlement corrected {t.corrections.length}×: {t.corrections.map((c: any) => `${c.from} → ${c.to} (${c.reason})`).join('; ')}
-            </p>
-          )}
+          <h1>{t.title}</h1>
+          <p class="sub num">{timing}</p>
         </div>
-        <div class="panel">
-          <h2>Decision</h2>
-          {t.status === 'pending' && (
-            <p class="warn-c" data-testid="baseline-pending">
-              Baseline check running: the runner confirms the test command fails at {t.commit} three times before trading opens.
-            </p>
+        {isCustomer && t.status === 'open' && (
+          <button disabled={busy} onClick={() => act(`/api/tasks/${encodeURIComponent(id)}/close`, undefined, 'Trading closed. Pick an agent to run.')} data-testid="close-trading">
+            Close trading now
+          </button>
+        )}
+      </div>
+      <div class="split">
+        <div class="stack" style="gap:16px">
+          <Card title="Candidate agents" sub={rec ? <>Market favours <b>{rec.executor.name}</b> at {view.recommendation.chance}¢{t.status !== 'open' ? ' at close' : ''}</> : 'Markets open after the baseline check'} flush>
+            {view.markets.map((m: any) => (
+              <AgentRow m={m} chosen={t.chosenAgent === m.executorId} onOpen={() => (location.hash = `#/market/${encodeURIComponent(m.marketId)}`)} />
+            ))}
+            <div class="sr-only" data-testid="candidates">
+              {view.markets.length} candidates
+            </div>
+          </Card>
+          {t.corrections?.length > 0 && (
+            <div class="callout warn" data-testid="corrections">
+              Settlement corrected {t.corrections.length}×: {t.corrections.map((c: any) => `${c.from} → ${c.to} (${c.reason})`).join('; ')}
+            </div>
+          )}
+          <Card title="Task packet" sub="What every trader and the runner see">
+            <div class="stack">
+              <div class="prompt">{t.prompt}</div>
+              <dl class="kv">
+                <dt>Repository</dt>
+                <dd>
+                  <span class="chip">
+                    {t.repo} @ {t.commit}
+                  </span>
+                </dd>
+                <dt>Test command</dt>
+                <dd>
+                  <span class="chip">{t.testCommand}</span>
+                </dd>
+                <dt>Protected paths</dt>
+                <dd class="muted">{t.protectedPaths?.length ? t.protectedPaths.join(', ') : 'default test files and config'}</dd>
+                <dt>Baseline</dt>
+                <dd>{baseline}</dd>
+                <dt>Auto-decide</dt>
+                <dd>{t.autoDecide ? `yes, runs the favourite if it reaches ${t.minimumChance}¢` : 'no, the customer decides'}</dd>
+              </dl>
+            </div>
+          </Card>
+        </div>
+        <div class="side stack" style="gap:16px">
+          {t.status === 'resolved' && (
+            <Card title="Result" testId="settlement">
+              <div class="stack">
+                <div class={`callout ${t.passed === null ? 'warn' : t.passed ? 'yes' : 'no'}`} style="font-weight:600">
+                  {t.outcome === 'infra_error' ? 'Infrastructure error · settled at the closing price' : t.passed ? `${t.chosenAgent} passed · Yes paid 100¢` : `${t.chosenAgent} failed · No paid 100¢`}
+                </div>
+                <div>
+                  <h3 style="margin-bottom:6px">Run log</h3>
+                  <div class="log" data-testid="run-log">
+                    {t.runLog}
+                  </div>
+                  {t.runLogSha256 && <p class="help code">sha256 {t.runLogSha256}</p>}
+                </div>
+              </div>
+            </Card>
+          )}
+          {t.status === 'skipped' && (
+            <Card title="Result">
+              <div class="callout">Skipped by the customer. Every market settled at its closing price.</div>
+            </Card>
           )}
           {t.status === 'rejected' && (
-            <div data-testid="rejected">
-              <p class="no-c" style="font-size:16px;font-weight:700">Rejected: {t.rejectedReason === 'trivial' ? 'the tests already pass at the pinned commit' : 'the tests are flaky at the pinned commit'}</p>
-              <h2>Baseline log</h2>
-              <div class="mono" style="max-height:300px;overflow:auto">
-                {t.baseline?.log}
+            <Card title="Rejected at the baseline" testId="rejected">
+              <div class="stack">
+                <div class="callout no">{t.rejectedReason === 'trivial' ? 'The tests already pass at the pinned commit.' : 'The tests are flaky at the pinned commit.'}</div>
+                <div class="log">{t.baseline?.log}</div>
               </div>
-            </div>
+            </Card>
           )}
-          {!isCustomer && t.status !== 'rejected' && <p class="muted">Only the customer ({t.customer}) can close trading and decide. The customer never trades its own task.</p>}
-          {isCustomer && t.status === 'open' && (
-            <p>
-              <button disabled={busy} onClick={() => act(`/api/tasks/${encodeURIComponent(id)}/close`, undefined, 'Trading closed.')} data-testid="close-trading">
-                Close trading now
-              </button>
-            </p>
-          )}
-          {isCustomer && t.status === 'closed' && (
-            <div>
-              <p>Pick the agent to run, or skip and hand the task to a human. Unchosen markets settle at their closing price.</p>
-              {view.markets.map((m: any) => (
-                <p>
-                  <button class="primary" disabled={busy} onClick={() => act(`/api/tasks/${encodeURIComponent(id)}/decide`, { executorId: m.executorId }, `Running ${m.executorId}.`)} data-testid={`decide-${m.executorId}`}>
-                    Run {m.executorId} ({m.closingPrice}¢)
-                  </button>
-                </p>
-              ))}
-              <p>
-                <button disabled={busy} onClick={() => act(`/api/tasks/${encodeURIComponent(id)}/decide`, { executorId: null }, 'Skipped.')} data-testid="decide-skip">
-                  Skip the run
-                </button>
-              </p>
-            </div>
+          {t.status === 'pending' && (
+            <Card title="Baseline check">
+              <div class="callout warn" data-testid="baseline-pending">
+                The runner is confirming the test command fails three times at {t.commit} before trading opens.
+              </div>
+            </Card>
           )}
           {t.status === 'running' && (
-            <p class="warn-c">
-              Runner is executing <span class="mono">{t.chosenAgent}</span> at {t.commit}…
-            </p>
-          )}
-          {t.status === 'resolved' && (
-            <div data-testid="settlement">
-              <p class={t.passed === null ? 'warn-c' : t.passed ? 'yes-c' : 'no-c'} style="font-size:16px;font-weight:700">
-                {t.outcome === 'infra_error' ? 'Infrastructure error: settled at the closing price' : t.passed ? 'Tests passed · Yes paid 100¢' : 'Tests failed · No paid 100¢'}
-              </p>
-              <h2>Run log</h2>
-              <div class="mono" style="max-height:300px;overflow:auto" data-testid="run-log">
-                {t.runLog}
+            <Card title="Running">
+              <div class="callout warn">
+                The runner is executing <b>{t.chosenAgent}</b> at {t.commit}. The market settles on its signed result.
               </div>
-              {t.runLogSha256 && <p class="muted mono">sha256 {t.runLogSha256}</p>}
-            </div>
+            </Card>
           )}
-          {t.status === 'skipped' && <p class="muted">Skipped: every market settled at its closing price.</p>}
+          {isCustomer && t.status === 'closed' && (
+            <Card title="Decide" sub="Pick the agent to run, or hand the task to a human">
+              <div class="stack">
+                {view.markets.map((m: any) => (
+                  <button class="primary block" disabled={busy} onClick={() => act(`/api/tasks/${encodeURIComponent(id)}/decide`, { executorId: m.executorId }, `Running ${m.executorId}.`)} data-testid={`decide-${m.executorId}`}>
+                    Run {m.executor.name} · {m.closingPrice}¢
+                  </button>
+                ))}
+                <button class="ghost block" disabled={busy} onClick={() => act(`/api/tasks/${encodeURIComponent(id)}/decide`, { executorId: null }, 'Skipped. Markets settled at their closing prices.')} data-testid="decide-skip">
+                  Skip the run
+                </button>
+                <p class="help">Unchosen markets settle at their closing price; the chosen one settles on the test result.</p>
+              </div>
+            </Card>
+          )}
+          {!isCustomer && t.status === 'closed' && (
+            <Card title="Waiting for the customer">
+              <div class="callout">Trading has closed. The customer picks an agent to run, or skips.</div>
+            </Card>
+          )}
+          <Card title="How it settles">
+            <ol class="stack muted" style="margin:0;padding-left:18px;gap:6px;font-size:13.5px">
+              <li>Markets open once three agent-free test runs fail at the pinned commit.</li>
+              <li>Traders buy Yes or No per candidate until the window closes.</li>
+              <li>The customer picks one agent; the others settle at their closing price.</li>
+              <li>The runner executes the pick in a sandbox and signs the result: Yes pays 100¢ on a pass.</li>
+            </ol>
+            <p class="help">The customer never trades its own task. Anyone from an agent's maker cannot trade that agent.</p>
+          </Card>
         </div>
       </div>
     </div>

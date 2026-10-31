@@ -4,12 +4,12 @@ import { api, getKey, setKey } from './api.js';
 import { Account } from './screens/Account.js';
 import { Agents } from './screens/Agents.js';
 import { Arena } from './screens/Arena.js';
+import { KitchenSink } from './screens/KitchenSink.js';
 import { Leaderboard } from './screens/Leaderboard.js';
 import { Market } from './screens/Market.js';
 import { Portfolio } from './screens/Portfolio.js';
 import { Submit } from './screens/Submit.js';
 import { Task } from './screens/Task.js';
-import { KitchenSink } from './screens/KitchenSink.js';
 
 export interface Me {
   id: string;
@@ -29,14 +29,15 @@ export interface Ctx {
 }
 
 const THEME_KEY = 'kq.theme';
-function readTheme(): 'dark' | 'light' | 'auto' {
+type Theme = 'dark' | 'light' | 'auto';
+function readTheme(): Theme {
   try {
-    return (localStorage.getItem(THEME_KEY) as 'dark' | 'light' | null) ?? 'auto';
+    return (localStorage.getItem(THEME_KEY) as Theme | null) ?? 'auto';
   } catch {
     return 'auto';
   }
 }
-function applyTheme(t: 'dark' | 'light' | 'auto'): void {
+function applyTheme(t: Theme): void {
   if (t === 'auto') delete document.documentElement.dataset.theme;
   else document.documentElement.dataset.theme = t;
   try {
@@ -59,19 +60,37 @@ function useHash(): string {
 }
 
 const NAV: [string, string][] = [
-  ['#/', 'Arena'],
+  ['#/', 'Markets'],
   ['#/portfolio', 'Portfolio'],
   ['#/leaderboard', 'Leaderboard'],
   ['#/agents', 'Agents'],
-  ['#/submit', 'Submit task'],
-  ['#/account', 'Account'],
+  ['#/submit', 'Submit a task'],
 ];
+
+const Mark = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path fill="currentColor" d="M4 18h16l1-10-5 4-4-7-4 7-5-4z" />
+    <rect x="4" y="19.5" width="16" height="2" rx="1" fill="currentColor" opacity=".6" />
+  </svg>
+);
+const SunIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+  </svg>
+);
+const MoonIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
+  </svg>
+);
 
 function App() {
   const hash = useHash();
   const [me, setMe] = useState<Me | null>(null);
   const [toastMsg, setToastMsg] = useState<{ msg: string; err: boolean } | null>(null);
   const [tick, setTick] = useState(0);
+  const [theme, setTheme] = useState<Theme>(readTheme());
   const refreshMe = async () => {
     if (!getKey()) return setMe(null);
     try {
@@ -135,41 +154,58 @@ function App() {
   else if (path === 'submit') screen = <Submit ctx={ctx} />;
   else if (path === 'account') screen = <Account ctx={ctx} />;
   else if (path === 'kitchen-sink') screen = <KitchenSink ctx={ctx} />;
-  else screen = <div class="empty">No such page.</div>;
-  const [theme, setTheme] = useState(readTheme());
+  else screen = <div class="empty"><div class="title">No such page</div></div>;
+  const dark = theme === 'dark' || (theme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
   const cycleTheme = () => {
-    const next = theme === 'auto' ? 'dark' : theme === 'dark' ? 'light' : 'auto';
+    const next: Theme = dark ? 'light' : 'dark';
     applyTheme(next);
     setTheme(next);
   };
+  const active = (h: string) => (h === '#/' ? hash === '#/' || hash === '' || hash.startsWith('#/task') || hash.startsWith('#/market') : hash.startsWith(h));
   return (
     <>
-      <header>
-        <span class="brand">KILLER QUEEN</span>
-        <nav>
-          {NAV.map(([h, label]) => (
-            <a href={h} class={(h === '#/' ? hash === '#/' || hash === '' : hash.startsWith(h)) ? 'active' : ''} data-testid={`nav-${label.toLowerCase().replace(/\s+/g, '-')}`}>
-              {label}
-            </a>
-          ))}
-        </nav>
-        <span class="spacer" />
-        <button class="ghost" onClick={cycleTheme} aria-label={`Theme: ${theme}. Switch theme`} data-testid="theme-toggle" title="Theme">
-          {theme === 'auto' ? '◐ auto' : theme === 'dark' ? '● dark' : '○ light'}
-        </button>
-        <span class="who" data-testid="who">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <a class="brand" href="#/" aria-label="Killer Queen home">
+            <Mark />
+            Killer Queen
+          </a>
+          <nav class="nav" aria-label="Primary">
+            {NAV.map(([h, label]) => (
+              <a href={h} class={active(h) ? 'active' : ''} data-testid={`nav-${label.toLowerCase().replace(/\s+/g, '-')}`}>
+                {label}
+              </a>
+            ))}
+          </nav>
+          <span class="spacer" />
+          <button class="icon-btn" onClick={cycleTheme} aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'} data-testid="theme-toggle" title={dark ? 'Light theme' : 'Dark theme'}>
+            {dark ? <SunIcon /> : <MoonIcon />}
+          </button>
           {me ? (
-            <>
-              {me.name} · {me.role} · <span class="num">{(me.cash / 100).toFixed(2)}</span> <span class="playmoney">play money · no cash value</span>
-            </>
+            <a class="balance" href="#/account" data-testid="who" title="Play money · no cash value">
+              <span class="amt num">${(me.cash / 100).toFixed(2)}</span>
+              <span class="tag">play money</span>
+              <span class="faint">·</span>
+              <span class="ellipsis" style="max-width:140px">{me.name}</span>
+            </a>
           ) : (
-            <a href="#/account">Sign in</a>
+            <a class="btn primary" href="#/account" data-testid="who">
+              Sign in
+            </a>
           )}
-        </span>
+        </div>
       </header>
       <main>{screen}</main>
+      <footer>
+        <div class="inner">
+          <span>Killer Queen · sandbox exchange · play money, no cash value</span>
+          <span>
+            <a href="#/agents">Agent records</a> · <a href="#/kitchen-sink">Components</a>
+          </span>
+        </div>
+      </footer>
       {toastMsg && (
-        <div class={`toast ${toastMsg.err ? 'err' : ''}`} data-testid="toast">
+        <div class={`toast ${toastMsg.err ? 'err' : ''}`} role="status" data-testid="toast">
           {toastMsg.msg}
         </div>
       )}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
 import { api } from '../api.js';
+import { Card, ChanceBar, EmptyState, Skeleton, Stat } from '../components/index.js';
 import type { Ctx } from '../main.js';
 
 export function Agents({ ctx }: { ctx: Ctx }) {
@@ -9,98 +10,72 @@ export function Agents({ ctx }: { ctx: Ctx }) {
     api<{ executors: any[] }>('GET', '/api/executors').then((r) => setRows(r.executors)).catch(() => setRows([]));
     api('GET', '/api/stats').then(setStats).catch(() => setStats(null));
   }, [ctx.tick]);
-  if (!rows) return <div class="empty">Loading…</div>;
+  if (!rows)
+    return (
+      <div class="card card-body">
+        <Skeleton lines={6} />
+      </div>
+    );
+  const pct = (n: number | null) => (n === null ? '—' : `${Math.round(n * 100)}%`);
   return (
-    <div class="grid cols-2">
-      <div class="panel">
-        <h2>Coding agents · per-version records</h2>
-        {rows.length === 0 && <p class="muted">No executors registered. Run npm run seed.</p>}
-        {rows.length > 0 && (
-        <div class="scroll-x">
-          <table data-testid="executors">
-            <thead>
-              <tr>
-                <th>Agent</th>
-                <th>Org</th>
-                <th>Version</th>
-                <th class="r">Chosen</th>
-                <th class="r">Passed</th>
-                <th class="r">Pass rate</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((e) => (
-                <>
-                  <tr>
-                    <td class="mono">{e.id}</td>
-                    <td>{e.org}</td>
-                    <td class="mono">{e.version} (current)</td>
-                    <td class="r num">{e.chosen}</td>
-                    <td class="r num">{e.passed}</td>
-                    <td class="r num">{e.passRate === null ? '—' : `${Math.round(e.passRate * 100)}%`}</td>
-                  </tr>
-                  {Object.entries(e.byVersion).map(([v, r]: [string, any]) => (
-                    <tr>
-                      <td />
-                      <td />
-                      <td class="mono muted">{v}</td>
-                      <td class="r num muted">{r.chosen}</td>
-                      <td class="r num muted">{r.passed}</td>
-                      <td class="r num muted">{r.chosen ? `${Math.round((100 * r.passed) / r.chosen)}%` : '—'}</td>
-                    </tr>
-                  ))}
-                </>
-              ))}
-            </tbody>
-          </table>
+    <div class="stack" style="gap:20px">
+      <div class="page-head">
+        <div>
+          <h1>Coding agents</h1>
+          <p class="sub">Public, per-version reliability records from settled markets.</p>
         </div>
-        )}
       </div>
-      <div class="panel">
-        <h2>Exchange stats (v0 gate metrics)</h2>
-        {stats && (
-          <div class="scroll-x">
-          <table data-testid="stats">
-            <tr>
-              <th>Settled markets</th>
-              <td class="r num">{stats.markets.settled}</td>
-            </tr>
-            <tr>
-              <th>Settled on a test result</th>
-              <td class="r num">{stats.markets.settledOnTests}</td>
-            </tr>
-            <tr>
-              <th>Price Brier (closing price vs outcome)</th>
-              <td class="r num">{stats.priceBrier === null ? '—' : stats.priceBrier.toFixed(3)}</td>
-            </tr>
-            <tr>
-              <th>Base-rate Brier (agent history)</th>
-              <td class="r num">{stats.baseRateBrier === null ? '—' : stats.baseRateBrier.toFixed(3)}</td>
-            </tr>
-            <tr>
-              <th>Calibration 70–80¢ (pass share)</th>
-              <td class="r num">
-                {stats.calibration70to80.passRate === null ? '—' : `${Math.round(stats.calibration70to80.passRate * 100)}% of ${stats.calibration70to80.count}`}
-              </td>
-            </tr>
-            <tr>
-              <th>Median spread at close</th>
-              <td class="r num">{stats.medianSpreadAtClose === null ? '—' : `${stats.medianSpreadAtClose}¢`}</td>
-            </tr>
-            <tr>
-              <th>Median traders per market</th>
-              <td class="r num">{stats.medianTradersPerMarket ?? '—'}</td>
-            </tr>
-            <tr>
-              <th>Volume · fees</th>
-              <td class="r num">
-                {stats.volume} · ${(stats.fees / 100).toFixed(2)}
-              </td>
-            </tr>
-          </table>
+      {rows.length === 0 && <EmptyState title="No agents registered" hint="Run npm run seed on the exchange to register Claude Code, Codex and Gemini CLI." />}
+      {rows.length > 0 && (
+        <div class="grid grid-3" data-testid="executors">
+          {rows.map((e) => (
+            <Card title={e.name} sub={`${e.org} · v${e.version}`}>
+              <div class="stack">
+                <div class="row between" style="align-items:baseline">
+                  <span class="price md">{pct(e.passRate)}</span>
+                  <span class="muted num">
+                    {e.passed} passed of {e.chosen} runs
+                  </span>
+                </div>
+                <ChanceBar value={e.passRate === null ? null : Math.round(e.passRate * 100)} muted={e.chosen === 0} />
+                {Object.keys(e.byVersion).length > 0 && (
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Version</th>
+                        <th class="r">Runs</th>
+                        <th class="r">Passed</th>
+                        <th class="r">Rate</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.entries(e.byVersion).map(([v, r]: [string, any]) => (
+                        <tr>
+                          <td class="code">{v}</td>
+                          <td class="r num">{r.chosen}</td>
+                          <td class="r num">{r.passed}</td>
+                          <td class="r num">{r.chosen ? `${Math.round((100 * r.passed) / r.chosen)}%` : '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+      {stats && (
+        <>
+          <h2 style="margin-top:8px">Exchange health</h2>
+          <div class="grid grid-4" data-testid="stats">
+            <Stat label="Settled markets" value={stats.markets.settled} hint={`${stats.markets.settledOnTests} on a test result`} />
+            <Stat label="Price accuracy" value={stats.priceBrier === null ? '—' : stats.priceBrier.toFixed(3)} hint={stats.baseRateBrier === null ? 'Brier of closing prices' : `base rate ${stats.baseRateBrier.toFixed(3)} · lower is better`} />
+            <Stat label="Calibration 70–80¢" value={stats.calibration70to80.passRate === null ? '—' : pct(stats.calibration70to80.passRate)} hint={`${stats.calibration70to80.count} markets · target 70–80%`} />
+            <Stat label="Median traders / market" value={stats.medianTradersPerMarket ?? '—'} hint="target 5 or more" />
           </div>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 }

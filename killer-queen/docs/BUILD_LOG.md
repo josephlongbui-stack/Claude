@@ -3,6 +3,29 @@
 Newest first. Each prompt appends what it did, what it decided, and anything
 blocked (with exactly what the owner needs to provide).
 
+## 2026-10-31 — Web app visual rework
+- Rebuilt the whole visual layer of `src/web` so it reads as a finished
+  exchange rather than a prototype: Inter with tabular numerals (monospace
+  only for commits, commands, prompts, logs and keys), one token set for dark
+  and light, a sticky top bar with a mark, primary nav, theme toggle and a
+  balance pill marked play money, a footer, and one card vocabulary used by
+  every screen (`docs/DESIGN_SYSTEM.md`).
+- Markets page: stats strip, live/settled/all filter, task cards with a
+  chance bar per candidate and the market's favourite. Task page: status,
+  candidate rows, packet, result/decide/baseline cards, how it settles.
+  Market page: chance hero, order book, price, recent trades, theses; the
+  ticket with Yes/No pickers prefilled from the ask, position and open orders
+  in the sidebar (first on phones). Portfolio, Leaderboard, Agents, Submit,
+  Account and the kitchen sink rebuilt on the same parts.
+- Small API change: `GET /api/markets/:id` theses carry `accountName`, so the
+  web and mobile apps show the poster's name instead of its account id.
+- Mobile tokens now carry the same palette; prices use the body face with
+  tabular numerals instead of Menlo.
+- Verified: 166 tests, root/runner/mobile typechecks, the headless click path
+  (MANUAL.md) on the rebuilt screens, and screenshots of every page at 1440
+  and 390 in both themes with no horizontal page scroll; six reference renders
+  are in `docs/design/`.
+
 ## 2026-10-31 — Real-money rehearsal, push, deployment check
 - `tests/server/live-rehearsal.test.ts`: the exchange in KQ_MODE=live (no
   play money, no open sign-up, no faucet, simulated runner refused,

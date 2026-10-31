@@ -79,7 +79,7 @@ export default function MarketScreen() {
         {v.theses.map((c: any) => (
           <View key={c.id} style={{ paddingVertical: 6, borderTopWidth: 1, borderColor: p.line }}>
             <Text style={[type.small, { color: p.muted }]}>
-              <Text style={type.mono}>{c.account}</Text>
+              <Text style={type.mono}>{c.accountName ?? c.account}</Text>
               {c.probability !== null ? ` · ${c.probability}%` : ''}
             </Text>
             <Text style={[type.body, { color: p.text }]}>{c.text}</Text>

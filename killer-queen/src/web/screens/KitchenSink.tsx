@@ -1,5 +1,5 @@
 /** Dev-only: every component in every state, for screenshots and the ui-reviewer. */
-import { AgentRow, EmptyState, ErrorState, OrderBookLadder, OrderTicket, PacketView, Pill, PriceCell, Skeleton, Sparkline, ThesisList } from '../components/index.js';
+import { AgentRow, Card, ChanceBar, EmptyState, ErrorState, OrderBookLadder, OrderTicket, PacketView, Pill, PriceCell, Segmented, Skeleton, Sparkline, Stat, ThesisList } from '../components/index.js';
 import type { Ctx } from '../main.js';
 
 const packet = {
@@ -15,120 +15,121 @@ const packet = {
   quote: { yesBid: 66, yesAsk: 71, noBid: 29, noAsk: 34 },
   lastPrice: 69,
 };
-const executor = { id: 'codex', org: 'OpenAI', version: '0.48.0', chosen: 12, passed: 8 };
+const executor = { id: 'codex', name: 'Codex', org: 'OpenAI', version: '0.48.0', chosen: 12, passed: 8 };
 const row = (status: string, extra: any = {}) => ({ marketId: `tsk_1:${status}`, executorId: 'codex', executor, status, quote: { yesBid: 66, yesAsk: 71, volume: 120, chance: 69 }, closingPrice: 68, settlementPrice: null, outcome: null, traders: 5, ...extra });
 const fullBook = { yes: [{ price: 66, quantity: 30, orders: 1 }, { price: 65, quantity: 12, orders: 2 }, { price: 60, quantity: 40, orders: 3 }], no: [{ price: 29, quantity: 30, orders: 1 }, { price: 25, quantity: 50, orders: 2 }] };
-const thinBook = { yes: [{ price: 40, quantity: 1, orders: 1 }], no: [] };
 const history = Array.from({ length: 30 }, (_, i) => ({ at: i, price: 50 + Math.round(15 * Math.sin(i / 4)) + (i % 3) }));
 
 export function KitchenSink({ ctx }: { ctx: Ctx }) {
   return (
-    <div class="sink">
-      <h1>Kitchen sink (dev only)</h1>
-      <section class="panel">
-        <h2>Tokens</h2>
-        {['--bg', '--panel', '--panel-2', '--line', '--text', '--muted', '--yes', '--no', '--accent', '--warn'].map((v) => (
-          <span>
-            <span class="swatch" style={`background:var(${v})`} /> <span class="mono">{v}</span>{' '}
-          </span>
-        ))}
-        <p>
-          Body text · <span class="num">1,234.56 tabular</span> · <span class="mono">mono packet text</span> · <span class="muted">muted</span>
+    <div class="sink stack" style="gap:20px">
+      <div class="page-head">
+        <div>
+          <h1>Components</h1>
+          <p class="sub">Every component in every state, in the current theme.</p>
+        </div>
+      </div>
+      <Card title="Tokens">
+        <div class="row wrap" style="gap:12px">
+          {['--bg', '--panel', '--panel-2', '--line', '--text', '--muted', '--yes', '--no', '--accent', '--warn'].map((v) => (
+            <span class="row">
+              <span class="swatch" style={`background:var(${v})`} /> <span class="code">{v}</span>
+            </span>
+          ))}
+        </div>
+        <p style="margin-top:12px">
+          Body text · <span class="num">1,234.56 tabular</span> · <span class="code">code and commits</span> · <span class="muted">muted</span>
         </p>
-      </section>
-      <section class="panel">
-        <h2>Pills (status is also text, never colour alone)</h2>
-        {['pending', 'open', 'closed', 'running', 'resolved', 'settled', 'skipped', 'rejected', 'cancelled', 'passed', 'failed'].map((s) => (
-          <>
-            <Pill status={s} />{' '}
-          </>
-        ))}
-      </section>
-      <section class="panel">
-        <h2>PriceCell</h2>
-        <PriceCell value={69} /> <PriceCell value={69} side="yes" /> <PriceCell value={31} side="no" /> <PriceCell value={null} /> <PriceCell value={69} big label="chance" />
-      </section>
-      <section class="panel">
-        <h2>AgentRow states</h2>
-        <div class="scroll-x">
-          <table>
-            <thead>
-              <tr>
-                <th>Agent</th>
-                <th class="r">Chance</th>
-                <th class="r">Bid/Ask</th>
-                <th class="r">Vol</th>
-                <th class="r">Traders</th>
-              </tr>
-            </thead>
-            <tbody>
-              <AgentRow m={row('pending', { quote: { yesBid: null, yesAsk: null, volume: 0, chance: 50 } })} />
-              <AgentRow m={row('open')} />
-              <AgentRow m={row('closed')} />
-              <AgentRow m={row('running')} chosen />
-              <AgentRow m={row('settled', { settlementPrice: 100, outcome: 'passed' })} chosen />
-              <AgentRow m={row('settled', { settlementPrice: 68, outcome: 'unchosen' })} />
-              <AgentRow m={row('cancelled', { quote: { yesBid: null, yesAsk: null, volume: 0, chance: 50 } })} />
-            </tbody>
-          </table>
+      </Card>
+      <Card title="Pills · status is also text">
+        <div class="row wrap">
+          {['pending', 'open', 'closed', 'running', 'resolved', 'settled', 'skipped', 'rejected', 'cancelled', 'passed', 'failed', 'private'].map((s) => (
+            <Pill status={s} />
+          ))}
         </div>
-      </section>
-      <section class="grid cols-2">
-        <div class="panel">
-          <h2>OrderBookLadder · full</h2>
+      </Card>
+      <div class="grid grid-4">
+        <Stat label="Open markets" value={12} />
+        <Stat label="Contracts traded" value="4,312" hint="today" />
+        <Stat label="Price accuracy" value="0.184" hint="Brier · lower is better" />
+        <Stat label="Median spread" value="6¢" hint="target 6¢ or less" />
+      </div>
+      <Card title="PriceCell · ChanceBar · Segmented">
+        <div class="stack">
+          <div class="row" style="gap:24px;align-items:baseline">
+            <PriceCell value={69} /> <PriceCell value={69} side="yes" /> <PriceCell value={31} side="no" /> <PriceCell value={null} /> <PriceCell value={69} size="md" /> <PriceCell value={69} size="big" />
+          </div>
+          <ChanceBar value={69} />
+          <ChanceBar value={35} muted />
+          <Segmented value="open" label="demo" onChange={() => undefined} options={[{ value: 'open', label: 'Live · 3' }, { value: 'done', label: 'Settled · 9' }, { value: 'all', label: 'All' }]} />
+        </div>
+      </Card>
+      <Card title="AgentRow states" flush>
+        <AgentRow m={row('pending', { quote: { yesBid: null, yesAsk: null, volume: 0, chance: 50 } })} />
+        <AgentRow m={row('open')} />
+        <AgentRow m={row('closed')} />
+        <AgentRow m={row('running')} chosen />
+        <AgentRow m={row('settled', { settlementPrice: 100, outcome: 'passed' })} chosen />
+        <AgentRow m={row('settled', { settlementPrice: 68, outcome: 'unchosen' })} />
+        <AgentRow m={row('cancelled', { quote: { yesBid: null, yesAsk: null, volume: 0, chance: 50 } })} />
+      </Card>
+      <div class="grid grid-2">
+        <Card title="OrderBookLadder · full">
           <OrderBookLadder book={fullBook} status="open" />
-        </div>
-        <div class="panel">
-          <h2>OrderBookLadder · thin</h2>
-          <OrderBookLadder book={thinBook} status="open" />
-          <h2 style="margin-top:12px">OrderBookLadder · empty, closed</h2>
-          <OrderBookLadder book={{ yes: [], no: [] }} status="closed" />
-        </div>
-      </section>
-      <section class="grid cols-2">
-        <div class="panel">
-          <h2>Sparkline</h2>
-          <Sparkline points={history} />
-          <h2 style="margin-top:12px">Sparkline · no trades</h2>
-          <Sparkline points={[]} />
-        </div>
-        <div class="panel">
-          <h2>PacketView</h2>
+        </Card>
+        <Card title="OrderBookLadder · thin and cleared">
+          <div class="stack">
+            <OrderBookLadder book={{ yes: [{ price: 40, quantity: 1, orders: 1 }], no: [] }} status="open" />
+            <OrderBookLadder book={{ yes: [], no: [] }} status="closed" />
+          </div>
+        </Card>
+      </div>
+      <div class="grid grid-2">
+        <Card title="Sparkline">
+          <div class="stack">
+            <Sparkline points={history} />
+            <Sparkline points={[]} />
+          </div>
+        </Card>
+        <Card title="PacketView">
           <PacketView packet={packet} />
-        </div>
-      </section>
-      <section class="grid cols-3">
-        <div class="panel">
-          <h2>OrderTicket · open</h2>
-          <OrderTicket marketId="tsk_1:codex" open signedIn toast={ctx.toast} />
-        </div>
-        <div class="panel">
-          <h2>OrderTicket · signed out / closed / pending</h2>
-          <OrderTicket marketId="x" open signedIn={false} toast={ctx.toast} />
-          <OrderTicket marketId="x" open={false} signedIn toast={ctx.toast} />
-          <OrderTicket marketId="x" open={false} signedIn blockedReason="Trading opens after the baseline check." toast={ctx.toast} />
-        </div>
-        <div class="panel">
-          <h2>ThesisList</h2>
+        </Card>
+      </div>
+      <div class="grid grid-3">
+        <Card title="OrderTicket · open">
+          <OrderTicket marketId="tsk_1:codex" open signedIn quote={{ yesAsk: 71, noAsk: 34 }} toast={ctx.toast} />
+        </Card>
+        <Card title="OrderTicket · signed out / closed / pending">
+          <div class="stack">
+            <OrderTicket marketId="x" open signedIn={false} toast={ctx.toast} />
+            <OrderTicket marketId="x" open={false} signedIn toast={ctx.toast} />
+            <OrderTicket marketId="x" open={false} signedIn blockedReason="Trading opens after the baseline check." toast={ctx.toast} />
+          </div>
+        </Card>
+        <Card title="ThesisList">
           <ThesisList theses={[{ account: 'sim-1', probability: 71, at: 1793412000000, text: 'Narrow pytest file; standard runner. I put it at 71%.' }]} canPost onPost={async () => ctx.toast('posted (demo)')} />
-          <h2 style="margin-top:12px">ThesisList · empty</h2>
-          <ThesisList theses={[]} canPost={false} onPost={async () => undefined} />
-        </div>
-      </section>
-      <section class="grid cols-3">
-        <div class="panel">
-          <h2>Skeleton (loading)</h2>
+        </Card>
+      </div>
+      <div class="grid grid-3">
+        <Card title="Skeleton">
           <Skeleton lines={4} />
-        </div>
-        <div class="panel">
-          <h2>EmptyState</h2>
-          <EmptyState title="No tasks yet." hint="Submit one as a customer." action={{ href: '#/submit', label: 'Submit a task' }} />
-        </div>
-        <div class="panel">
-          <h2>ErrorState</h2>
+        </Card>
+        <Card title="EmptyState">
+          <EmptyState title="No tasks yet" hint="Submit one as a customer." action={{ href: '#/submit', label: 'Submit a task' }} />
+        </Card>
+        <Card title="ErrorState">
           <ErrorState message="rate limited: 30 orders per minute" retry={() => ctx.toast('retried (demo)')} />
+        </Card>
+      </div>
+      <Card title="Callouts">
+        <div class="stack">
+          <div class="callout">Neutral note.</div>
+          <div class="callout info">Informational note.</div>
+          <div class="callout warn">Thin book: few resting orders.</div>
+          <div class="callout yes">Codex passed · Yes paid 100¢</div>
+          <div class="callout no">Codex failed · No paid 100¢</div>
         </div>
-      </section>
+      </Card>
     </div>
   );
 }

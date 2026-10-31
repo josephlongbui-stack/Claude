@@ -1,4 +1,4 @@
-/** Killer Queen web components (docs/DESIGN_SYSTEM.md). Tokens only; every price is tabular; colour never carries meaning alone. */
+/** Killer Queen web components (docs/DESIGN_SYSTEM.md). Tokens only; prices are tabular; colour never carries meaning alone. */
 import type { ComponentChildren } from 'preact';
 import { useState } from 'preact/hooks';
 import { api, when } from '../api.js';
@@ -9,20 +9,67 @@ export function Pill({ status, children }: { status: string; children?: Componen
   return <span class={`pill ${status}`}>{children ?? status}</span>;
 }
 
-export function PriceCell({ value, side, big, suffix = '¢', label }: { value: number | null | undefined; side?: 'yes' | 'no'; big?: boolean; suffix?: string; label?: string }) {
+export function PriceCell({ value, side, size, suffix = '¢', label }: { value: number | null | undefined; side?: 'yes' | 'no'; size?: 'md' | 'big'; suffix?: string; label?: string }) {
   const text = value === null || value === undefined ? '—' : `${value}${suffix}`;
   return (
-    <span class={`price ${side ?? ''} ${big ? 'big' : ''}`} aria-label={label ? `${label} ${text}` : undefined}>
+    <span class={`price ${side ?? ''} ${size ?? ''}`} aria-label={label ? `${label} ${text}` : undefined}>
       {text}
     </span>
   );
 }
 
-export function Skeleton({ lines = 3, width }: { lines?: number; width?: string }) {
+export function ChanceBar({ value, muted }: { value: number | null; muted?: boolean }) {
+  return (
+    <div class={`chance-bar ${muted ? 'muted' : ''}`} role="img" aria-label={value === null ? 'no price' : `${value} percent chance`}>
+      <span style={`width:${value ?? 0}%`} />
+    </div>
+  );
+}
+
+export function Card({ title, sub, actions, children, flush, class: cls, testId }: { title?: ComponentChildren; sub?: ComponentChildren; actions?: ComponentChildren; children: ComponentChildren; flush?: boolean; class?: string; testId?: string }) {
+  return (
+    <section class={`card ${flush ? 'flush' : ''} ${cls ?? ''}`} data-testid={testId}>
+      {(title || actions) && (
+        <div class="card-head">
+          <div>
+            {title && <h2>{title}</h2>}
+            {sub && <div class="sub">{sub}</div>}
+          </div>
+          {actions && <div class="row">{actions}</div>}
+        </div>
+      )}
+      <div class="card-body">{children}</div>
+    </section>
+  );
+}
+
+export function Stat({ label, value, hint, testId }: { label: string; value: ComponentChildren; hint?: string; testId?: string }) {
+  return (
+    <div class="card stat" data-testid={testId}>
+      <div class="label">{label}</div>
+      <div class="value num">{value}</div>
+      {hint && <div class="hint">{hint}</div>}
+    </div>
+  );
+}
+
+export function Segmented<T extends string>({ value, options, onChange, label }: { value: T; options: { value: T; label: string }[]; onChange: (v: T) => void; label: string }) {
+  return (
+    <div class="segmented" role="group" aria-label={label}>
+      {options.map((o) => (
+        <button type="button" class={o.value === value ? 'on' : ''} aria-pressed={o.value === value} onClick={() => onChange(o.value)} data-testid={`seg-${o.value}`}>
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export function Skeleton({ lines = 3 }: { lines?: number }) {
   return (
     <div role="status" aria-live="polite" aria-label="Loading">
       {Array.from({ length: lines }, (_, i) => (
-        <div class="skeleton" style={width ? `width:${width}` : i === lines - 1 ? 'width:60%' : ''} />
+        <div class="skeleton" style={i === lines - 1 ? 'width:55%' : i % 3 === 1 ? 'width:85%' : ''} />
       ))}
     </div>
   );
@@ -31,11 +78,13 @@ export function Skeleton({ lines = 3, width }: { lines?: number; width?: string 
 export function EmptyState({ title, hint, action }: { title: string; hint?: string; action?: { href: string; label: string } }) {
   return (
     <div class="empty" role="status">
-      <div>{title}</div>
-      {hint && <div class="muted">{hint}</div>}
+      <div class="title">{title}</div>
+      {hint && <div class="hint">{hint}</div>}
       {action && (
-        <div style="margin-top:8px">
-          <a href={action.href}>{action.label}</a>
+        <div class="act">
+          <a class="btn primary" href={action.href}>
+            {action.label}
+          </a>
         </div>
       )}
     </div>
@@ -44,10 +93,11 @@ export function EmptyState({ title, hint, action }: { title: string; hint?: stri
 
 export function ErrorState({ message, retry }: { message: string; retry?: () => void }) {
   return (
-    <div class="empty" role="alert">
-      <div class="no-c">Error: {message}</div>
+    <div class="empty error" role="alert">
+      <div class="title">Something went wrong</div>
+      <div class="hint">{message}</div>
       {retry && (
-        <div style="margin-top:8px">
+        <div class="act">
           <button onClick={retry}>Try again</button>
         </div>
       )}
@@ -65,12 +115,12 @@ export interface Level {
 
 export function OrderBookLadder({ book, status }: { book: { yes: Level[]; no: Level[] }; status?: string }) {
   const maxQ = Math.max(1, ...book.yes.map((l) => l.quantity), ...book.no.map((l) => l.quantity));
-  const thin = book.yes.length + book.no.length > 0 && book.yes.length + book.no.length < 3;
+  const n = book.yes.length + book.no.length;
   const side = (levels: Level[], kind: 'yes' | 'no') => (
     <table data-testid={`book-${kind}`} aria-label={`${kind === 'yes' ? 'Yes' : 'No'} bids`}>
       <thead>
         <tr>
-          <th>Price</th>
+          <th>{kind === 'yes' ? 'Yes bids' : 'No bids · Yes ask'}</th>
           <th class="r">Qty</th>
         </tr>
       </thead>
@@ -78,45 +128,38 @@ export function OrderBookLadder({ book, status }: { book: { yes: Level[]; no: Le
         {levels.length === 0 && (
           <tr>
             <td colSpan={2} class="muted">
-              {status && status !== 'open' ? 'book cleared' : 'no bids'}
+              {status && status !== 'open' ? 'Book cleared' : 'No resting bids'}
             </td>
           </tr>
         )}
         {levels.map((l) => (
-          <tr class={`bar ${kind}`} style={`--w:${(100 * l.quantity) / maxQ}%`}>
-            <td>
-              <span class="num">
-                {l.price}¢{kind === 'no' && <span class="muted"> (ask {100 - l.price})</span>}
+          <tr class={`lvl ${kind}`} style={`--w:${(100 * l.quantity) / maxQ}%`}>
+            <td class="num">
+              <span class={kind === 'yes' ? 'yes-c' : 'no-c'} style="font-weight:600">
+                {l.price}¢
               </span>
+              {kind === 'no' && <span class="muted"> · ask {100 - l.price}¢</span>}
             </td>
-            <td class="r">
-              <span class="num">{l.quantity}</span>
-            </td>
+            <td class="r num">{l.quantity}</td>
           </tr>
         ))}
       </tbody>
     </table>
   );
   return (
-    <div>
-      {thin && <p class="warn-c">Thin book: few resting orders; prices can move a lot on one trade.</p>}
+    <div class="stack">
+      {n > 0 && n < 3 && <div class="callout warn">Thin book: few resting orders, so one trade can move the price a lot.</div>}
       <div class="ladder">
-        <div class="side">
-          <h3 class="yes-c">Yes bids</h3>
-          {side(book.yes, 'yes')}
-        </div>
-        <div class="side">
-          <h3 class="no-c">No bids (= Yes asks)</h3>
-          {side(book.no, 'no')}
-        </div>
+        {side(book.yes, 'yes')}
+        {side(book.no, 'no')}
       </div>
     </div>
   );
 }
 
-export function Sparkline({ points, height = 48 }: { points: { at: number; price: number }[]; height?: number }) {
+export function Sparkline({ points, height = 56 }: { points: { at: number; price: number }[]; height?: number }) {
   if (points.length < 2) return <p class="muted">No trades yet.</p>;
-  const w = 300;
+  const w = 320;
   const xs = points.map((_, i) => (i / (points.length - 1)) * w);
   const ys = points.map((p) => height - 4 - ((p.price - 1) / 98) * (height - 8));
   const d = xs.map((x, i) => `${i === 0 ? 'M' : 'L'}${x.toFixed(1)} ${ys[i]!.toFixed(1)}`).join(' ');
@@ -131,18 +174,22 @@ export function Sparkline({ points, height = 48 }: { points: { at: number; price
 
 export function PacketView({ packet, compact }: { packet: any; compact?: boolean }) {
   return (
-    <div class="packet" data-testid="packet">
-      {!compact && <div class="mono">{packet.prompt}</div>}
-      <dl>
-        <dt>Repo</dt>
-        <dd class="mono">
-          {packet.repo} @ {packet.commit}
+    <div class="stack" data-testid="packet">
+      {!compact && <div class="prompt">{packet.prompt}</div>}
+      <dl class="kv">
+        <dt>Repository</dt>
+        <dd>
+          <span class="chip">
+            {packet.repo} @ {packet.commit}
+          </span>
         </dd>
         <dt>Test command</dt>
-        <dd class="mono">{packet.testCommand}</dd>
+        <dd>
+          <span class="chip">{packet.testCommand}</span>
+        </dd>
         <dt>Executor</dt>
         <dd>
-          <span class="mono">{packet.executor.id}</span> · {packet.executor.org} · v{packet.executor.version} · record {packet.executor.passed}/{packet.executor.chosen}
+          <b>{packet.executor.name}</b> <span class="muted">· {packet.executor.org} · v{packet.executor.version} · record {packet.executor.passed}/{packet.executor.chosen}</span>
         </dd>
         <dt>Baseline</dt>
         <dd>{packet.baseline}</dd>
@@ -153,32 +200,47 @@ export function PacketView({ packet, compact }: { packet: any; compact?: boolean
   );
 }
 
+export function chanceOf(m: any): number | null {
+  if (m.status === 'pending' || m.status === 'cancelled') return null;
+  if (m.status === 'settled') return m.settlementPrice;
+  if (m.status === 'open') return m.quote.chance;
+  return m.closingPrice;
+}
+
 export function AgentRow({ m, chosen, onOpen }: { m: any; chosen?: boolean; onOpen?: () => void }) {
-  const chance = m.status === 'pending' || m.status === 'cancelled' ? null : m.status === 'settled' ? m.settlementPrice : m.status === 'open' ? m.quote.chance : m.closingPrice;
+  const chance = chanceOf(m);
+  const settledOnTests = m.status === 'settled' && (m.outcome === 'passed' || m.outcome === 'failed');
   return (
-    <tr class={onOpen ? 'click' : ''} onClick={onOpen} data-testid={`market-row-${m.executorId}`}>
-      <td>
-        <a href={`#/market/${encodeURIComponent(m.marketId)}`} class="mono">
-          {m.executorId}
-        </a>
-        <div class="muted">
+    <div class="agent-row" onClick={onOpen} role={onOpen ? 'link' : undefined} tabIndex={onOpen ? 0 : undefined} onKeyDown={(e) => e.key === 'Enter' && onOpen?.()} data-testid={`market-row-${m.executorId}`}>
+      <div class="grow">
+        <div class="row wrap">
+          <span class="name">{m.executor.name ?? m.executorId}</span>
+          {m.outcome && <Pill status={settledOnTests ? m.outcome : m.status}>{m.outcome}</Pill>}
+          {chosen && !m.outcome && <Pill status="running">chosen</Pill>}
+          {m.status === 'pending' && <Pill status="pending">baseline</Pill>}
+        </div>
+        <div class="meta">
           {m.executor.org} · v{m.executor.version} · {m.executor.passed}/{m.executor.chosen} passed
         </div>
-        <div>
-          {m.outcome && <Pill status={m.status}>{m.outcome}</Pill>} {chosen && <Pill status="running">chosen</Pill>} {m.status === 'pending' && <Pill status="pending">baseline</Pill>}
+        <div class="bar">
+          <ChanceBar value={chance} muted={m.status !== 'open'} />
         </div>
-      </td>
-      <td class="r">
-        <PriceCell value={chance} big label="chance" />
-      </td>
-      <td class="r">
+      </div>
+      <div class="col">
+        <span class="lbl">Chance</span>
+        <PriceCell value={chance} size="md" label="chance" side={settledOnTests ? (m.outcome === 'passed' ? 'yes' : 'no') : undefined} />
+      </div>
+      <div class="col hide-sm">
+        <span class="lbl">Bid · Ask</span>
         <span class="num">
-          {m.quote.yesBid ?? '–'}/{m.quote.yesAsk ?? '–'}
+          {m.quote.yesBid ?? '–'} · {m.quote.yesAsk ?? '–'}
         </span>
-      </td>
-      <td class="r num">{m.quote.volume}</td>
-      <td class="r num">{m.traders}</td>
-    </tr>
+      </div>
+      <div class="col hide-sm">
+        <span class="lbl">Volume</span>
+        <span class="num">{m.quote.volume}</span>
+      </div>
+    </div>
   );
 }
 
@@ -191,29 +253,38 @@ export function ThesisList({ theses, canPost, onPost }: { theses: any[]; canPost
     setText('');
   };
   return (
-    <div>
+    <div class="stack">
       {canPost && (
-        <form onSubmit={submit}>
-          <label for="thesis-text">Thesis</label>
-          <textarea id="thesis-text" value={text} onInput={(e) => setText((e.target as HTMLTextAreaElement).value)} placeholder="Why will it pass or fail?" data-testid="thesis-text" required />
+        <form onSubmit={submit} class="stack">
+          <div>
+            <label for="thesis-text">Your thesis</label>
+            <textarea id="thesis-text" value={text} onInput={(e) => setText((e.target as HTMLTextAreaElement).value)} placeholder="Why will it pass or fail? Theses are public." data-testid="thesis-text" required style="min-height:84px" />
+          </div>
           <div class="row">
-            <div>
-              <label for="thesis-prob">Stated probability (optional)</label>
-              <input id="thesis-prob" type="number" min={1} max={99} value={prob} onInput={(e) => setProb((e.target as HTMLInputElement).value === '' ? '' : Number((e.target as HTMLInputElement).value))} />
+            <div style="width:160px">
+              <label for="thesis-prob">Stated probability</label>
+              <input id="thesis-prob" type="number" min={1} max={99} placeholder="optional, 1–99" value={prob} onInput={(e) => setProb((e.target as HTMLInputElement).value === '' ? '' : Number((e.target as HTMLInputElement).value))} />
             </div>
-            <button data-testid="post-thesis">Post</button>
+            <div class="grow" />
+            <button data-testid="post-thesis" style="align-self:flex-end">
+              Post thesis
+            </button>
           </div>
         </form>
       )}
-      {theses.length === 0 && <p class="muted">No theses yet.</p>}
-      {theses.map((c) => (
-        <div class="thesis">
-          <div>
-            <b class="mono">{c.account}</b> {c.probability !== null && <span class="num">· {c.probability}%</span>} <span class="muted num">· {when(c.at)}</span>
+      <div>
+        {theses.length === 0 && <p class="muted">No theses yet. Be the first to say why.</p>}
+        {theses.map((c) => (
+          <div class="thesis">
+            <div class="who">
+              <b>{c.accountName ?? c.account}</b>
+              {c.probability !== null && <span class="num">{c.probability}%</span>}
+              <span class="faint num">{when(c.at)}</span>
+            </div>
+            <div>{c.text}</div>
           </div>
-          <div>{c.text}</div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
@@ -223,27 +294,36 @@ export interface TicketProps {
   open: boolean;
   signedIn: boolean;
   blockedReason?: string | null;
+  quote?: { yesAsk: number | null; noAsk: number | null };
+  initialSide?: 'yes' | 'no';
   onPlaced?: () => void | Promise<void>;
   toast: (msg: string, err?: boolean) => void;
 }
 
-export function OrderTicket({ marketId, open, signedIn, blockedReason, onPlaced, toast }: TicketProps) {
-  const [side, setSide] = useState<'yes' | 'no'>('yes');
+export function OrderTicket({ marketId, open, signedIn, blockedReason, quote, initialSide, onPlaced, toast }: TicketProps) {
+  const [side, setSide] = useState<'yes' | 'no'>(initialSide ?? 'yes');
   const [action, setAction] = useState<'buy' | 'sell'>('buy');
   const [type, setType] = useState<'limit' | 'market'>('limit');
-  const [price, setPrice] = useState(50);
+  const [price, setPrice] = useState<number>(quote?.[initialSide === 'no' ? 'noAsk' : 'yesAsk'] ?? 50);
   const [qty, setQty] = useState(10);
   const [busy, setBusy] = useState(false);
   if (!signedIn)
     return (
-      <p class="muted">
-        <a href="#/account">Sign in</a> to trade.
-      </p>
+      <div class="stack">
+        <p class="muted">Sign in to trade. New traders start with $1,000 of play money.</p>
+        <a class="btn primary" href="#/account">
+          Sign in or create an account
+        </a>
+      </div>
     );
-  if (!open) return <p class="muted">{blockedReason ?? 'Trading is closed.'}</p>;
-  if (blockedReason) return <p class="warn-c">{blockedReason}</p>;
+  if (!open || blockedReason) return <div class="callout">{blockedReason ?? 'Trading is closed on this market.'}</div>;
   const effPrice = type === 'market' ? 99 : action === 'sell' ? 100 - price : price;
   const lock = (effPrice + 1) * qty;
+  const pick = (s: 'yes' | 'no') => {
+    setSide(s);
+    const ask = s === 'yes' ? quote?.yesAsk : quote?.noAsk;
+    if (ask) setPrice(ask);
+  };
   const place = async (e: Event) => {
     e.preventDefault();
     setBusy(true);
@@ -252,7 +332,7 @@ export function OrderTicket({ marketId, open, signedIn, blockedReason, onPlaced,
       if (type === 'limit') body.price = Number(price);
       const r = await api<{ order: any; fills: any[] }>('POST', '/api/orders', body);
       const filled = r.fills.reduce((a, f) => a + f.quantity, 0);
-      toast(`${action} ${side}: ${filled} filled${r.order.status === 'open' ? `, ${r.order.quantity - r.order.filled} resting` : ''}.`);
+      toast(`${action === 'buy' ? 'Bought' : 'Sold'} ${filled} ${side.toUpperCase()}${r.order.status === 'open' ? `, ${r.order.quantity - r.order.filled} resting` : ''}.`);
       await onPlaced?.();
     } catch (err: any) {
       toast(`${err.error} (${err.code})`, true);
@@ -261,49 +341,51 @@ export function OrderTicket({ marketId, open, signedIn, blockedReason, onPlaced,
     }
   };
   return (
-    <form onSubmit={place} data-testid="ticket" aria-label="Order ticket">
-      <div class="row" role="group" aria-label="Side">
-        <button type="button" class={side === 'yes' ? 'yes' : ''} aria-pressed={side === 'yes'} onClick={() => setSide('yes')} data-testid="side-yes">
-          Yes
+    <form onSubmit={place} data-testid="ticket" aria-label="Order ticket" class="stack">
+      <div class="quick" role="group" aria-label="Side">
+        <button type="button" class={`yes lg ${side === 'yes' ? 'on' : ''}`} aria-pressed={side === 'yes'} onClick={() => pick('yes')} data-testid="side-yes">
+          Yes {quote?.yesAsk !== null && quote?.yesAsk !== undefined ? `${quote.yesAsk}¢` : ''}
         </button>
-        <button type="button" class={side === 'no' ? 'no' : ''} aria-pressed={side === 'no'} onClick={() => setSide('no')} data-testid="side-no">
-          No
+        <button type="button" class={`no lg ${side === 'no' ? 'on' : ''}`} aria-pressed={side === 'no'} onClick={() => pick('no')} data-testid="side-no">
+          No {quote?.noAsk !== null && quote?.noAsk !== undefined ? `${quote.noAsk}¢` : ''}
         </button>
       </div>
-      <div class="row">
+      <div class="fields">
         <div>
           <label for="t-action">Action</label>
           <select id="t-action" value={action} onChange={(e) => setAction((e.target as HTMLSelectElement).value as any)} data-testid="action">
             <option value="buy">Buy</option>
-            <option value="sell">Sell (= buy the other side)</option>
+            <option value="sell">Sell</option>
           </select>
         </div>
         <div>
-          <label for="t-type">Type</label>
+          <label for="t-type">Order type</label>
           <select id="t-type" value={type} onChange={(e) => setType((e.target as HTMLSelectElement).value as any)} data-testid="type">
             <option value="limit">Limit</option>
-            <option value="market">Market (IOC at 99¢)</option>
+            <option value="market">Market</option>
           </select>
         </div>
       </div>
-      <div class="row">
+      <div class="fields">
         <div>
-          <label for="t-price">Price (¢)</label>
+          <label for="t-price">Limit price (¢)</label>
           <input id="t-price" type="number" min={1} max={99} value={price} disabled={type === 'market'} onInput={(e) => setPrice(Number((e.target as HTMLInputElement).value))} data-testid="price" />
         </div>
         <div>
-          <label for="t-qty">Quantity</label>
+          <label for="t-qty">Contracts</label>
           <input id="t-qty" type="number" min={1} value={qty} onInput={(e) => setQty(Number((e.target as HTMLInputElement).value))} data-testid="quantity" />
         </div>
       </div>
-      <p class="muted">
-        Locks {effPrice + 1}¢ × {qty} = <span class="num">${(lock / 100).toFixed(2)}</span> (price + 1¢ taker fee; the fee returns if you make)
-      </p>
-      <p>
-        <button class={`primary ${side}`} disabled={busy} data-testid="place-order">
-          {action === 'buy' ? 'Buy' : 'Sell'} {side.toUpperCase()}
-        </button>
-      </p>
+      <div class="row between muted" style="font-size:12.5px">
+        <span>{type === 'market' ? 'Immediate-or-cancel at 99¢' : action === 'sell' ? `Sells ${side.toUpperCase()} by buying the other side at ${100 - price}¢` : 'Fills at the resting price or better'}</span>
+        <span class="num">
+          Locks ${(lock / 100).toFixed(2)}
+        </span>
+      </div>
+      <button class={`block lg ${side === 'yes' ? 'fill-yes' : 'fill-no'}`} disabled={busy || qty < 1} data-testid="place-order">
+        {action === 'buy' ? 'Buy' : 'Sell'} {side === 'yes' ? 'Yes' : 'No'} · {qty} contract{qty === 1 ? '' : 's'}
+      </button>
+      <p class="help" style="margin:0">Takers pay 1¢ per contract; the fee is returned on any part that rests. A winning contract pays 100¢.</p>
     </form>
   );
 }
