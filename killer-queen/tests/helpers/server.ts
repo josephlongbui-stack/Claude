@@ -37,7 +37,7 @@ export async function startTestServer(opts: { env?: Record<string, string>; dir?
     LOG_LEVEL: 'silent',
     ...opts.env,
   });
-  const booted = await boot({ config, clock, listen: 0, timers: false, publicDir: join(dir, 'no-public'), bots: opts.bots ?? [] });
+  const booted = await boot({ config, clock, listen: 0, timers: false, publicDir: join(dir, 'no-public'), bots: opts.bots ?? [], seedExecutors: false });
   const url = booted.url!;
   const api: TestServer['api'] = async (method, path, o = {}) => {
     const headers: Record<string, string> = { ...(o.headers ?? {}) };

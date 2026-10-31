@@ -10,6 +10,7 @@ import { createApp } from './app.js';
 import { ConfigError, loadConfig, type Config } from './config.js';
 import { Journal, openVenue } from './journal.js';
 import { SimulatedRunner } from './runners/simulated.js';
+import { ensureExecutors } from './seed.js';
 
 export const HOUSE_ACCOUNT_ID = 'house';
 export const MM_ACCOUNT_ID = 'mm';
@@ -26,6 +27,8 @@ export interface BootOptions {
   log?: (msg: string) => void;
   /** Bot factories registered by src/bots; boot calls them after accounts exist. */
   bots?: BotFactory[];
+  /** Sandbox: register the default executors when none exist (default true). */
+  seedExecutors?: boolean;
 }
 
 export interface BotHandle {
@@ -61,6 +64,10 @@ export async function boot(opts: BootOptions = {}): Promise<Booted> {
   log(`journal ${config.dbPath}: replayed ${replayed} commands`);
 
   ensureHouseAccounts(venue, config);
+  if (config.mode === 'sandbox' && opts.seedExecutors !== false) {
+    const n = ensureExecutors(venue);
+    if (n) log(`seeded ${n} default executors`);
+  }
 
   const bots: BotHandle[] = [];
   for (const factory of opts.bots ?? []) {

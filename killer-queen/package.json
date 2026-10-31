@@ -8,8 +8,9 @@
     "node": ">=22.13"
   },
   "scripts": {
-    "dev": "tsx src/server/main.ts",
+    "dev": "npm run build:web && tsx src/server/main.ts",
     "start": "tsx src/server/main.ts",
+    "dev:web": "tsx scripts/build-web.ts --watch",
     "test": "node --import tsx --test --test-concurrency=1 \"tests/**/*.test.ts\"",
     "typecheck": "tsc --noEmit",
     "build:web": "tsx scripts/build-web.ts",
