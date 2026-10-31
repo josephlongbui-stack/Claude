@@ -73,3 +73,10 @@ settles every market. Play money has no cash value.
 
 ## Git
 - Branch per phase, small commits. Never commit .env, data/, or keys.
+
+## UI rules
+- Every UI change follows docs/DESIGN_SYSTEM.md. Use tokens and the components in
+  src/web/ui (mobile/src/ui on mobile); never add a colour, size or spacing value.
+- Nothing in the "Never" list of DESIGN_SYSTEM.md may ship.
+- UI work isn't done until it has been screenshotted at 1440 and 390 wide in light and
+  dark, compared with its Figma frame when one exists, and reviewed by design-critic.
