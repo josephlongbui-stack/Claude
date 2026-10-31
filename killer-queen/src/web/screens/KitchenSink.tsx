@@ -50,6 +50,9 @@ function Row({ label, children }: { label: string; children: import('preact').Co
 
 export function KitchenSink({ ctx }: { ctx: Ctx }) {
   const [tab, setTab] = useState<'theses' | 'trades'>('theses');
+  const [railSeed, setRailSeed] = useState(0);
+  const [replay, setReplay] = useState(0);
+  const jitter = (p: number, i: number) => Math.max(5, Math.min(95, p + Math.round(Math.sin(railSeed * 1.7 + i) * 9)));
   const statuses: Status[] = ['open', 'soon', 'closed', 'running', 'passed', 'failed', 'settled', 'skipped', 'pending', 'rejected', 'cancelled', 'infra_error', 'private', 'demo'];
   return (
     <div class="sink">
@@ -207,10 +210,10 @@ export function KitchenSink({ ctx }: { ctx: Ctx }) {
         </Table>
       </Panel>
 
-      <SectionHead title="OddsRail" aside="live, closing-price, settled; 2, 4 and 8 agents" />
+      <SectionHead title="OddsRail" aside={<Button onClick={() => setRailSeed((s) => s + 1)} data-testid="rail-shuffle">Move the prices</Button>} />
       <Panel>
         <PanelBody>
-          <OddsRail markers={[{ id: 'gm', name: 'Gemini CLI', price: 44, bid: 42, ask: 47, lead: false, state: 'live' }, { id: 'cx', name: 'Codex', price: 53, bid: 50, ask: 56, lead: false, state: 'live' }, { id: 'cc', name: 'Claude Code', price: 61, bid: 60, ask: 62, lead: true, state: 'live' }]} />
+          <OddsRail markers={[{ id: 'gm', name: 'Gemini CLI', price: jitter(44, 0), bid: jitter(44, 0) - 2, ask: jitter(44, 0) + 3, lead: false, state: 'live' }, { id: 'cx', name: 'Codex', price: jitter(53, 1), bid: jitter(53, 1) - 3, ask: jitter(53, 1) + 3, lead: false, state: 'live' }, { id: 'cc', name: 'Claude Code', price: jitter(61, 2), bid: jitter(61, 2) - 1, ask: jitter(61, 2) + 1, lead: true, state: 'live' }]} />
           <OddsRail markers={[{ id: 'a', name: 'Claude Code', price: 61, bid: 60, ask: 62, lead: true, state: 'live' }, { id: 'b', name: 'Codex', price: 62, bid: 61, ask: 64, lead: false, state: 'live' }]} />
           <OddsRail markers={[{ id: 'a', name: 'Claude Code', price: 60, bid: 59, ask: 61, lead: true, state: 'live' }, { id: 'b', name: 'Codex', price: 61, bid: 60, ask: 63, lead: false, state: 'live' }, { id: 'c', name: 'Gemini CLI', price: 62, bid: 61, ask: 64, lead: false, state: 'live' }, { id: 'd', name: 'Aider', price: 59, bid: 57, ask: 60, lead: false, state: 'live' }]} />
           <OddsRail markers={['Claude Code', 'Codex', 'Gemini CLI', 'Aider', 'Jules', 'Devin', 'Cursor Agent', 'Amp'].map((n, i) => ({ id: `e${i}`, name: n, price: 48 + i, bid: 46 + i, ask: 50 + i, lead: i === 7, state: 'live' as const }))} />
@@ -263,11 +266,11 @@ export function KitchenSink({ ctx }: { ctx: Ctx }) {
         <OrderTicket executorName="Claude Code" status="open" quote={{ yesBid: 60, yesAsk: 62, noBid: 38, noAsk: 40 }} signedIn cash={410} onSubmit={async () => undefined} />
       </div>
 
-      <SectionHead title="PacketView, SettlementPanel" />
+      <SectionHead title="PacketView, SettlementPanel" aside={<Button onClick={() => setReplay((r) => r + 1)} data-testid="settle-replay">Replay the settlement</Button>} />
       <div class="sink-grid">
         <PacketView packet={packet} status="open" />
         <div class="stack">
-          <SettlementPanel outcome="passed" agentName="Claude Code" log={LOG} settledAt={NOW - 3_600_000} position={{ side: 'yes', quantity: 15, payout: 1500 }} />
+          <SettlementPanel key={replay} outcome="passed" agentName="Claude Code" log={LOG} settledAt={NOW - 3_600_000} position={{ side: 'yes', quantity: 15, payout: 1500 }} animate={replay > 0} />
           <SettlementPanel outcome="failed" agentName="Gemini CLI" log={LOG_FAIL} settledAt={NOW - 3_600_000} position={{ side: 'yes', quantity: 15, payout: 0 }} />
           <SettlementPanel outcome="infra_error" agentName="Codex" log={'[runner] clone failed: connection reset by peer (attempt 3 of 3)\n[runner] infrastructure error after 3 attempts; no agent was run'} settledAt={NOW - 3_600_000} closingPrice={54} />
         </div>

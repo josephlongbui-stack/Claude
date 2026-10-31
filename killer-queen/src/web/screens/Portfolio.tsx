@@ -141,10 +141,10 @@ export function Portfolio({ ctx }: { ctx: Ctx }) {
                   <TitleCell title={h.title} sub={agentOf(h.executorId, h.market)} />
                 </Td>
                 <Td>
-                  <StatusPill status={h.outcome === 'passed' || h.outcome === 'failed' ? h.outcome : h.outcome === 'infra_error' ? 'infra_error' : 'settled'}>{h.outcome === 'unchosen' || h.outcome === 'skipped' ? `Settled at ${h.settlementPrice ?? '—'}¢` : undefined}</StatusPill>
+                  <StatusPill status={h.closed.outcome === 'passed' || h.closed.outcome === 'failed' ? h.closed.outcome : h.closed.outcome === 'infra_error' ? 'infra_error' : 'settled'}>{h.closed.outcome === 'passed' || h.closed.outcome === 'failed' ? undefined : `Settled at ${h.closed.settlementPrice}¢`}</StatusPill>
                 </Td>
                 <Td align="right" hideSm>
-                  {h.yes > 0 ? `${count(h.yes)} Yes` : h.no > 0 ? `${count(h.no)} No` : '—'}
+                  {h.closed.yes > 0 ? `${count(h.closed.yes)} Yes` : h.closed.no > 0 ? `${count(h.closed.no)} No` : '—'}
                 </Td>
                 <Td align="right">{dollars(h.payout)}</Td>
                 <Td align="right">

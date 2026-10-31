@@ -3,6 +3,30 @@
 Newest first. Each prompt appends what it did, what it decided, and anything
 blocked (with exactly what the owner needs to provide).
 
+## 2026-10-31 — Design overhaul D7 (odds rail and settlement)
+- Odds rail: the pure layout moved to `src/web/ui/oddsRailLayout.ts`
+  (`spread` places colliding labels as a centred group with a minimum gap,
+  `layout` uses one row, two rows or a numbered legend, `rowPlan` keeps
+  labels on their rows while prices move, `springStep` is the damped spring
+  at stiffness 300 and damping 30). Markers glide with the spring on every
+  price change; reduced motion jumps. `tests/web/oddsrail.test.ts` checks 2,
+  4 and 8 agents at nearly equal prices at 1232 and 358 px (no label overlaps,
+  everything inside the rail, pins at their prices), the row fallbacks, the
+  edge labels, the spread and the spring's settling.
+- Settlement: `SettlementPanel` runs the one orchestrated animation when the
+  viewer watched the market settle (the Market and Task screens track the
+  unsettled → settled transition): panel opens (200 ms), the log tail streams
+  in (600 ms), one cell per test fills (400 ms), the stamp lands (200 ms),
+  the viewer's position counts into cash (400 ms); 1.8 s in all. Reduced
+  motion and arriving on an already-settled market show the final state at
+  once. Found and fixed on the way: settled positions were read from the
+  wrong field, so "Held at close" said nothing.
+- Recorded with Playwright into `docs/design/after/`: `odds-rail-1440.webm`,
+  `odds-rail-390.webm` (prices moved four times in the kitchen sink) and
+  `settlement-1440.webm` (a real market settling while a trader watches, on
+  the sandbox server). Frames were tiled with ffmpeg at 4–6 fps and checked:
+  no overlaps, no clipping, no label hopping between rows.
+
 ## 2026-10-31 — Design overhaul D4, D5, D6
 - D4 foundation: IBM Plex self-hosted through @fontsource and bundled by
   esbuild (`public/fonts`, latin subsets only); `src/web/styles/tokens.css`

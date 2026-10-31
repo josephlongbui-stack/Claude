@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { api } from '../api.js';
 import { useTitle, type Ctx } from '../main.js';
 import { BookLadder, Button, ChangeCell, Countdown, EmptyState, Icon, IconButton, Money, OrderTicket, PacketView, Panel, PanelBody, PanelHead, PriceCell, PriceChart, SettlementPanel, Skeleton, StatusPill, Tabs, ThesisList, TradeList, dollars, marketStatus, toast, type OrderInput } from '../ui/index.js';
@@ -11,6 +11,9 @@ export function Market({ ctx, id }: { ctx: Ctx; id: string }) {
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<'theses' | 'trades'>('theses');
   const [sheet, setSheet] = useState<null | 'yes' | 'no'>(null);
+  // The one animation runs only when this viewer saw the market move from unsettled to settled.
+  const seenUnsettled = useRef(false);
+  const [animateSettle, setAnimateSettle] = useState(false);
   const side = /[?&]side=(yes|no)/.exec(location.hash)?.[1] as 'yes' | 'no' | undefined;
   const load = () =>
     api('GET', `/api/markets/${encodeURIComponent(id)}`)
@@ -26,6 +29,14 @@ export function Market({ ctx, id }: { ctx: Ctx; id: string }) {
     void loadPf();
   }, [id, ctx.tick, ctx.me?.id]);
   useTitle(v ? `${v.packet.executor.name} on ${v.packet.title}` : null);
+  useEffect(() => {
+    if (!v) return;
+    if (v.market.status !== 'settled') seenUnsettled.current = true;
+    else if (seenUnsettled.current) {
+      setAnimateSettle(true);
+      seenUnsettled.current = false;
+    }
+  }, [v?.market.status]);
 
   if (error === 'not_found') return <EmptyState title="There is no market at this address" hint="It may have been removed, or the link is wrong." action={{ href: '#/', label: 'Go to the Arena' }} />;
   if (error) return <EmptyState kind="error" title="The exchange did not answer" hint={error} retry={() => void load()} />;
@@ -158,7 +169,7 @@ export function Market({ ctx, id }: { ctx: Ctx; id: string }) {
             <dl class="kv">
               <dt>Held at close</dt>
               <dd>
-                {closed.yes > 0 ? `${closed.yes} Yes` : closed.no > 0 ? `${closed.no} No` : 'nothing'}
+                {closed.closed.yes > 0 ? `${closed.closed.yes} Yes` : closed.closed.no > 0 ? `${closed.closed.no} No` : 'nothing'}
               </dd>
               <dt>Paid out</dt>
               <dd>
@@ -252,7 +263,7 @@ export function Market({ ctx, id }: { ctx: Ctx; id: string }) {
           </div>
           <PriceChart points={v.priceHistory} last={m.lastPrice} />
           {onTests && task && task.task.chosenAgent === m.executorId && (
-            <SettlementPanel outcome={m.outcome} agentName={name} log={task.task.runLog} settledAt={task.task.resolvedAt} closingPrice={m.closingPrice} position={closed && (closed.yes > 0 || closed.no > 0) ? { side: closed.yes > 0 ? 'yes' : 'no', quantity: closed.yes > 0 ? closed.yes : closed.no, payout: closed.payout } : null} />
+            <SettlementPanel outcome={m.outcome} agentName={name} log={task.task.runLog} settledAt={task.task.resolvedAt} closingPrice={m.closingPrice} animate={animateSettle} onDone={() => void ctx.refreshMe()} position={closed && (closed.closed.yes > 0 || closed.closed.no > 0) ? { side: closed.closed.yes > 0 ? 'yes' : 'no', quantity: closed.closed.yes > 0 ? closed.closed.yes : closed.closed.no, payout: closed.payout } : null} />
           )}
           <Panel>
             <BookLadder book={v.book} status={m.status} />

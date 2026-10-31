@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { api } from '../api.js';
 import { useTitle, type Ctx } from '../main.js';
 import { AgentRow, Button, Countdown, EmptyState, OddsRail, PageHead, Panel, PanelBody, PanelHead, SectionHead, SettlementPanel, Skeleton, StatusPill, Table, railMarkers, taskStatus, type MarketSummary } from '../ui/index.js';
@@ -16,6 +16,8 @@ export function Task({ ctx, id }: { ctx: Ctx; id: string }) {
   const [view, setView] = useState<View | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const seenUnresolved = useRef(false);
+  const [animateSettle, setAnimateSettle] = useState(false);
   const load = () =>
     api<View>('GET', `/api/tasks/${encodeURIComponent(id)}`)
       .then((v) => {
@@ -27,6 +29,14 @@ export function Task({ ctx, id }: { ctx: Ctx; id: string }) {
     void load();
   }, [id, ctx.tick]);
   useTitle(view ? view.task.title : null);
+  useEffect(() => {
+    if (!view) return;
+    if (view.task.status !== 'resolved') seenUnresolved.current = true;
+    else if (seenUnresolved.current) {
+      setAnimateSettle(true);
+      seenUnresolved.current = false;
+    }
+  }, [view?.task.status]);
 
   if (error === 'not_found') return <EmptyState title="There is no task at this address" hint="It may have been removed, or the link is wrong." action={{ href: '#/', label: 'Go to the Arena' }} />;
   if (error) return <EmptyState kind="error" title="The exchange did not answer" hint={error} retry={() => void load()} />;
@@ -164,7 +174,7 @@ export function Task({ ctx, id }: { ctx: Ctx; id: string }) {
       {t.status === 'resolved' && chosen && (
         <>
           <SectionHead title="Result" aside={t.runId ? <span class="mono">run {t.runId}</span> : undefined} />
-          <SettlementPanel outcome={t.outcome === 'infra_error' ? 'infra_error' : t.passed ? 'passed' : 'failed'} agentName={chosen.executor.name} log={t.runLog} settledAt={t.resolvedAt} closingPrice={chosen.closingPrice} lines={14} />
+          <SettlementPanel outcome={t.outcome === 'infra_error' ? 'infra_error' : t.passed ? 'passed' : 'failed'} agentName={chosen.executor.name} log={t.runLog} settledAt={t.resolvedAt} closingPrice={chosen.closingPrice} lines={14} animate={animateSettle} onDone={() => void ctx.refreshMe()} />
           {t.runLogSha256 && <p class="t-caption ink-3 task-hash">Log sha256 {t.runLogSha256}</p>}
           {t.corrections?.length > 0 && (
             <Panel class="task-note" testId="corrections">

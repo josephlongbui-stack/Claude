@@ -1,15 +1,23 @@
 .settle { border: var(--hairline) solid var(--rule-strong); border-radius: var(--r-panel); background: var(--surface); overflow: hidden; }
+.settle.playing { transition: opacity 200ms ease-out; }
 .settle-log { font-family: var(--font-mono); font-size: var(--t-dense); line-height: var(--t-dense-lh); background: var(--surface-sunken); padding: var(--sp-3) var(--sp-4); color: var(--ink-2); margin: 0; display: flex; flex-direction: column; white-space: pre; overflow-x: auto; }
 .settle-log .ln.ok { color: var(--yes); }
 .settle-log .ln.bad { color: var(--no); }
+.settle.playing .settle-log .ln { opacity: 0; transform: translateY(var(--sp-1)); }
+.settle.playing .settle-log .ln.in { opacity: 1; transform: none; transition: opacity 80ms ease-out, transform 80ms ease-out; }
 .settle-strip { display: flex; gap: var(--tick); padding: var(--sp-3) var(--sp-4) 0; }
-.settle-strip span { flex: 1; height: var(--bar-lg); border-radius: var(--tick); background: var(--rule); }
+.settle-strip span { flex: 1; height: var(--bar-lg); border-radius: var(--tick); background: var(--rule); transition: background 120ms ease-out; }
 .settle-strip span.yes { background: var(--yes); }
 .settle-strip span.no { background: var(--no); }
 .settle-stamp { display: flex; align-items: baseline; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); flex-wrap: wrap; }
+.settle.playing .settle-stamp { opacity: 0; transform: translateY(var(--sp-2)) scale(1.04); }
+.settle.playing .settle-stamp.on { opacity: 1; transform: none; transition: opacity 200ms ease-out, transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1); }
 .settle-stamp .word { font-family: var(--font-cond); font-weight: 600; font-size: var(--t-h2); line-height: var(--t-h2-lh); }
 .settle-stamp .word.yes { color: var(--yes); }
 .settle-stamp .word.no { color: var(--no); }
 .settle-stamp .word.warn { color: var(--warn); }
 .settle-stamp .paid { color: var(--ink-2); }
-.settle-you { padding: var(--sp-3) var(--sp-4); border-top: var(--hairline) solid var(--rule); font-size: var(--t-ui); line-height: var(--t-ui-lh); }
+.settle-you { padding: var(--sp-3) var(--sp-4); border-top: var(--hairline) solid var(--rule); font-size: var(--t-ui); line-height: var(--t-ui-lh); font-variant-numeric: tabular-nums; }
+.settle.playing .settle-you { opacity: 0; }
+.settle.playing .settle-you.on { opacity: 1; transition: opacity 120ms ease-out; }
+@media (prefers-reduced-motion: reduce) { .settle.playing .settle-log .ln, .settle.playing .settle-stamp, .settle.playing .settle-you { opacity: 1; transform: none; } }
