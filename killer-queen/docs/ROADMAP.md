@@ -79,9 +79,15 @@ deployment and real tasks.)
       the local server. (Headless-browser run recorded in `MANUAL.md`)
 - [x] Design system (docs/DESIGN_SYSTEM.md), tokens for dark and light,
       components with every state in `#/kitchen-sink`, 390 px layout with no
-      horizontal page scroll (prompts 3.2–3.3); visual rework with reference
-      renders in docs/design/. ui-reviewer subagent not run (no Playwright
-      MCP in this session); checked by hand from screenshots.
+      horizontal page scroll (prompts 3.2–3.3).
+- [x] Design overhaul D-setup–D10 (KILLER_QUEEN_DESIGN_PROMPTS.md): audit and
+      before/after screenshots (docs/design/before, after, compare.html),
+      demo seed, design board in place of Figma (docs/design/FIGMA.md),
+      IBM Plex and tokens.css with `lint:styles`, every screen rebuilt, odds
+      rail and settlement animation, states/words/numbers/axe sweep
+      (docs/design/REPORT.md), design-critic rounds with every blocker
+      fixed, and the same system in mobile/ (simulator checks wait on a
+      Mac).
 
 ### Operations
 - [x] Journal in WAL mode, synchronous=FULL; a command is acknowledged only
