@@ -12,8 +12,13 @@
     "maestro": "maestro test .maestro"
   },
   "dependencies": {
+    "@expo-google-fonts/ibm-plex-mono": "^0.4.1",
+    "@expo-google-fonts/ibm-plex-sans": "^0.4.1",
+    "@expo-google-fonts/ibm-plex-sans-condensed": "^0.4.1",
     "expo": "~58.0.21",
+    "expo-clipboard": "~58.0.4",
     "expo-constants": "~58.0.14",
+    "expo-font": "~58.0.11",
     "expo-haptics": "~58.0.7",
     "expo-linking": "~58.0.15",
     "expo-router": "~58.0.28",

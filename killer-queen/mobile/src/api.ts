@@ -76,6 +76,8 @@ export const kq = {
   cancelOrder: (id: string) => api('DELETE', `/api/orders/${encodeURIComponent(id)}`),
   comment: (marketId: string, text: string, probability: number | null) => api('POST', `/api/markets/${encodeURIComponent(marketId)}/comments`, { text, probability }),
   faucet: () => api('POST', '/api/wallet/faucet'),
+  closeTask: (id: string) => api('POST', `/api/tasks/${encodeURIComponent(id)}/close`),
+  decide: (id: string, executorId: string | null) => api('POST', `/api/tasks/${encodeURIComponent(id)}/decide`, { executorId }),
   deleteAccount: () => api('POST', '/api/me/delete'),
   reportThesis: (marketId: string, commentId: string, reason: string) => api('POST', `/api/markets/${encodeURIComponent(marketId)}/comments/${encodeURIComponent(commentId)}/report`, { reason }),
 };
@@ -128,5 +130,7 @@ export function subscribe(onEvent: (type: string, data: any) => void, opts: { ma
 }
 
 export const cents = (n: number | null | undefined): string => (n === null || n === undefined ? '—' : `${n}¢`);
-export const dollars = (n: number): string => `${n < 0 ? '-' : ''}$${(Math.abs(n) / 100).toFixed(2)}`;
+export const dollars = (n: number): string => `${n < 0 ? '−' : ''}$${(Math.abs(n) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+export const count = (n: number): string => n.toLocaleString('en-US');
+export const when = (ms: number | null | undefined): string => (ms ? new Date(ms).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—');
 export const signed = (n: number): string => `${n > 0 ? '+' : ''}${dollars(n)}`;

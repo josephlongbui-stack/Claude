@@ -1,7 +1,7 @@
 appId: dev.killerqueen.app
 ---
 - launchApp
-- tapOn: "Profile"
+- tapOn: "Account"
 - tapOn:
     id: "signup-name"
 - inputText: "Maestro Trader"

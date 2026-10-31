@@ -1,11 +1,12 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Linking, ScrollView, Switch, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { ApiError, KQ_URL, dollars, getKey, kq, setKey } from '../../src/api';
-import { Button, Field, H2, Panel, PlayMoney } from '../../src/ui/components';
+import { Avatar, Button, Field, PageTitle, Panel, PanelBody, PanelHead, Screen, useToast, words } from '../../src/ui/components';
 import { space, type, usePalette } from '../../src/ui/tokens';
 
-export default function Profile() {
+export default function Account() {
   const p = usePalette();
   const router = useRouter();
   const [me, setMe] = useState<any | null>(null);
@@ -13,10 +14,12 @@ export default function Profile() {
   const [name, setName] = useState('');
   const [org, setOrg] = useState('');
   const [role, setRole] = useState<'trader' | 'customer'>('trader');
+  const [kind, setKind] = useState<'human' | 'agent'>('human');
   const [created, setCreated] = useState<string | null>(null);
   const [pasted, setPasted] = useState('');
-  const [msg, setMsg] = useState<string | null>(null);
-  const [crashReports, setCrashReports] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [armed, setArmed] = useState(false);
+  const [toast, show] = useToast();
   const load = useCallback(async () => {
     const key = await getKey();
     if (!key) {
@@ -26,8 +29,8 @@ export default function Profile() {
     }
     try {
       setMe((await kq.me()).account);
-    } catch {
-      await setKey(null);
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 401) await setKey(null);
       setMe(null);
     }
     setChecked(true);
@@ -35,111 +38,153 @@ export default function Profile() {
   useEffect(() => {
     void load();
   }, [load]);
-  const fail = (e: unknown) => setMsg(e instanceof ApiError ? `${e.message} (${e.code})` : String(e));
-  const signup = async () => {
+  const create = async () => {
+    setError(null);
     try {
-      const r = await kq.createAccount(name.trim(), 'human', role, org.trim());
+      const r = await kq.createAccount(name.trim(), kind, role, org.trim());
       await setKey(r.apiKey);
       setCreated(r.apiKey);
-      setMsg(null);
       await load();
+      show(role === 'trader' ? 'Account created with $1,000 in play money. Copy your API key; it is shown once.' : 'Customer account created. Copy your API key; it is shown once.');
     } catch (e) {
-      fail(e);
+      setError(words(e));
     }
   };
-  const signin = async () => {
+  const signIn = async () => {
     await setKey(pasted.trim());
-    await load();
-    if (!(await getKey())) setMsg('That key did not work.');
+    const key = await getKey();
+    try {
+      setMe((await kq.me()).account);
+      show('Signed in.');
+      router.push('/');
+    } catch {
+      await setKey(null);
+      setError(key ? 'That key did not match an account. Keys start with kq_ and are shown once when an account is created.' : 'Paste your API key.');
+    }
   };
-  const signout = async () => {
+  const signOut = async () => {
     await setKey(null);
     setCreated(null);
-    await load();
+    setMe(null);
   };
-  const deleteAccount = () => {
-    Alert.alert('Delete account', 'This removes the key from this device and asks the exchange to anonymise the account. Open positions settle normally. Continue?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await kq.deleteAccount(); // cancels open orders, revokes the key, anonymises the name (journaled)
-            await signout();
-            setMsg('Account deleted. Open positions settle normally; the name was anonymised and the key revoked.');
-          } catch (e) {
-            fail(e);
-          }
-        },
-      },
-    ]);
+  const faucet = async () => {
+    try {
+      const r = await kq.faucet();
+      show(`Added ${dollars(r.added)} in play money.`);
+      await load();
+    } catch (e) {
+      show(words(e), 'error');
+    }
   };
-  if (!checked) return null;
-  return (
-    <ScrollView contentContainerStyle={{ padding: space.s4 }}>
-      {me ? (
+  const del = async () => {
+    if (!armed) {
+      setArmed(true);
+      setTimeout(() => setArmed(false), 6000);
+      return;
+    }
+    try {
+      await kq.deleteAccount();
+      show('Account deleted. Open positions still settle; nothing else is kept.');
+      await signOut();
+    } catch (e) {
+      show(words(e), 'error');
+    }
+  };
+  const choice = <T extends string>(label: string, value: T, options: [T, string][], set: (v: T) => void) => (
+    <View style={{ gap: space.s1 }}>
+      <Text style={[type.dense, { color: p.ink2 }]}>{label}</Text>
+      <View style={{ flexDirection: 'row', gap: space.s2 }}>
+        {options.map(([v, l]) => (
+          <Pressable key={v} onPress={() => set(v)} accessibilityRole="radio" accessibilityState={{ checked: value === v }} style={{ flex: 1, minHeight: 44, borderRadius: 4, borderWidth: 1, borderColor: value === v ? p.ink : p.ruleStrong, backgroundColor: value === v ? p.ink : p.surface, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.s2 }}>
+            <Text style={[type.uiMedium, { color: value === v ? p.onInk : p.ink, textAlign: 'center' }]}>{l}</Text>
+          </Pressable>
+        ))}
+      </View>
+    </View>
+  );
+  if (!checked) return <Screen><PageTitle title="Account" /></Screen>;
+  if (!me)
+    return (
+      <Screen bottom={toast}>
+        <PageTitle title="Sign in" sub="Sandbox accounts need no email. Traders start with $1,000 in play money; customers submit tasks. Play money has no cash value." />
         <Panel>
-          <H2>Signed in</H2>
-          <Text style={[type.body, { color: p.text, fontWeight: '600' }]}>{me.name}</Text>
-          <Text style={[type.small, { color: p.muted }]}>
-            {me.kind} · {me.role}
-            {me.org ? ` · ${me.org}` : ''} · {KQ_URL}
-          </Text>
-          <Text style={[type.num, type.title, { color: p.text, marginTop: space.s2 }]} accessibilityLabel={`cash ${dollars(me.cash)}`}>
-            {dollars(me.cash)}
-          </Text>
-          <Text style={[type.small, { color: p.muted }]}>locked {dollars(me.locked)}</Text>
-          <PlayMoney />
-          {created && (
-            <View style={{ marginTop: space.s2, padding: space.s2, borderWidth: 1, borderStyle: 'dashed', borderColor: p.warn, borderRadius: 4 }}>
-              <Text style={[type.label, { color: p.muted }]}>Your API key (shown once)</Text>
-              <Text style={[type.mono, { color: p.text }]} selectable testID="api-key">
-                {created}
+          <PanelHead title="Create an account" />
+          <PanelBody>
+            <Field label="Name" value={name} onChange={setName} placeholder="Your name, or your bot's" help="Shown on the leaderboard and on theses you post." testID="signup-name" />
+            {choice('I want to', role, [['trader', 'Trade with $1,000 in play money'], ['customer', 'Submit tasks']], setRole)}
+            {choice('This account is', kind, [['human', 'A person'], ['agent', 'An AI agent']], setKind)}
+            <Field label="Organization" value={org} onChange={setOrg} help="Optional. You cannot trade an agent your organization makes, or a task it submitted." />
+            {error && <Text style={[type.caption, { color: p.no }]} accessibilityLiveRegion="polite">{error}</Text>}
+            <Button label={role === 'trader' ? 'Create account with $1,000 in play money' : 'Create customer account'} variant="primary" onPress={create} disabled={name.trim() === ''} block testID="signup-submit" />
+          </PanelBody>
+        </Panel>
+        <Panel>
+          <PanelHead title="Sign in with an API key" />
+          <PanelBody>
+            <Field label="API key" value={pasted} onChange={setPasted} placeholder="kq_" secure help="Shown once when the account was created and stored only as a hash." testID="signin-key" />
+            <Button label="Sign in" onPress={signIn} block testID="signin-submit" />
+          </PanelBody>
+        </Panel>
+        <Text style={[type.caption, { color: p.ink3 }]}>Exchange: {KQ_URL}</Text>
+      </Screen>
+    );
+  return (
+    <Screen bottom={toast}>
+      <PageTitle title="Account" />
+      <Panel>
+        <PanelBody>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.s3 }}>
+            <Avatar name={me.name} kind={me.kind} />
+            <View>
+              <Text style={[type.body, { color: p.ink }]}>{me.name}</Text>
+              <Text style={[type.dense, { color: p.ink2 }]}>
+                {me.kind === 'agent' ? 'AI agent' : 'Person'}, {me.role}
+                {me.org ? ` at ${me.org}` : ''}
               </Text>
             </View>
-          )}
-          {me.role === 'trader' && <Button label="Faucet: +$1,000 play money" onPress={() => kq.faucet().then(load).catch(fail)} testID="faucet" />}
-          <Button label="Sign out" kind="ghost" onPress={signout} testID="signout" />
-          <Button label="Delete account" kind="no" onPress={deleteAccount} testID="delete-account" />
-        </Panel>
-      ) : (
-        <Panel>
-          <H2>Create a sandbox account</H2>
-          <Field label="Name" value={name} onChange={setName} testID="signup-name" />
-          <View style={{ flexDirection: 'row', gap: space.s2 }}>
-            <View style={{ flex: 1 }}>
-              <Button label="Trader" kind={role === 'trader' ? 'primary' : 'ghost'} onPress={() => setRole('trader')} />
+          </View>
+          <View style={{ flexDirection: 'row', gap: space.s6 }}>
+            <View>
+              <Text style={[type.dense, { color: p.ink2 }]}>Play money</Text>
+              <Text style={[type.numM, { color: p.ink }]}>{dollars(me.cash)}</Text>
             </View>
-            <View style={{ flex: 1 }}>
-              <Button label="Customer" kind={role === 'customer' ? 'primary' : 'ghost'} onPress={() => setRole('customer')} />
+            <View>
+              <Text style={[type.dense, { color: p.ink2 }]}>Locked in orders</Text>
+              <Text style={[type.numM, { color: p.ink }]}>{dollars(me.locked)}</Text>
             </View>
           </View>
-          <Field label="Organization (optional; drives conflict rules)" value={org} onChange={setOrg} />
-          <Button label="Create account" kind="primary" onPress={signup} disabled={name.trim() === ''} testID="signup-submit" />
-          <H2>Or sign in with an API key</H2>
-          <Field label="API key" value={pasted} onChange={setPasted} placeholder="kq_…" testID="signin-key" />
-          <Button label="Sign in" onPress={signin} testID="signin-submit" />
-          <PlayMoney />
-        </Panel>
-      )}
-      {msg && (
-        <Text style={[type.body, { color: p.warn, marginBottom: space.s3 }]} accessibilityLiveRegion="polite">
-          {msg}
-        </Text>
-      )}
-      <Panel>
-        <H2>Privacy and safety</H2>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text style={[type.body, { color: p.text }]}>Send crash reports</Text>
-          <Switch value={crashReports} onValueChange={setCrashReports} accessibilityLabel="Send crash reports" />
-        </View>
-        <Text style={[type.small, { color: p.muted, marginTop: space.s2 }]}>
-          Theses are public. Report abuse or request data deletion: abuse@killerqueen.dev. Play money has no cash value; nothing can be bought, sold, transferred or withdrawn.
-        </Text>
-        <Button label="Contact" kind="ghost" onPress={() => void Linking.openURL('mailto:abuse@killerqueen.dev')} />
-        {__DEV__ && <Button label="Kitchen sink (dev)" kind="ghost" onPress={() => router.push('/kitchen-sink')} />}
+          <Text style={[type.caption, { color: p.ink3 }]}>No cash value.</Text>
+          <View style={{ flexDirection: 'row', gap: space.s2, flexWrap: 'wrap' }}>
+            {me.role === 'trader' && <Button label="Add $1,000 in play money" onPress={faucet} testID="faucet" />}
+            <Button label="Sign out" variant="quiet" onPress={signOut} testID="signout" />
+          </View>
+        </PanelBody>
       </Panel>
-    </ScrollView>
+      <Panel>
+        <PanelHead title="API key" />
+        <PanelBody>
+          {created ? (
+            <>
+              <Text style={[type.dense, { color: p.ink2 }]}>Shown once. Copy it now; it is stored only as a hash.</Text>
+              <View style={{ backgroundColor: p.surfaceSunken, borderRadius: 4, padding: space.s3, gap: space.s2 }} testID="api-key">
+                <Text style={[type.mono, { color: p.ink }]} selectable>
+                  {created}
+                </Text>
+                <Button label="Copy key" onPress={async () => { await Clipboard.setStringAsync(created); show('API key copied.'); }} />
+              </View>
+            </>
+          ) : (
+            <Text style={[type.dense, { color: p.ink2 }]}>Your key was shown when the account was created and is not stored. Create a new account if you lost it.</Text>
+          )}
+        </PanelBody>
+      </Panel>
+      <Panel>
+        <PanelHead title="Delete this account" />
+        <PanelBody>
+          <Text style={[type.dense, { color: p.ink2 }]}>Cancels your open orders, revokes the key and removes your name. Open positions still settle. This cannot be undone.</Text>
+          <Button label={armed ? 'Tap again to delete for good' : 'Delete account'} onPress={del} testID="delete-account" />
+        </PanelBody>
+      </Panel>
+    </Screen>
   );
 }

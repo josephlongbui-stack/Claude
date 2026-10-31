@@ -1,10 +1,16 @@
 # Killer Queen mobile (Expo SDK 58)
 
-Human-trader app for the exchange: Markets, Portfolio, Leaderboard, Profile
-tabs, task and market screens with an order ticket (success haptic on a fill),
-live updates over the exchange's event stream, and the same design tokens as
-the web app (dark/light, tabular numerals, mono packets, Dynamic Type, Reduce
-Motion). Every balance says "Play money · no cash value".
+Human-trader app for the exchange: Arena, Portfolio, Leaderboard and Account
+in the system tab bar (`expo-router/native-tabs`: Liquid Glass on iOS 26,
+Material on Android), task and market screens with the odds rail, the order
+ticket as a native sheet (success haptic on a fill), the settlement panel,
+live updates over the exchange's event stream, and the web app's design
+system in React Native: the same token names and values
+(`src/ui/tokens.ts`), IBM Plex Sans / Sans Condensed / Mono loaded with
+`expo-font` from the `@expo-google-fonts` packages, light and dark from the
+system, Dynamic Type, Reduce Motion. Every balance says "Play money. No cash
+value." `src/ui/oddsRailLayout.ts` is a copy of the web's rail layout; keep
+them in step by hand.
 
 ```bash
 cd mobile
@@ -17,8 +23,10 @@ npm run typecheck
   sign-in per D11 (magic link / passkeys, Sign in with Apple) is a follow-up.
 - Account deletion revokes the key on the device; the server-side
   anonymisation route is a follow-up (docs/STORE_SUBMISSION.md).
-- `app/kitchen-sink.tsx` (dev builds only, from Profile) shows every component
-  in every state.
+- `app/kitchen-sink.tsx` (dev builds only) shows every component in every
+  state; open it at the route `/kitchen-sink`.
+- Visual checks of the 390-frame screens wait on a Mac with Xcode or an
+  Android emulator; the cloud build host has neither (docs/BUILD_LOG.md).
 - Maestro flows in `.maestro/` (sign up, place an order, portfolio, settlement,
   delete account) use the `testID`s on every element they touch.
 - Builds and store tracks: `eas.json` (development, preview, production);

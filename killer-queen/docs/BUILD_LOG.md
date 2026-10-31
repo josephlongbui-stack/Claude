@@ -436,3 +436,40 @@ blocked (with exactly what the owner needs to provide).
   simulated runner determinism, journal durability, accuracy, trading window).
 - Wrote docs/ROADMAP.md: v0–v3 with gates and per-feature acceptance
   statements, including the per-screen checklists prompt 3.3 refers to.
+
+## 2026-10-31 — D10 Mobile: the design system in React Native
+- `mobile/src/ui/tokens.ts` now carries the brief's token names and values
+  (light and dark palettes, type scale with IBM Plex family names, spacing
+  4–64, radius 4/8, the float shadow) and the `usePalette` / `useReduceMotion`
+  hooks (system colour scheme; Reanimated's Reduce Motion).
+- Fonts: IBM Plex Sans 400/500/600, Sans Condensed 600 and Mono 400 from the
+  `@expo-google-fonts/ibm-plex-*` packages (0.4.1, OFL) through `expo-font`
+  ~58.0.11 in `app/_layout.tsx`; the splash stays up until they load.
+  `expo-clipboard` ~58.0.4 added for the one-time API key copy.
+- Tabs: `expo-router/native-tabs` (`NativeTabs`, `NativeTabs.Trigger`, SF
+  Symbols on iOS, Material icons on Android): Arena, Portfolio, Leaderboard,
+  Account. No custom tab bar.
+- `mobile/src/ui/components.tsx` rebuilt on the web components' names and
+  words: Panel/PanelHead/PanelBody, PageTitle, SectionHead, Button (primary,
+  secondary, quiet, yes, no, solid), StatusPill with `taskStatus` /
+  `marketStatus`, PriceCell (dense/m/l/xl, tabular, capped Dynamic Type on
+  the hero), ChangeCell, Money, Countdown, Avatar, Field/Check, EmptyState,
+  FetchError, Skeleton, AgentRow, OddsRail (spring-animated pins over the
+  shared `oddsRailLayout.ts`, a hand-kept copy of the web module), BookLadder,
+  PriceChart (views, no SVG dependency), PacketView, OrderTicket (Buy/Sell,
+  side buttons with the price, Contracts, Limit price, "Fill now at the best
+  price", cost/fee/total/pays, low-cash state, success haptic on a fill,
+  error haptic on a refusal), TicketSheet (iOS page sheet), StickyBar,
+  SettlementPanel (same timing as the web, final state under Reduce Motion),
+  ThesisList, useToast, `words()` for API errors.
+- Screens rebuilt to the 390 frames: Arena (filter tabs, grouped rows, quick
+  Yes/No), Portfolio (cash hero, positions, resting orders, settled),
+  Leaderboard (profit/accuracy), Account (sign up, sign in, key shown once,
+  faucet, delete with press-again confirm), Task (rail, candidates, customer
+  decide panel, result), Market (hero, chart, settlement, position, book,
+  theses/trades, packet, sticky Buy Yes/Buy No opening the sheet),
+  kitchen-sink. `.maestro` flows updated to the new tab names and test ids.
+- `cd mobile && npx tsc --noEmit` passes. Not done here: screenshots on a
+  simulator (no Mac or Android emulator on this host) and `expo-glass-effect`
+  surfaces beyond the system tab bar; both wait on a Mac. `npx expo install
+  --check` after cloning confirms the SDK 58 versions.

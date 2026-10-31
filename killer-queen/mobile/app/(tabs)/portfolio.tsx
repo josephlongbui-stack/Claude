@@ -1,8 +1,8 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { dollars, getKey, kq, signed, subscribe } from '../../src/api';
-import { Button, EmptyState, ErrorState, H2, Panel, Pill, PlayMoney, Skeleton } from '../../src/ui/components';
+import { Pressable, Text, View } from 'react-native';
+import { getKey, kq, subscribe } from '../../src/api';
+import { Button, EmptyState, FetchError, Money, PageTitle, Panel, Screen, SectionHead, Skeleton, StatusPill, count, dollars, useToast, words } from '../../src/ui/components';
 import { space, type, usePalette } from '../../src/ui/tokens';
 
 export default function Portfolio() {
@@ -10,90 +10,119 @@ export default function Portfolio() {
   const router = useRouter();
   const [pf, setPf] = useState<any | null>(null);
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
-  const [err, setErr] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
+  const [titles, setTitles] = useState<Record<string, { title: string; agent: string }>>({});
+  const [toast, show] = useToast();
   const load = useCallback(async () => {
     const key = await getKey();
     setSignedIn(!!key);
     if (!key) return;
     try {
-      setPf(await kq.portfolio());
-      setErr(null);
+      const [p2, t] = await Promise.all([kq.portfolio(), kq.tasks().catch(() => ({ tasks: [] }))]);
+      setPf(p2);
+      const map: Record<string, { title: string; agent: string }> = {};
+      for (const e of t.tasks) for (const m of e.markets) map[m.marketId] = { title: e.task.title, agent: `${m.executor.name} ${m.executor.version}` };
+      setTitles(map);
+      setError(null);
     } catch (e) {
-      setErr((e as Error).message);
+      setError(e);
     }
   }, []);
   useEffect(() => {
     void load();
     return subscribe(() => void load());
   }, [load]);
-  if (signedIn === false) return <EmptyState title="Sign in on the Profile tab to see your portfolio." />;
-  if (err) return <ErrorState message={err} retry={() => void load()} />;
+  if (signedIn === false) return <EmptyState title="Sign in to see your portfolio" hint="New traders start with $1,000 in play money." action={{ label: 'Sign in', onPress: () => router.push('/profile') }} />;
+  if (error) return <FetchError error={error} retry={() => void load()} />;
   if (!pf)
     return (
-      <View style={{ padding: space.s4 }}>
-        <Skeleton lines={6} />
-      </View>
+      <Screen>
+        <PageTitle title="Portfolio" />
+        <Skeleton shape="table" rows={6} />
+      </Screen>
     );
-  const row = (k: string, v: string, color?: string) => (
-    <View key={k} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 }}>
-      <Text style={[type.body, { color: p.muted }]}>{k}</Text>
-      <Text style={[type.num, type.body, { color: color ?? p.text }]} accessibilityLabel={`${k} ${v}`}>
-        {v}
-      </Text>
+  const cancel = async (id: string) => {
+    try {
+      await kq.cancelOrder(id);
+      show('Order cancelled; the lock is back in your cash.');
+      await load();
+    } catch (e) {
+      show(words(e), 'error');
+    }
+  };
+  const openValue = pf.positions.reduce((a: number, x: any) => a + x.quantity * (x.side === 'yes' ? x.mark : 100 - x.mark), 0);
+  const stat = (k: string, v: React.ReactNode) => (
+    <View key={k} style={{ minWidth: '45%', gap: 2 }}>
+      <Text style={[type.dense, { color: p.ink2 }]}>{k}</Text>
+      {typeof v === 'string' ? <Text style={[type.numM, { color: p.ink }]}>{v}</Text> : v}
     </View>
   );
+  const rowStyle = { paddingVertical: space.s3, paddingHorizontal: space.s4, borderTopWidth: 1, borderColor: p.rule, gap: 2 } as const;
   return (
-    <ScrollView contentContainerStyle={{ padding: space.s4 }}>
-      <Panel testID="balances">
-        <H2>Balance</H2>
-        {row('Cash', dollars(pf.cash))}
-        {row('Locked in orders', dollars(pf.locked))}
-        {row('Realized P&L', signed(pf.pnl.realized), pf.pnl.realized >= 0 ? p.yes : p.no)}
-        {row('Unrealized P&L', signed(pf.pnl.unrealized), pf.pnl.unrealized >= 0 ? p.yes : p.no)}
-        {row('Fees paid', dollars(pf.pnl.fees))}
-        {row('Total (net of fees)', signed(pf.pnl.total), pf.pnl.total >= 0 ? p.yes : p.no)}
-        <PlayMoney />
-      </Panel>
+    <Screen bottom={toast}>
+      <PageTitle title="Portfolio" />
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.s3, paddingBottom: space.s3, borderBottomWidth: 1, borderColor: p.rule }} testID="balances">
+        {stat('Cash', dollars(pf.cash))}
+        {stat('Locked in orders', dollars(pf.locked))}
+        {stat('Open positions', dollars(openValue))}
+        {stat('Total P&L', <Money cents={pf.pnl.total} signed style={type.numM} />)}
+        <Text style={[type.caption, { color: p.ink3, width: '100%' }]}>Play money. No cash value.</Text>
+      </View>
+      <SectionHead title="Positions" aside={pf.positions.length ? `${pf.positions.length} open` : undefined} />
       <Panel testID="positions">
-        <H2>Positions</H2>
-        {pf.positions.length === 0 && <Text style={[type.body, { color: p.muted }]}>No open positions.</Text>}
-        {pf.positions.map((x: any) => (
-          <Pressable key={x.market} onPress={() => router.push(`/market/${encodeURIComponent(x.market)}`)} accessibilityRole="button" accessibilityLabel={`${x.title}, ${x.quantity} ${x.side}, unrealized ${signed(x.unrealized)}`} style={{ paddingVertical: 6, borderBottomWidth: 1, borderColor: p.line }}>
-            <Text style={[type.body, { color: p.text }]}>{x.title}</Text>
-            <Text style={[type.small, { color: p.muted }]}>
-              <Text style={type.mono}>{x.executorId}</Text> · <Text style={{ color: x.side === 'yes' ? p.yes : p.no }}>{x.quantity} {x.side}</Text> · avg {x.avgCost}¢ · mark {x.mark}¢ ·{' '}
-              <Text style={{ color: x.unrealized >= 0 ? p.yes : p.no }}>{signed(x.unrealized)}</Text>
-            </Text>
-          </Pressable>
-        ))}
+        {pf.positions.length === 0 ? (
+          <EmptyState title="No positions yet" hint="Pick an agent in the Arena to make your first trade." action={{ label: 'Go to the Arena', onPress: () => router.push('/') }} />
+        ) : (
+          pf.positions.map((x: any, i: number) => (
+            <Pressable key={x.market} onPress={() => router.push(`/market/${encodeURIComponent(x.market)}`)} accessibilityRole="link" style={[rowStyle, { borderTopWidth: i === 0 ? 0 : 1 }]}>
+              <Text style={[type.ui, { fontFamily: type.uiMedium.fontFamily, color: p.ink }]}>{x.title}</Text>
+              <Text style={[type.dense, { color: p.ink3 }]}>{titles[x.market]?.agent ?? x.executorId}</Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
+                <Text style={[type.dense, type.num, { color: p.ink }]}>
+                  <Text style={{ color: x.side === 'yes' ? p.yes : p.no, fontFamily: type.uiMedium.fontFamily }}>{count(x.quantity)} {x.side === 'yes' ? 'Yes' : 'No'}</Text> at {x.avgCost}¢, mark {x.mark}¢
+                </Text>
+                <Money cents={x.unrealized} signed style={type.dense} />
+              </View>
+            </Pressable>
+          ))
+        )}
       </Panel>
-      <Panel>
-        <H2>Open orders</H2>
-        {pf.openOrders.length === 0 && <Text style={[type.body, { color: p.muted }]}>None.</Text>}
-        {pf.openOrders.map((o: any) => (
-          <View key={o.id} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 4 }}>
-            <Text style={[type.small, { color: p.text }]}>
-              <Text style={type.mono}>{o.market}</Text> · <Text style={{ color: o.side === 'yes' ? p.yes : p.no }}>{o.side}</Text> {o.price}¢ × {o.quantity - o.filled}
-            </Text>
-            <Button label="Cancel" kind="ghost" onPress={() => kq.cancelOrder(o.id).then(load).catch(() => undefined)} />
-          </View>
-        ))}
-      </Panel>
-      <Panel>
-        <H2>Settled history</H2>
-        {pf.history.length === 0 && <Text style={[type.body, { color: p.muted }]}>Nothing settled yet.</Text>}
-        {pf.history.map((h: any) => (
-          <View key={h.market} style={{ paddingVertical: 4, borderBottomWidth: 1, borderColor: p.line }}>
-            <Text style={[type.body, { color: p.text }]}>{h.title}</Text>
-            <View style={{ flexDirection: 'row', gap: space.s2, alignItems: 'center' }}>
-              <Pill status={h.closed.outcome} />
-              <Text style={[type.small, type.num, { color: p.muted }]}>
-                settled {h.closed.settlementPrice}¢ · payout {dollars(h.payout)} · <Text style={{ color: h.realized >= 0 ? p.yes : p.no }}>{signed(h.realized)}</Text>
-              </Text>
+      <SectionHead title="Open orders" aside={pf.openOrders.length ? `${pf.openOrders.length} resting` : undefined} />
+      <Panel testID="open-orders">
+        {pf.openOrders.length === 0 ? (
+          <EmptyState title="No resting orders" hint="Limit orders that do not fill at once wait here until they fill or you cancel them." />
+        ) : (
+          pf.openOrders.map((o: any, i: number) => (
+            <View key={o.id} style={[rowStyle, { borderTopWidth: i === 0 ? 0 : 1, flexDirection: 'row', alignItems: 'center', gap: space.s3 }]}>
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={[type.ui, { fontFamily: type.uiMedium.fontFamily, color: p.ink }]}>{titles[o.market]?.title ?? o.market}</Text>
+                <Text style={[type.dense, type.num, { color: p.ink2 }]}>
+                  <Text style={{ color: o.side === 'yes' ? p.yes : p.no }}>{o.side === 'yes' ? 'Yes' : 'No'}</Text> {count(o.quantity - o.filled)} left at {o.price}¢
+                </Text>
+              </View>
+              <Button label="Cancel" variant="quiet" onPress={() => cancel(o.id)} compact />
             </View>
-          </View>
-        ))}
+          ))
+        )}
       </Panel>
-    </ScrollView>
+      <SectionHead title="Settled" aside={pf.history.length ? `${pf.history.length} ${pf.history.length === 1 ? 'market' : 'markets'}` : undefined} />
+      <Panel testID="history">
+        {pf.history.length === 0 ? (
+          <EmptyState title="Nothing has settled yet" hint="Markets settle when the chosen agent finishes its run, or at the closing price when it is not chosen." />
+        ) : (
+          pf.history.map((h: any, i: number) => (
+            <Pressable key={h.market} onPress={() => router.push(`/market/${encodeURIComponent(h.market)}`)} accessibilityRole="link" style={[rowStyle, { borderTopWidth: i === 0 ? 0 : 1 }]}>
+              <Text style={[type.ui, { fontFamily: type.uiMedium.fontFamily, color: p.ink }]}>{h.title}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
+                <StatusPill status={h.closed.outcome === 'passed' || h.closed.outcome === 'failed' ? h.closed.outcome : h.closed.outcome === 'infra_error' ? 'infra_error' : 'settled'} label={h.closed.outcome === 'passed' || h.closed.outcome === 'failed' ? undefined : `Settled at ${h.closed.settlementPrice}¢`} />
+                <Text style={[type.dense, type.num, { color: p.ink2 }]}>
+                  {h.closed.yes > 0 ? `${count(h.closed.yes)} Yes` : h.closed.no > 0 ? `${count(h.closed.no)} No` : '—'}, paid {dollars(h.payout)} <Money cents={h.realized} signed style={type.dense} />
+                </Text>
+              </View>
+            </Pressable>
+          ))
+        )}
+      </Panel>
+    </Screen>
   );
 }

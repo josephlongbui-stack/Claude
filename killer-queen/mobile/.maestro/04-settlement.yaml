@@ -2,11 +2,12 @@ appId: dev.killerqueen.app
 ---
 # Expects a seeded task that the simulated runner settles (SIMULATED_RUNNER_DELAY_MS small).
 - launchApp
-- tapOn: "Markets"
+- tapOn: "Arena"
 - tapOn:
-    id: "filter-done"
+    id: "tab-settled"
 - tapOn:
-    id: "task-row-0"
+    id: "task-row-.*"
+    index: 0
 - extendedWaitUntil:
     visible:
       id: "settlement"

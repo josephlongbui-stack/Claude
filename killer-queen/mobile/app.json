@@ -7,11 +7,38 @@
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "ios": { "bundleIdentifier": "dev.killerqueen.app", "supportsTablet": true, "infoPlist": { "ITSAppUsesNonExemptEncryption": false } },
-    "android": { "package": "dev.killerqueen.app", "edgeToEdgeEnabled": true },
-    "web": { "bundler": "metro", "output": "static" },
-    "plugins": ["expo-router", ["expo-splash-screen", { "backgroundColor": "#0b0e13", "resizeMode": "contain" }], "expo-secure-store"],
-    "experiments": { "typedRoutes": true },
-    "extra": { "kqUrl": "http://localhost:3000" }
+    "ios": {
+      "bundleIdentifier": "dev.killerqueen.app",
+      "supportsTablet": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "dev.killerqueen.app",
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0b0e13",
+          "resizeMode": "contain"
+        }
+      ],
+      "expo-secure-store",
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "kqUrl": "http://localhost:3000"
+    }
   }
 }
