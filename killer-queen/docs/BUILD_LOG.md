@@ -14,6 +14,13 @@ blocked (with exactly what the owner needs to provide).
   No real money moves anywhere in the codebase; real payments, identity
   verification and the DCM listing remain the v2 gate items.
 - Pushed the branch to origin on the owner's instruction.
+- Deployment could not run from the build container: Docker client present
+  but no daemon, no flyctl, no hosting token. Prepared the path instead:
+  `.github/workflows/ci.yml` (tests, typechecks, web build, mobile typecheck
+  on every push), `.github/workflows/deploy.yml` (Fly deploy on manual
+  dispatch or on main when the FLY_API_TOKEN secret and KQ_DEPLOY variable
+  are set), `scripts/deploy.sh` (one-shot deploy from a machine with
+  flyctl). Owner action: a Fly account/token, or another host.
 
 ## 2026-10-31 — Polish pass
 - Re-verified every scope item against the product doc (engine commands,

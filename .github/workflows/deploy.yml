@@ -1,0 +1,41 @@
+# Deploys the exchange to Fly.io. Needs the repository secret FLY_API_TOKEN
+# (fly tokens create deploy -x 999999h) and a Fly app matching killer-queen/fly.toml
+# (fly apps create killer-queen && fly volumes create kq_data --size 10 --region iad).
+# Exchange secrets are set once on the app, never in this file:
+#   fly secrets set RUNNER_SECRET=... ADMIN_KEY=... [ANTHROPIC_API_KEY=... ANTHROPIC_MODEL=...]
+name: Deploy Killer Queen
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["killer-queen/**", ".github/workflows/deploy.yml"]
+
+concurrency: deploy-killer-queen
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ vars.KQ_DEPLOY == 'true' || github.event_name == 'workflow_dispatch' }}
+    defaults:
+      run:
+        working-directory: killer-queen
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci --no-audit --no-fund
+      - run: npm test
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Deploy
+        run: |
+          test -n "$FLY_API_TOKEN" || { echo "FLY_API_TOKEN secret is not set"; exit 1; }
+          flyctl deploy --remote-only --config fly.toml
+      - name: Health check
+        run: |
+          app=$(grep -E '^app = ' fly.toml | sed -E 's/app = "(.*)"/\1/')
+          for i in $(seq 1 30); do curl -fsS "https://$app.fly.dev/api/health" && exit 0; sleep 5; done
+          echo "health check failed"; exit 1

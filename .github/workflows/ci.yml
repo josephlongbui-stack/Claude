@@ -1,0 +1,28 @@
+name: Killer Queen CI
+
+on:
+  push:
+    paths: ["killer-queen/**", ".github/workflows/ci.yml"]
+  pull_request:
+    paths: ["killer-queen/**", ".github/workflows/ci.yml"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: killer-queen
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: killer-queen/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build:web
+      - name: Mobile typecheck
+        working-directory: killer-queen/mobile
+        run: npm ci --no-audit --no-fund && npm run typecheck

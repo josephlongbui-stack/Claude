@@ -5,6 +5,15 @@ Dockerfile / fly.toml deployment; adapt paths for another host.
 
 ## Deploy
 
+Fastest path: `scripts/deploy.sh` on any machine with `flyctl` and a
+`FLY_API_TOKEN` (creates the app and volume on first run, sets random
+`RUNNER_SECRET`/`ADMIN_KEY`, runs the tests, deploys, health-checks). Or add
+`FLY_API_TOKEN` as a GitHub repository secret and run the "Deploy Killer
+Queen" workflow (`.github/workflows/deploy.yml`, manual dispatch, or set the
+repository variable `KQ_DEPLOY=true` to deploy on every push to `main`).
+
+By hand:
+
 1. `npm test && npm run typecheck` on the commit you are deploying.
 2. Secrets live only in the platform: `fly secrets set RUNNER_SECRET=<32+ random chars> ADMIN_KEY=<random> ANTHROPIC_API_KEY=... ANTHROPIC_MODEL=...` (a lab's trader is on only when both its key and model are set).
 3. `fly deploy` (builds the Dockerfile; the web app is built in the image).
