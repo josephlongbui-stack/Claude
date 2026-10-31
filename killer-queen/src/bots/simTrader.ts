@@ -171,6 +171,11 @@ export class HeuristicEstimator implements Estimator {
     const jitter = (parseInt(sha256(`${this.seed}:${packet.marketId}`).slice(0, 4), 16) % 11) - 5;
     p += jitter;
     p = clampPrice(p);
-    return { probability: p, rationale: `${reasons.join('; ')}. I put it at ${p}%.` };
+    // Three house traders share one heuristic; each phrases it its own way so the theses read as different voices.
+    const voice = parseInt(sha256(`voice:${this.seed}`).slice(0, 2), 16) % 3;
+    const first = reasons[0]!.charAt(0).toUpperCase() + reasons[0]!.slice(1);
+    const rest = reasons.slice(1).join('; ');
+    const rationale = voice === 0 ? `${first}${rest ? `; ${rest}` : ''}. I put it at ${p}%.` : voice === 1 ? `${p}% from me. ${first}${rest ? `, and ${rest}` : ''}.` : `Reading the packet: ${reasons.join(', ')}. Fair value about ${p}¢.`;
+    return { probability: p, rationale };
   }
 }

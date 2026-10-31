@@ -22,6 +22,18 @@ describe('views', () => {
     assert.equal(quote(f.venue.engine, codex).change, 6);
   });
 
+  it('task and packet show the version frozen at task creation and the record on that version only (D4)', () => {
+    const f = seedExchange();
+    // A later version of the same agent: the open task keeps 0.48.0; the record on 0.48.0 is still empty.
+    must(f.venue, { type: 'upsertExecutor', id: 'codex', name: 'Codex', org: 'OpenAI', version: '0.49.0' });
+    const tv = taskView(f.venue.engine, f.taskId);
+    const codex = tv.markets.find((m) => m.executorId === 'codex')!;
+    assert.equal(codex.executor.version, '0.48.0');
+    assert.deepEqual({ chosen: codex.executor.chosen, passed: codex.executor.passed }, { chosen: 0, passed: 0 });
+    assert.equal(packet(f.venue.engine, f.markets[1]!).executor.version, '0.48.0');
+    assert.equal(executorRecords(f.venue.engine).find((r) => r.id === 'codex')!.version, '0.49.0');
+  });
+
   it('packet has exactly the documented fields', () => {
     const f = seedExchange();
     const codex = f.markets[1]!;

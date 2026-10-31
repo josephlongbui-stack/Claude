@@ -31,7 +31,7 @@ export function Wordmark() {
 }
 
 export function isActive(href: string, hash: string): boolean {
-  if (href === '#/') return hash === '#/' || hash === '' || hash.startsWith('#/task') || hash.startsWith('#/market') || hash.startsWith('#/submit');
+  if (href === '#/') return hash === '#/' || hash === '' || hash.startsWith('#/task') || hash.startsWith('#/market');
   return hash.startsWith(href);
 }
 
@@ -65,7 +65,11 @@ export function TopBar({ me, hash, demo, dark, onTheme, onSignOut }: { me: TopBa
         </nav>
         {demo && <StatusPill status="demo" class="topbar-demo" title="Filled by the demo seed; nothing here is a real result" />}
         <span class="spacer" />
-        {me ? (
+        {me && me.role !== 'trader' ? (
+          <a class="balance" href="#/account" data-testid="who">
+            <span class="lbl">{me.role === 'customer' ? 'Customer' : me.role === 'admin' ? 'Admin' : 'Staff'}</span>
+          </a>
+        ) : me ? (
           <a class="balance" href="#/portfolio" data-testid="who" title="Play money has no cash value">
             <span class="lbl">Play money</span>
             <span class="amt">{dollars(me.cash)}</span>

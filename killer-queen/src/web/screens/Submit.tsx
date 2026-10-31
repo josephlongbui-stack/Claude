@@ -9,6 +9,7 @@ export function Submit({ ctx }: { ctx: Ctx }) {
   const [f, setF] = useState({ title: '', prompt: '', repo: '', commit: '', testCommand: '', minutes: '60', autoDecide: false, minimumChance: '60', privateTask: false });
   const [chosen, setChosen] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof typeof f, string>>>({});
   const [busy, setBusy] = useState(false);
   useEffect(() => {
     api<{ executors: any[] }>('GET', '/api/executors')
@@ -24,9 +25,28 @@ export function Submit({ ctx }: { ctx: Ctx }) {
   };
   if (!ctx.me) return <EmptyState page title="Sign in as a customer to submit a task" hint="Customers submit tasks and choose the agent; they never trade their own markets." action={{ href: '#/signin', label: 'Sign in' }} />;
   if (ctx.me.role !== 'customer' && ctx.me.role !== 'admin') return <EmptyState page title="Only customer accounts submit tasks" hint="Your account is a trader account. Create a customer account to open markets on your own tasks." action={{ href: '#/signin', label: 'Create a customer account' }} />;
+  /** Our own validation, in our own words: no browser bubbles. Returns the id of the first field to fix. */
+  const check = (): string | null => {
+    const errs: Partial<Record<keyof typeof f, string>> = {};
+    if (f.title.trim() === '') errs.title = 'Give the task a title.';
+    if (f.prompt.trim() === '') errs.prompt = 'Write the prompt the agent will get.';
+    if (f.repo.trim() === '') errs.repo = 'Name the repository, such as github.com/org/repo.';
+    const commit = f.commit.trim();
+    if (commit === '') errs.commit = 'Pin a commit.';
+    else if (!/^[0-9a-fA-F]{7,40}$/.test(commit)) errs.commit = `A commit is 7 or 40 hex characters; this one has ${commit.length}.`;
+    if (f.testCommand.trim() === '') errs.testCommand = 'Give the command that must go from failing to passing.';
+    setFieldErrors(errs);
+    const first = (['title', 'prompt', 'repo', 'commit', 'testCommand'] as const).find((k) => errs[k]);
+    return first ? { title: 'f-title', prompt: 'f-prompt', repo: 'f-repo', commit: 'f-commit', testCommand: 'f-test' }[first] : null;
+  };
   const submit = async (e: Event) => {
     e.preventDefault();
     setError(null);
+    const bad = check();
+    if (bad) {
+      document.getElementById(bad)?.focus();
+      return;
+    }
     if (chosen.size === 0) {
       setError('Pick at least one candidate agent.');
       return;
@@ -45,7 +65,7 @@ export function Submit({ ctx }: { ctx: Ctx }) {
         minimumChance: Math.min(99, Math.max(1, Number(f.minimumChance) || 60)),
         visibility: f.privateTask ? 'private' : 'public',
       });
-      ctx.toast('Task submitted. Markets open once the baseline check passes.');
+      ctx.toast('Task submitted. Markets open once the baseline check confirms the tests fail.');
       location.hash = `#/task/${encodeURIComponent(r.task.id)}`;
     } catch (err: any) {
       setError(words(err));
@@ -59,23 +79,23 @@ export function Submit({ ctx }: { ctx: Ctx }) {
       <div class="submit-grid">
         <Panel>
           <PanelBody>
-            <form onSubmit={submit} data-testid="submit-form" class="submit-form">
-              <Field label="Title" htmlFor="f-title" help="One line, the way you would name a pull request.">
-                <Input id="f-title" value={f.title} onInput={set('title')} required maxLength={200} placeholder="Reject negative quantities in the cart API" data-testid="f-title" />
+            <form onSubmit={submit} noValidate data-testid="submit-form" class="submit-form">
+              <Field label="Title" htmlFor="f-title" help="One line, the way you would name a pull request: Reject negative quantities in the cart API." error={fieldErrors.title}>
+                <Input id="f-title" value={f.title} onInput={set('title')} maxLength={200} aria-invalid={!!fieldErrors.title} data-testid="f-title" />
               </Field>
-              <Field label="Prompt for the agent" htmlFor="f-prompt" help="Traders and the runner see this exactly as written. Say what to change and what done looks like.">
-                <Textarea id="f-prompt" value={f.prompt} onInput={set('prompt')} required maxLength={8000} data-testid="f-prompt" />
+              <Field label="Prompt for the agent" htmlFor="f-prompt" help="Traders and the runner see this exactly as written. Say what to change and what done looks like." error={fieldErrors.prompt}>
+                <Textarea id="f-prompt" value={f.prompt} onInput={set('prompt')} maxLength={8000} aria-invalid={!!fieldErrors.prompt} data-testid="f-prompt" />
               </Field>
               <div class="two-up">
-                <Field label="Repository" htmlFor="f-repo">
-                  <Input id="f-repo" value={f.repo} onInput={set('repo')} required placeholder="github.com/org/repo" data-testid="f-repo" />
+                <Field label="Repository" htmlFor="f-repo" help="As github.com/org/repo." error={fieldErrors.repo}>
+                  <Input id="f-repo" value={f.repo} onInput={set('repo')} aria-invalid={!!fieldErrors.repo} data-testid="f-repo" />
                 </Field>
-                <Field label="Commit" htmlFor="f-commit" help="Seven or forty hex characters.">
-                  <Input id="f-commit" value={f.commit} onInput={set('commit')} required pattern="[0-9a-fA-F]{7,40}" placeholder="58b0ce4" data-testid="f-commit" />
+                <Field label="Commit" htmlFor="f-commit" help="Seven or forty hex characters." error={fieldErrors.commit}>
+                  <Input id="f-commit" value={f.commit} onInput={set('commit')} aria-invalid={!!fieldErrors.commit} data-testid="f-commit" />
                 </Field>
               </div>
-              <Field label="Test command" htmlFor="f-test" help="Exit code 0 is a pass. It must fail three times at the commit before trading opens.">
-                <Input id="f-test" value={f.testCommand} onInput={set('testCommand')} required placeholder="pytest tests/api/test_cart.py" data-testid="f-test" />
+              <Field label="Test command" htmlFor="f-test" help="Exit code 0 is a pass; pytest tests/api/test_cart.py, for example. It must fail three times at the commit before trading opens." error={fieldErrors.testCommand}>
+                <Input id="f-test" value={f.testCommand} onInput={set('testCommand')} aria-invalid={!!fieldErrors.testCommand} data-testid="f-test" />
               </Field>
               <fieldset class="field candidates">
                 <legend class="label">Candidate agents</legend>
@@ -91,7 +111,8 @@ export function Submit({ ctx }: { ctx: Ctx }) {
                     }}
                     label={
                       <span>
-                        {e.name} <span class="ink-3">{e.version}</span> <span class="ink-2">{e.chosen === 0 ? 'no runs yet' : `passed ${e.passed} of ${e.chosen}`}</span>
+                        {e.name} <span class="ink-3">{e.version}</span>{' '}
+                        <span class="ink-2">{(e.byVersion?.[e.version]?.chosen ?? 0) === 0 ? 'no runs yet on this version' : `passed ${e.byVersion[e.version].passed} of ${e.byVersion[e.version].chosen} on this version`}</span>
                       </span>
                     }
                   />
@@ -122,7 +143,7 @@ export function Submit({ ctx }: { ctx: Ctx }) {
               )}
               <div class="submit-actions">
                 <Button type="submit" variant="primary" size={40} disabled={busy} data-testid="f-submit">
-                  Submit task and open {chosen.size} {chosen.size === 1 ? 'market' : 'markets'}
+                  Submit task
                 </Button>
               </div>
             </form>

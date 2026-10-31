@@ -4,4 +4,4 @@
 .tabs button:hover { color: var(--ink); }
 .tabs button.on { color: var(--ink); border-bottom-color: var(--ink); }
 .tabs .count { color: var(--ink-3); font-variant-numeric: tabular-nums; font-weight: 400; }
-@media (max-width: 720px) { .tabs button { height: var(--touch); } }
+@media (max-width: 720px) { .tabs { flex-wrap: wrap; gap: 0 var(--sp-4); overflow: visible; } .tabs button { height: var(--touch); } }

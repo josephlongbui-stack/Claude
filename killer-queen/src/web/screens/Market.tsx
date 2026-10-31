@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { api } from '../api.js';
 import { useTitle, type Ctx } from '../main.js';
-import { BookLadder, Button, ChangeCell, Countdown, EmptyState, FetchError, Icon, IconButton, Money, OrderTicket, PacketView, Panel, PanelBody, PanelHead, PriceCell, PriceChart, SettlementPanel, Skeleton, StatusPill, Tabs, ThesisList, TradeList, dollars, marketStatus, toast, type OrderInput } from '../ui/index.js';
+import { BookLadder, Button, ChangeCell, Countdown, count, EmptyState, FetchError, Icon, IconButton, Money, OrderTicket, PacketView, Panel, PanelBody, PanelHead, PriceCell, PriceChart, SettlementPanel, Skeleton, StatusPill, Tabs, ThesisList, TradeList, dollars, marketStatus, toast, type OrderInput } from '../ui/index.js';
 import { when } from '../ui/PacketView.js';
 
 export function Market({ ctx, id }: { ctx: Ctx; id: string }) {
@@ -130,7 +130,12 @@ export function Market({ ctx, id }: { ctx: Ctx; id: string }) {
 
   const heroLine = open ? (
     <>
-      <b>{chance}% chance</b> {name} passes <ChangeCell delta={v.quote.change} /> {v.quote.change !== null && v.quote.change !== undefined ? 'today' : ''}
+      <b>{chance}% chance</b> {name} passes
+      {v.quote.change ? (
+        <>
+          , <ChangeCell delta={v.quote.change} /> today
+        </>
+      ) : null}
     </>
   ) : m.status === 'pending' ? (
     <>Trading opens after the baseline check.</>
@@ -254,7 +259,7 @@ export function Market({ ctx, id }: { ctx: Ctx; id: string }) {
       </p>
       <div class="market" data-testid="market-status" data-status={m.status}>
         <aside class="col-packet" aria-label="Packet">
-          <PacketView packet={p} status={st} closedLabel={m.status === 'settled' ? 'Settled' : m.status === 'open' || m.status === 'pending' ? 'Trading closes' : 'Trading closed'} />
+          <PacketView packet={p} status={st} closedLabel={m.status === 'open' || m.status === 'pending' ? 'Trading closes' : 'Trading closed'} />
         </aside>
         <div class="col-centre">
           <div class="chance-hero">
@@ -280,10 +285,47 @@ export function Market({ ctx, id }: { ctx: Ctx; id: string }) {
             {tab === 'theses' ? <ThesisList theses={v.theses} canPost={!!me && open && !blocked} onPost={post} onReport={me ? report : undefined} /> : <TradeList fills={v.trades} />}
           </div>
         </div>
-        <aside class="col-ticket" aria-label="Trade">
-          <OrderTicket executorName={name} status={m.status} quote={ticketQuote} signedIn={!!me} cash={me?.cash} blockedReason={blocked} initialSide={side} onSubmit={place} />
-        </aside>
-        {(pos || closed || myOrders.length > 0) && <div class="col-yours">{yourSide}</div>}
+        {open || m.status === 'pending' || m.status === 'cancelled' ? (
+          <aside class="col-ticket" aria-label="Trade">
+            <OrderTicket executorName={name} status={m.status} quote={ticketQuote} signedIn={!!me} cash={me?.cash} blockedReason={blocked} initialSide={side} onSubmit={place} />
+          </aside>
+        ) : (
+          !(pos || closed || myOrders.length > 0) && (
+            <aside class="col-ticket" aria-label="Market summary">
+              <Panel testId="market-summary">
+                <PanelHead title={m.status === 'settled' ? 'Settled' : 'Trading closed'} aside={<StatusPill status={st} />} />
+                <PanelBody>
+                  <dl class="kv">
+                    <dt>Closing price</dt>
+                    <dd>{m.closingPrice === null ? '—' : `${m.closingPrice}¢`}</dd>
+                    {m.status === 'settled' && (
+                      <>
+                        <dt>Settled at</dt>
+                        <dd class={m.outcome === 'passed' ? 'yes' : m.outcome === 'failed' ? 'no' : ''}>{m.settlementPrice === null ? '—' : `${m.settlementPrice}¢`}</dd>
+                      </>
+                    )}
+                    <dt>Contracts traded</dt>
+                    <dd>{count(v.quote.volume)}</dd>
+                    <dt>Traders</dt>
+                    <dd>{count(v.traders)}</dd>
+                    <dt>Trading closed</dt>
+                    <dd>{when(p.closesAt)}</dd>
+                    {task?.task.resolvedAt && (
+                      <>
+                        <dt>Settled</dt>
+                        <dd>{when(task.task.resolvedAt)}</dd>
+                      </>
+                    )}
+                  </dl>
+                  <Button href={`#/task/${encodeURIComponent(m.taskId)}`} block>
+                    See the task
+                  </Button>
+                </PanelBody>
+              </Panel>
+            </aside>
+          )
+        )}
+        {(pos || closed || myOrders.length > 0) && <div class={`col-yours ${open ? '' : 'in-ticket-col'}`}>{yourSide}</div>}
       </div>
       {open && (
         <div class="sticky-bar">

@@ -30,7 +30,7 @@ export function Agents({ ctx }: { ctx: Ctx }) {
         ) : rows.length === 0 ? (
           <EmptyState title="No agents registered" hint="The operator registers agents; tasks can only name registered ones." />
         ) : (
-          <Table caption="Agent records per version" columns={[{ key: 'a', label: 'Agent', width: 'task' }, { key: 'v', label: 'Version' }, { key: 'r', label: 'Runs', align: 'right' }, { key: 'p', label: 'Passed', align: 'right', hideXs: true }, { key: 'x', label: 'Pass rate', align: 'right' }]}>
+          <Table caption="Agent records per version" columns={[{ key: 'a', label: 'Agent', width: 'task' }, { key: 'v', label: 'Version' }, { key: 'r', label: 'Runs', align: 'right' }, { key: 'p', label: 'Passed', align: 'right', hideSm: true }, { key: 'x', label: 'Pass rate', align: 'right' }]}>
             {rows.map((e) => {
               const versions = Object.entries(e.byVersion as Record<string, { chosen: number; passed: number }>).sort(([a], [b]) => b.localeCompare(a, undefined, { numeric: true }));
               const lines = versions.length ? versions : [[e.version, { chosen: 0, passed: 0 }] as [string, { chosen: number; passed: number }]];
@@ -42,14 +42,14 @@ export function Agents({ ctx }: { ctx: Ctx }) {
                       <div class="ink-3 t-dense">
                         {e.org}, current version {e.version}
                       </div>
-                      <div class="t-dense agent-total">
+                      <div class="t-dense agent-total hide-sm">
                         {e.chosen === 0 ? 'No runs yet' : `Passed ${count(e.passed)} of ${count(e.chosen)} overall`}
                       </div>
                     </Td>
                   ) : null}
-                  <Td class="mono">{v}</Td>
+                  <Td>{v}</Td>
                   <Td align="right">{count(r.chosen)}</Td>
-                  <Td align="right" hideXs>
+                  <Td align="right" hideSm>
                     {count(r.passed)}
                   </Td>
                   <Td align="right">{r.chosen ? pct(r.passed / r.chosen) : <span class="ink-3">—</span>}</Td>
@@ -61,7 +61,7 @@ export function Agents({ ctx }: { ctx: Ctx }) {
       </Panel>
       {stats && (
         <>
-          <SectionHead title="How the exchange is doing" aside="Gate metrics from the product spec" />
+          <SectionHead title="How the exchange is doing" aside="Are the prices better than the agents' own pass rates?" />
           <div class="summary" data-testid="stats"><dl class="summary-list">
             <div>
               <dt>Settled on a test</dt>
@@ -89,7 +89,7 @@ export function Agents({ ctx }: { ctx: Ctx }) {
             </div>
           </dl>
           </div>
-          <p class="t-caption ink-3 foot-note">Lower Brier is better. The v0 gate is closing prices at least 10% more accurate than the agents' historical pass rates over 500 settled runs; markets closing at 70–80¢ should pass 70–80% of the time.</p>
+          <p class="t-caption ink-3 foot-note">Lower Brier is better. The aim is closing prices at least 10% more accurate than the agents' historical pass rates over 500 settled runs, with markets that close at 70–80¢ passing 70–80% of the time.</p>
         </>
       )}
     </>

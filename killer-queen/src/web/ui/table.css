@@ -2,9 +2,11 @@
 .table th { font-size: var(--t-dense); line-height: var(--t-dense-lh); font-weight: 500; color: var(--ink-2); padding: var(--sp-2) var(--sp-3); border-bottom: var(--hairline) solid var(--rule-strong); background: var(--surface-sunken); text-align: left; white-space: nowrap; }
 .table th:first-child { border-top-left-radius: var(--r-panel); }
 .table th:last-child { border-top-right-radius: var(--r-panel); }
-.table td { font-size: var(--t-dense); line-height: var(--t-dense-lh); padding: var(--sp-2) var(--sp-3); border-bottom: var(--hairline) solid var(--rule); vertical-align: middle; }
-.table tbody tr:last-child td { border-bottom: 0; }
+/* Rules sit on the top of each row, so cells that span rows never leave a stray line under a group. */
+.table td { font-size: var(--t-dense); line-height: var(--t-dense-lh); padding: var(--sp-2) var(--sp-3); border-top: var(--hairline) solid var(--rule); vertical-align: middle; }
+.table tbody tr:first-child td { border-top: 0; }
 .table .r { text-align: right; font-variant-numeric: tabular-nums; }
+.table .nowrap { white-space: nowrap; }
 .table tbody tr.link { cursor: pointer; }
 .table tbody tr.link:hover td { background: var(--surface-sunken); }
 .table tbody tr.link:focus-visible { outline: var(--focus-w) solid var(--focus); outline-offset: calc(-1 * var(--focus-w)); }
@@ -12,9 +14,10 @@
 .table .w-narrow { width: 1%; white-space: nowrap; }
 .table .group td { border-top: var(--hairline) solid var(--rule-strong); }
 .table tbody tr:first-child.group td { border-top: 0; }
+.table .agent-pill { margin-left: var(--sp-2); }
 .title-cell { min-width: 0; }
 .title-cell .title { font-size: var(--t-ui); line-height: var(--t-ui-lh); font-weight: 500; color: var(--ink); }
 .title-cell .sub { margin-top: var(--tick); color: var(--ink-3); font-size: var(--t-dense); line-height: var(--t-dense-lh); }
 .title-cell .sub.mono { font-family: var(--font-mono); }
-@media (max-width: 720px) { .table .hide-sm { display: none; } .table .w-task { width: auto; } }
+@media (max-width: 720px) { .table .hide-sm { display: none; } .table .w-task { width: auto; min-width: 45%; } .table .agent-pill { display: block; margin: var(--sp-1) 0 0; } }
 @media (max-width: 360px) { .table .hide-xs { display: none; } .table th, .table td { padding-left: var(--sp-2); padding-right: var(--sp-2); } }

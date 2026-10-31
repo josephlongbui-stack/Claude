@@ -1,4 +1,4 @@
-import { PageHead, Panel, PanelBody } from '../ui/index.js';
+import { EmptyState, PageHead, Panel, PanelBody } from '../ui/index.js';
 
 export function Terms() {
   return (
@@ -41,12 +41,7 @@ export function Contact() {
 export function NotFound() {
   return (
     <div class="static-page">
-      <PageHead title="There is nothing at this address" sub="The link may be old, or the task may have been removed." />
-      <p>
-        <a class="btn" href="#/">
-          Go to the Arena
-        </a>
-      </p>
+      <EmptyState page title="There is nothing at this address" hint="The link may be old, or the page may have moved." action={{ href: '#/', label: 'Go to the Arena' }} />
     </div>
   );
 }

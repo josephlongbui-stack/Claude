@@ -38,6 +38,8 @@
 .market .col-ticket { grid-area: ticket; position: sticky; top: calc(var(--topbar-h) + var(--sp-4)); }
 .market .col-packet { grid-area: packet; display: flex; flex-direction: column; gap: var(--sp-4); }
 .market .col-yours { grid-area: yours; display: flex; flex-direction: column; gap: var(--sp-4); }
+/* After trading closes the ticket has nothing to say, so the trader's own result takes its column. */
+.market .col-yours.in-ticket-col { grid-area: ticket; position: sticky; top: calc(var(--topbar-h) + var(--sp-4)); }
 .chance-hero { display: flex; align-items: flex-end; gap: var(--sp-4); flex-wrap: wrap; }
 .chance-hero .hero-line { padding-bottom: var(--sp-2); max-width: var(--measure); }
 .chance-hero .hero-line b { color: var(--ink); font-weight: 500; }
@@ -53,6 +55,7 @@
 @media (max-width: 720px) {
   .market { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "centre" "yours" "packet"; }
   .market .col-ticket { display: none; }
+  .market .col-yours.in-ticket-col { grid-area: yours; position: static; }
   .sticky-bar { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); position: sticky; bottom: 0; z-index: 5; padding: var(--sp-2) var(--gutter-mobile); background: var(--surface); border-top: var(--hairline) solid var(--rule-strong); box-shadow: var(--shadow-float); margin: var(--sp-4) calc(-1 * var(--gutter-mobile)) calc(-1 * var(--sp-8)); width: calc(100% + 2 * var(--gutter-mobile)); }
   .sticky-bar .btn { height: var(--touch); }
 }
@@ -63,17 +66,19 @@
 .summary-list > div { display: flex; flex-direction: column; }
 .summary dt { font-size: var(--t-dense); line-height: var(--t-dense-lh); color: var(--ink-2); white-space: nowrap; }
 .summary dd { font-family: var(--font-cond); font-weight: 600; font-size: var(--t-num-m); line-height: var(--t-num-m-lh); font-variant-numeric: tabular-nums; }
+.summary .hero dd { font-size: var(--t-num-l); line-height: var(--t-num-l-lh); letter-spacing: -0.01em; }
 .summary .note { align-self: flex-end; margin-left: auto; font-size: var(--t-caption); line-height: var(--t-caption-lh); color: var(--ink-3); }
 .foot-note { margin-top: var(--sp-3); max-width: var(--measure); }
-.trader-cell { display: inline-flex; align-items: center; gap: var(--sp-2); }
+.trader-cell { display: inline-flex; align-items: center; flex-wrap: wrap; gap: var(--sp-1) var(--sp-2); }
+.trader-cell > span { white-space: nowrap; }
 .trader-name { font-weight: 500; color: var(--ink); }
-.table tr.me td { background: var(--yes-tint); }
+.table tr.me td { background: var(--surface-sunken); }
 .agent-title { font-size: var(--t-ui); line-height: var(--t-ui-lh); font-weight: 500; }
 .agent-total { margin-top: var(--sp-1); }
 
 /* Submit, Sign in, Account */
 .submit-grid { display: grid; grid-template-columns: minmax(0, 1fr) var(--side-col); gap: var(--sp-6); align-items: start; }
-.submit-form .field:last-of-type { margin-bottom: 0; }
+.submit-form .checks { margin-bottom: 0; }
 .two-up { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); }
 .candidates { border: 0; padding: 0; margin: 0 0 var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-2); }
 .candidates legend { padding: 0; }

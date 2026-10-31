@@ -17,6 +17,8 @@ const { chromium } = require('playwright');
   const open = tasks.find((t) => t.task.status === 'open');
   const done = tasks.find((t) => t.task.status === 'resolved' && t.markets.some((m) => m.outcome === 'passed' || m.outcome === 'failed'));
   const trader = await api('/api/accounts', { method: 'POST', body: JSON.stringify({ name: 'Ada Shotwell', role: 'trader', kind: 'human', org: 'Indie' }) });
+  const customer = await api('/api/accounts', { method: 'POST', body: JSON.stringify({ name: 'Ada Shotwell', role: 'customer', kind: 'human', org: 'Indie' }) });
+  const byStatus = (st) => tasks.find((t) => t.task.status === st);
   if (open) {
     await api('/api/orders', { method: 'POST', headers: { authorization: `Bearer ${trader.apiKey}` }, body: JSON.stringify({ marketId: open.markets[0].marketId, side: 'yes', action: 'buy', type: 'market', quantity: 12 }) });
     const other = open.markets[1] || open.markets[0];
@@ -24,12 +26,16 @@ const { chromium } = require('playwright');
   }
   const openM = open ? open.markets[0].marketId : null;
   const doneM = done ? (done.markets.find((m) => m.outcome === 'passed' || m.outcome === 'failed') || done.markets[0]).marketId : null;
+  const unchosenM = done ? (done.markets.find((m) => m.status === 'settled' && m.outcome !== 'passed' && m.outcome !== 'failed') || {}).marketId : null;
   const shots = [
     ['arena', '#/'], open && ['task-open', `#/task/${open.task.id}`], done && ['task-settled', `#/task/${done.task.id}`],
+    ...['closed', 'running', 'skipped', 'rejected', 'pending'].map((st) => byStatus(st) && [`task-${st}`, `#/task/${byStatus(st).task.id}`]),
     openM && ['market-open', `#/market/${encodeURIComponent(openM)}`], doneM && ['market-settled', `#/market/${encodeURIComponent(doneM)}`],
-    ['portfolio', '#/portfolio'], ['leaderboard', '#/leaderboard'], ['agents', '#/agents'], ['submit', '#/submit'],
-    ['account', '#/account'], ['kitchen-sink', '#/kitchen-sink'], ['error-market', '#/market/does-not-exist'],
+    unchosenM && ['market-unchosen', `#/market/${encodeURIComponent(unchosenM)}`],
+    ['portfolio', '#/portfolio'], ['leaderboard', '#/leaderboard'], ['agents', '#/agents'],
+    ['account', '#/account'], ['kitchen-sink', '#/kitchen-sink'], ['error-market', '#/market/does-not-exist'], ['not-found', '#/nowhere'],
   ].filter(Boolean);
+  const customerShots = [['submit', '#/submit'], ['submit-trader-gate-not', null]].filter((x) => x[1]);
   const signedOut = [['signed-out-arena', '#/'], openM && ['signed-out-market', `#/market/${encodeURIComponent(openM)}`], ['signed-out-portfolio', '#/portfolio'], ['signin', '#/signin']].filter(Boolean);
   const browser = await chromium.launch();
   const problems = [];
@@ -38,7 +44,9 @@ const { chromium } = require('playwright');
     const page = await ctx.newPage();
     page.on('pageerror', (e) => problems.push(`${theme}/${width}: page error ${e.message}`));
     const shoot = async (name, url) => {
+      // A hash-only change is a same-document navigation; reload so every shot is a fresh load of that route.
       await page.goto(url);
+      await page.reload();
       await page.waitForTimeout(1000);
       await page.screenshot({ path: `${out}/${name}-${width}-${theme}.png`, fullPage: true });
       const [sw, cw] = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
@@ -48,6 +56,9 @@ const { chromium } = require('playwright');
     await page.evaluate(([t, k]) => { localStorage.setItem('kq.theme', t); localStorage.setItem('kq.apiKey', k); }, [theme, trader.apiKey]);
     await page.reload();
     for (const [n, h] of shots) await shoot(n, `${base}/${h}`);
+    await page.evaluate((k) => localStorage.setItem('kq.apiKey', k), customer.apiKey);
+    await page.reload();
+    for (const [n, h] of customerShots) await shoot(n, `${base}/${h}`);
     await page.evaluate(() => localStorage.removeItem('kq.apiKey'));
     await page.reload();
     for (const [n, h] of signedOut) await shoot(n, `${base}/${h}`);

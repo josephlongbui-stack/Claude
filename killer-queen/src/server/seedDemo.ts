@@ -250,32 +250,46 @@ const AGENTS: [string, string][] = [
 
 const EXECUTOR_PREVIOUS: Record<string, string> = { 'claude-code': '2.0.9', codex: '0.46.1', 'gemini-cli': '0.13.2' };
 
-/* thesis templates; {agent} {org} {fw} {p} {k} {n} {repo} {commit}. `only` keeps task-specific lines on matching tasks. */
-interface Thesis { text: string; only?: RegExp }
+/* Thesis templates; {agent} {org} {fw} {k} {n} {repo} {commit}. `only` keeps task-specific lines on matching tasks;
+   `when` checks the agent's record (k passed of n). The stated probability is posted as a number, never repeated in the text. */
+interface Thesis {
+  text: string;
+  only?: RegExp;
+  when?: (rec: { k: number; n: number }) => boolean;
+}
 const THESES_YES: Thesis[] = [
-  { text: 'The prompt names the file, the schema and the error body. {agent} handles this shape well; I put it at {p}%.', only: /schema|422|body/i },
-  { text: 'Narrow test file, no new dependency, clear acceptance criteria. {agent} has passed {k} of {n} runs here. {p}%.' },
-  { text: '{fw} with fake timers is bread and butter for {agent}. The only real risk is the clock plumbing. {p}%.', only: /fake timers|fake clock/i },
-  { text: 'Read the repo: the change is one module and the tests already describe the contract. Buying Yes up to {p}.' },
-  { text: 'Commit {commit} is recent and the test command is scoped to one file. I expect a pass; {p}% feels right.' },
-  { text: '{agent} tends to over-edit, but protected paths restore the tests, so that risk is gone. {p}%.' },
-  { text: 'Baseline fails cleanly 3 of 3, which means the tests are deterministic. That is most of the battle. {p}%.' },
-  { text: 'Similar task on {repo} passed last week with the same agent. Priors say {p}%.' },
-  { text: 'Golden-file comparison, but the shape is fully specified in the prompt. {agent} is careful with output formats. {p}%.', only: /golden/i },
-  { text: 'A unique constraint plus an error translation is a well-trodden path. {p}%.', only: /unique constraint|integrity/i },
+  { text: 'The prompt names the file, the schema and the error body. {agent} handles this shape well.', only: /schema|422|body/i },
+  { text: 'Narrow test file, no new dependency, clear acceptance criteria. {agent} has passed {k} of {n} runs here.', when: (r) => r.n >= 2 && r.k / r.n >= 0.5 },
+  { text: '{fw} with fake timers is bread and butter for {agent}. The only real risk is the clock plumbing.', only: /fake timers|fake clock/i },
+  { text: 'Read the repo: the change is one module and the tests already describe the contract. Buying Yes.' },
+  { text: 'Commit {commit} is recent and the test command is scoped to one file. I expect a pass.' },
+  { text: '{agent} tends to over-edit, but protected paths restore the tests, so that risk is gone.' },
+  { text: 'Baseline fails cleanly 3 of 3, so the tests are deterministic. That is most of the battle.' },
+  { text: 'A similar task on {repo} passed last week with the same agent.' },
+  { text: 'Golden-file comparison, but the shape is fully specified in the prompt. {agent} is careful with output formats.', only: /golden/i },
+  { text: 'A unique constraint plus an error translation is a well-trodden path.', only: /unique constraint|integrity/i },
+  { text: 'Small diff, one test file, and the failing assertions are listed in the prompt. Hard to see how this misses.' },
+  { text: 'There is a lockfile and a Makefile, so no time lost on setup. Yes.' },
+  { text: 'Ran the prompt through {agent} on a fork and it passed first time. Not betting the house, but Yes.' },
+  { text: 'The house maker opened this too low. {agent} has had a good month on {fw} tasks.' },
+  { text: 'Nothing in the prompt needs the network or a secret, which is where sandbox runs usually die.' },
 ];
 const THESES_NO: Thesis[] = [
-  { text: 'Time zones and DST in one prompt. Agents get the boundary case wrong more often than not. I am at {p}%.', only: /time ?zone|DST/i },
-  { text: 'The fixture set is large and the tolerance is one minor unit. Rounding tasks fail quietly. {p}%.', only: /round/i },
-  { text: '"20 times in a row" is a flakiness bar, not a logic bar. {agent} will fix the obvious race and miss the second one. {p}%.', only: /20 times/i },
-  { text: 'A migration and a flag in one change: too many moving parts for a single run. Selling down to {p}.', only: /migrat/i },
-  { text: '{agent} on {fw} has a weak record on this org: {k} of {n}. {p}%.' },
-  { text: 'Identical output shape to the real run; golden-file tests punish small drift. {p}%.', only: /golden|identical/i },
-  { text: 'Concurrency test with a thread pool. These pass locally and fail in the sandbox. {p}%.', only: /concurren|thread pool/i },
-  { text: 'Good prompt, but the repo has a custom test harness the agent has to discover first. {p}%.' },
-  { text: 'Retry schedules with jitter are easy to get subtly wrong and the test checks exact bounds. {p}%.', only: /backoff|retry|retries/i },
-  { text: 'Streaming plus RFC 4180 quoting; the 10,000-row case will time out or miss an edge. {p}%.', only: /CSV|RFC 4180/i },
-  { text: 'The prompt leaves the fallback behaviour vague and the test is strict about it. {p}%.' },
+  { text: 'Time zones and DST in one prompt. Agents get the boundary case wrong more often than not.', only: /time ?zone|DST/i },
+  { text: 'The fixture set is large and the tolerance is one minor unit. Rounding tasks fail quietly.', only: /round/i },
+  { text: '"20 times in a row" is a flakiness bar, not a logic bar. {agent} will fix the obvious race and miss the second one.', only: /20 times/i },
+  { text: 'A migration and a flag in one change: too many moving parts for a single run. Selling.', only: /migrat/i },
+  { text: '{agent} on {fw} has a weak record here: {k} of {n}.', when: (r) => r.n >= 2 && r.k / r.n < 0.5 },
+  { text: 'Identical output shape to the real run; golden-file tests punish small drift.', only: /golden|identical/i },
+  { text: 'Concurrency test with a thread pool. These pass locally and fail in the sandbox.', only: /concurren|thread pool/i },
+  { text: 'Good prompt, but the repo has a custom test harness the agent has to discover first.' },
+  { text: 'Retry schedules with jitter are easy to get subtly wrong and the test checks exact bounds.', only: /backoff|retry|retries/i },
+  { text: 'Streaming plus RFC 4180 quoting; the 10,000-row case will time out or miss an edge.', only: /CSV|RFC 4180/i },
+  { text: 'The prompt leaves the fallback behaviour vague and the test is strict about it.' },
+  { text: 'Two files to change and the second one is not named in the prompt. I have seen {agent} stop after the first.' },
+  { text: 'Thirty minutes is tight for a repo this size; the agent spends half of it reading. Leaning No.' },
+  { text: 'The market is pricing the agent, not the task, and this task has a nasty edge case in the last assertion.' },
+  { text: 'No version pin on the test runner in {repo}. One dependency drift and the run goes red for the wrong reason.' },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -369,6 +383,7 @@ export function seedDemoExchange(venue: Venue, clock: SettableClock, opts: DemoO
   if (opts.config.mode !== 'sandbox') throw new Error('the demo seed runs only in sandbox mode');
   if (venue.engine.state.tasks.size > 0) throw new Error('the demo seed needs an empty exchange');
   const r = rng(opts.seed ?? 20261031);
+  const usedTheses = new Map<string, Set<Thesis>>();
   const int = (lo: number, hi: number) => lo + Math.floor(r() * (hi - lo + 1));
   const pick = <T>(arr: readonly T[]): T => arr[Math.floor(r() * arr.length)]!;
   const now = opts.now;
@@ -496,11 +511,18 @@ export function seedDemoExchange(venue: Venue, clock: SettableClock, opts: DemoO
             const bullish = p >= 50 ? r() < 0.7 : r() < 0.35;
             const exec = DEFAULT_EXECUTORS.find((e) => e.id === execId)!;
             const rec = record(execId);
-            const stated = clamp(p + int(-7, 7), 3, 97);
-            const pool = (bullish ? THESES_YES : THESES_NO).filter((x) => !x.only || x.only.test(`${t.title} ${t.prompt}`));
-            const text = pick(pool).text
+            // A bull states more than the price, a bear less; the number is posted once, as the probability.
+            const stated = clamp(bullish ? p + int(2, 12) : p - int(3, 15), 3, 97);
+            const fits = (x: Thesis) => (!x.only || x.only.test(`${t.title} ${t.prompt}`)) && (!x.when || x.when(rec));
+            const used = usedTheses.get(m) ?? new Set<Thesis>();
+            usedTheses.set(m, used);
+            const all = (bullish ? THESES_YES : THESES_NO).filter(fits);
+            const fresh = all.filter((x) => !used.has(x));
+            const tpl = pick(fresh.length ? fresh : all);
+            used.add(tpl);
+            const text = tpl.text
               .replace('{agent}', exec.name).replace('{org}', exec.org).replace('{fw}', t.framework).replace('{repo}', `${t.org}/${t.repo}`).replace('{commit}', t.commit)
-              .replace('{k}', String(rec.k)).replace('{n}', String(Math.max(rec.n, 1))).replace(/\{p\}/g, String(stated));
+              .replace('{k}', String(rec.k)).replace('{n}', String(Math.max(rec.n, 1)));
             venue.apply({ type: 'comment', account: tr.id, market: m, text, probability: r() < 0.22 ? null : stated });
           });
         }

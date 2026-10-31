@@ -8,7 +8,7 @@
 .book tbody tr:last-child td { border-bottom: 0; }
 .book td.lvl { position: relative; }
 .book td.lvl.yes { text-align: right; }
-.book td.lvl .depth { position: absolute; top: var(--sp-1); bottom: var(--sp-1); }
+.book td.lvl .depth { position: absolute; top: var(--sp-1); bottom: var(--sp-1); max-width: calc(100% - var(--sp-3)); }
 .book td.lvl.yes .depth { right: 0; background: var(--yes-tint); }
 .book td.lvl.no .depth { left: 0; background: var(--no-tint); }
 .book td.lvl .q { position: relative; }

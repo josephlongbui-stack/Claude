@@ -57,7 +57,7 @@ export interface MarketView {
   book: { yes: BookLevel[]; no: BookLevel[] };
   trades: Fill[];
   priceHistory: { at: number; price: number; quantity: number }[];
-  theses: (Comment & { accountName: string })[];
+  theses: (Comment & { accountName: string; accountKind: Account['kind'] })[];
   packet: Packet;
   traders: number;
 }
@@ -65,7 +65,8 @@ export interface MarketView {
 export interface TaskMarketSummary {
   marketId: string;
   executorId: string;
-  executor: ExecutorRecord;
+  /** The agent as this task froze it (D4): the candidate version and its record on that version only. */
+  executor: ExecutorAtVersion;
   status: Market['status'];
   quote: Quote;
   closingPrice: number | null;
@@ -236,6 +237,21 @@ export function executorRecord(engine: Engine, executorId: string): ExecutorReco
   return executorRecords(engine).find((r) => r.id === executorId);
 }
 
+export interface ExecutorAtVersion {
+  id: string;
+  name: string;
+  org: string;
+  version: string;
+  chosen: number;
+  passed: number;
+}
+
+/** The executor as a task shows it: the version frozen at task creation and the record on that version only. */
+export function executorAt(rec: ExecutorRecord, version: string): ExecutorAtVersion {
+  const bv = rec.byVersion[version] ?? { chosen: 0, passed: 0 };
+  return { id: rec.id, name: rec.name, org: rec.org, version, chosen: bv.chosen, passed: bv.passed };
+}
+
 export function packet(engine: Engine, marketId: string): Packet {
   const market = engine.market(marketId);
   if (!market) throw new Error(`no market ${marketId}`);
@@ -251,14 +267,7 @@ export function packet(engine: Engine, marketId: string): Packet {
     repo: task.repo,
     commit: task.commit,
     testCommand: task.testCommand,
-    executor: {
-      id: rec.id,
-      name: rec.name,
-      org: rec.org,
-      version: task.candidateVersions[rec.id] ?? rec.version,
-      chosen: rec.chosen,
-      passed: rec.passed,
-    },
+    executor: executorAt(rec, task.candidateVersions[rec.id] ?? rec.version),
     closesAt: task.closesAt,
     quote: { yesBid: q.yesBid, yesAsk: q.yesAsk, noBid: q.noBid, noAsk: q.noAsk },
     lastPrice: market.lastPrice,
@@ -289,7 +298,7 @@ export function marketView(engine: Engine, marketId: string, limit = 50): Market
       .filter((c) => c.market === marketId)
       .slice()
       .reverse()
-      .map((c) => ({ ...c, accountName: engine.account(c.account)?.name ?? c.account })),
+      .map((c) => ({ ...c, accountName: engine.account(c.account)?.name ?? c.account, accountKind: engine.account(c.account)?.kind ?? 'human' })),
     packet: packet(engine, marketId),
     traders: distinctTraders(engine, marketId),
   };
@@ -305,7 +314,7 @@ export function taskView(engine: Engine, taskId: string): TaskView {
     return {
       marketId,
       executorId: execId,
-      executor: records.get(execId)!,
+      executor: executorAt(records.get(execId)!, task.candidateVersions[execId] ?? records.get(execId)!.version),
       status: m.status,
       quote: quote(engine, marketId),
       closingPrice: m.closingPrice,

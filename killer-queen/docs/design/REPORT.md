@@ -36,10 +36,9 @@ Every string in `src/web` was read against the "Words" rules.
 
 - Sentence case throughout; no all-caps labels, no eyebrow labels.
 - Buttons say what happens and keep their name: "Buy Yes at 61¢" → toast
-  "Bought 10 Yes at 61¢"; "Submit task and open 3 markets"; "Create account
-  with $1,000 in play money"; "Close trading now"; "Run Codex (64¢)"; "Skip the
-  run"; "Add $1,000 in play money"; "Delete account" then "Click again to
-  delete for good".
+  "Bought 10 Yes at 61¢"; "Submit task"; "Create account with $1,000 in play
+  money"; "Close trading now"; "Run Codex (64¢)"; "Skip the run"; "Add $1,000
+  in play money"; "Delete account" then "Press again to delete for good".
 - Errors say what happened and what to do, never apologise:
   `words()` in `src/web/screens/Market.tsx` rewrites every API code
   ("Not enough play money. You need $6.90 and have $4.10.", "Too many requests
@@ -96,3 +95,54 @@ Every string in `src/web` was read against the "Words" rules.
 Left open: the kitchen sink (dev only) is not held to the 320 px reflow rule;
 the `prefers-contrast` media query is not handled; no screen-reader test with
 a real assistive technology was run on this host.
+
+# Fresh-eyes review (D9)
+
+`design-critic` reviewed every screen in `docs/design/after` at 1440 and 390,
+light and dark, with no memory of the build. Each round's blockers were fixed
+before the next.
+
+## Round 1: 9 blockers, all fixed
+
+| # | Blocker | Fix |
+| --- | --- | --- |
+| B1 | Wrong screenshots (Arena showed Account; signed-out Arena showed an error; Submit showed the trader gate) | `scripts/design-shots.cjs` reloads on every route (a hash-only change is a same-document navigation) and uses a customer account for Submit; it now also captures closed, running, skipped, rejected and pending tasks, an unchosen market and the 404 |
+| B2 | Arena rules broke at the Closes column and under the last group; stray partial rules on phones | Table rules moved from the bottom to the top of each row (`src/web/ui/table.css`), the Closes cell is per row, and on phones the rules belong to the row, not the cells (`agentrow.css`) |
+| B3 | Task page showed the agents' current versions, not the frozen ones | `taskView` now uses `candidateVersions` (D4) through `executorAt` in `src/engine/views.ts`; test "task and packet show the version frozen at task creation…" |
+| B4 | "Passed 3 of 6 runs on this version" was the overall record; packet "Settled" time was the trading close | Per-version record from `byVersion` everywhere the version is named (packet, task table, Submit checkboxes); the packet row is "Trading closed", the result panel carries the settled time |
+| B5 | "55% chance Claude Code passes 0 today" | A zero change shows nothing; a non-zero one reads ", ▲ 3 today" |
+| B6 | Run log clipped at the panel edge | `.settle-log` wraps with a hanging indent instead of scrolling sideways |
+| B7 | Raw run id on the task page | Removed; the result section says "Signed by the runner"; the log hash is in the API, not on the page |
+| B8 | Identical theses from several traders, the stated % repeated in the text, a "weak record" thesis at 69% | Thesis templates rewritten (`src/server/seedDemo.ts`): 15 per side, each used once per market, record-aware (`when`), bulls state above the price and bears below, the number posted once as the probability; the three house traders each phrase the shared heuristic in their own voice (`src/bots/simTrader.ts`) |
+| B9 | Browser validation bubbles on Submit | `noValidate` and the app's own field errors in its own words, focus on the first bad field |
+
+Risks from round 1 also fixed: the selected tab no longer looks like a focus
+ring (the old boxed tab style was removed from `base.css`); filter tabs wrap on
+phones instead of clipping; the rail's axis labels have room below the track
+and leaders end exactly at their label; settled tasks drop the dead Bid/ask
+column; the "Passed" pill sits under the name on phones; book depth bars stop
+short of the panel edge; a settled market without a position shows a "Settled"
+summary (closing price, settlement, volume, traders, times) instead of an empty
+ticket; "Gate metrics from the product spec", "v0 gate" and "Sandbox accounts"
+are gone; the empty Arena says markets open when the baseline check confirms
+the tests fail; the Submit button is "Submit task"; Submit placeholders became
+help text; the candidates fieldset has its margin back; a customer sees
+"Customer" in the top bar and no play-money balance; the Portfolio's cash is
+the hero figure and "Realized" names the fees it is net of; positions read
+"12 Yes" in one column so market names have room on phones; the leaderboard's
+own row is grey, not green; AI traders have the agent avatar in theses too;
+Agents versions are no longer mono; the two not-found pages are one component;
+only the Arena link is highlighted on the Arena, only "Submit a task" on
+Submit.
+
+Not changed, on purpose:
+
+- A passed market settles at 100¢ but the rail's axis ends at 99¢ (the brief's
+  axis); the marker carries the word "passed" rather than a number.
+- Leader lines are diagonals when several labels crowd one price; the layout
+  keeps labels readable first.
+- On phones the packet is the last section of a market, after the theses, as
+  the brief's phone order has it.
+- The house traders ("House trader 1–3", org "Killer Queen Sim") rank where
+  their play-money profit puts them; they are named as the house and are part
+  of the exchange by design.

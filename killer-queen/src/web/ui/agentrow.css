@@ -1,6 +1,5 @@
 .agent-row .agent-name { font-weight: 500; color: var(--ink); }
 .agent-row .agent-ver { color: var(--ink-3); }
-.agent-row .agent-pill { margin-left: var(--sp-2); }
 .agent-row td.chance-cell { padding-top: var(--sp-1); padding-bottom: var(--sp-1); white-space: nowrap; }
 .agent-row .quick { display: inline-flex; gap: var(--sp-1); }
 .agent-row .quick-none { font-size: var(--t-caption); line-height: var(--t-caption-lh); }
@@ -10,10 +9,12 @@
   .arena-table thead { display: none; }
   .arena-table, .arena-table tbody { display: block; }
   .arena-table tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "task task" "agent chance" "agent change" "quick quick"; column-gap: var(--sp-3); align-items: center; padding: 0 var(--sp-3); }
-  .arena-table td { border-bottom: 0; padding: 0; }
-  .arena-table td.task-cell { grid-area: task; padding: var(--sp-3) 0 var(--sp-2); border-top: var(--hairline) solid var(--rule-strong); }
-  .arena-table tr:first-child td.task-cell { border-top: 0; }
+  /* In the grid, rules belong to the rows, not the cells: one strong rule above each task, one light rule between its agents. */
+  .arena-table td, .arena-table tr.group td { border: 0; padding: 0; }
+  .arena-table tr.group { border-top: var(--hairline) solid var(--rule-strong); }
+  .arena-table tbody tr:first-child.group { border-top: 0; }
   .arena-table tr:not(.group) { border-top: var(--hairline) solid var(--rule); }
+  .arena-table td.task-cell { grid-area: task; padding: var(--sp-3) 0 var(--sp-2); }
   .arena-table td.agent-cell { grid-area: agent; padding: var(--sp-2) 0; align-self: center; }
   .arena-table td.chance-cell { grid-area: chance; text-align: right; padding: var(--sp-2) 0 0; align-self: end; }
   .arena-table td.change-cell { grid-area: change; text-align: right; padding: 0 0 var(--sp-2); align-self: start; }
@@ -22,5 +23,4 @@
   .arena-table td.quick-cell:empty { display: none; }
   .arena-table .quick { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); width: 100%; }
   .arena-table .quick .btn { height: var(--touch); }
-  .arena-table .agent-pill { display: block; margin: var(--sp-1) 0 0; }
 }

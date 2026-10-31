@@ -49,7 +49,7 @@ export function Portfolio({ ctx }: { ctx: Ctx }) {
     <>
       <PageHead title="Portfolio" />
       <div class="summary" data-testid="balances"><dl class="summary-list">
-        <div>
+        <div class="hero">
           <dt>Cash</dt>
           <dd>{dollars(pf.cash)}</dd>
         </div>
@@ -62,7 +62,7 @@ export function Portfolio({ ctx }: { ctx: Ctx }) {
           <dd>{dollars(openValue)}</dd>
         </div>
         <div>
-          <dt>Realized P&amp;L</dt>
+          <dt>{pf.pnl.fees > 0 ? `Realized, after ${dollars(pf.pnl.fees)} in fees` : 'Realized P&L'}</dt>
           <dd>
             <Money cents={pf.pnl.realized - pf.pnl.fees} signed />
           </dd>
@@ -82,14 +82,15 @@ export function Portfolio({ ctx }: { ctx: Ctx }) {
         {pf.positions.length === 0 ? (
           <EmptyState title="No positions yet" hint="Pick an agent in the Arena to make your first trade." action={{ href: '#/', label: 'Go to the Arena' }} />
         ) : (
-          <Table caption="Open positions" columns={[{ key: 'm', label: 'Market', width: 'task' }, { key: 's', label: 'Side' }, { key: 'q', label: 'Contracts', align: 'right' }, { key: 'c', label: 'Average cost', align: 'right', hideSm: true }, { key: 'k', label: 'Mark', align: 'right', hideSm: true }, { key: 'u', label: 'Unrealized', align: 'right' }]}>
+          <Table caption="Open positions" columns={[{ key: 'm', label: 'Market', width: 'task' }, { key: 'q', label: 'Holding', align: 'right' }, { key: 'c', label: 'Average cost', align: 'right', hideSm: true }, { key: 'k', label: 'Mark', align: 'right', hideSm: true }, { key: 'u', label: 'Unrealized', align: 'right' }]}>
             {pf.positions.map((p: any) => (
               <Tr key={p.market} href={`#/market/${encodeURIComponent(p.market)}`}>
                 <Td>
                   <TitleCell title={p.title} sub={agentOf(p.executorId, p.market)} />
                 </Td>
-                <Td class={p.side === 'yes' ? 'yes' : 'no'}>{p.side === 'yes' ? 'Yes' : 'No'}</Td>
-                <Td align="right">{count(p.quantity)}</Td>
+                <Td align="right" class="nowrap">
+                  {count(p.quantity)} <span class={p.side === 'yes' ? 'yes' : 'no'}>{p.side === 'yes' ? 'Yes' : 'No'}</span>
+                </Td>
                 <Td align="right" hideSm>
                   {p.avgCost}¢
                 </Td>
@@ -110,15 +111,16 @@ export function Portfolio({ ctx }: { ctx: Ctx }) {
         {pf.openOrders.length === 0 ? (
           <EmptyState title="No resting orders" hint="Limit orders that do not fill at once wait here until they fill or you cancel them." />
         ) : (
-          <Table caption="Open orders" columns={[{ key: 'm', label: 'Market', width: 'task' }, { key: 's', label: 'Side' }, { key: 'p', label: 'Price', align: 'right' }, { key: 'l', label: 'Left', align: 'right' }, { key: 'a', label: '' }]}>
+          <Table caption="Open orders" columns={[{ key: 'm', label: 'Market', width: 'task' }, { key: 'l', label: 'Resting', align: 'right' }, { key: 'p', label: 'Price', align: 'right' }, { key: 'a', label: '', sr: 'Cancel' }]}>
             {pf.openOrders.map((o: any) => (
               <Tr key={o.id}>
                 <Td>
                   <TitleCell title={titles[o.market]?.title ?? o.market} href={`#/market/${encodeURIComponent(o.market)}`} sub={titles[o.market]?.agent} />
                 </Td>
-                <Td class={o.side === 'yes' ? 'yes' : 'no'}>{o.side === 'yes' ? 'Yes' : 'No'}</Td>
+                <Td align="right" class="nowrap">
+                  {count(o.quantity - o.filled)} <span class={o.side === 'yes' ? 'yes' : 'no'}>{o.side === 'yes' ? 'Yes' : 'No'}</span>
+                </Td>
                 <Td align="right">{o.price}¢</Td>
-                <Td align="right">{count(o.quantity - o.filled)}</Td>
                 <Td align="right">
                   <Button variant="quiet" class="compact" onClick={() => cancel(o.id)} aria-label={`Cancel ${o.quantity - o.filled} ${o.side === 'yes' ? 'Yes' : 'No'} at ${o.price} cents`}>
                     Cancel

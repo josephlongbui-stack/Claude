@@ -131,15 +131,15 @@ export function Task({ ctx, id }: { ctx: Ctx; id: string }) {
           columns={[
             { key: 'agent', label: 'Agent' },
             { key: 'chance', label: t.status === 'open' ? 'Chance' : t.status === 'resolved' || t.status === 'skipped' ? 'Settled at' : 'Closed at', align: 'right' },
-            { key: 'bidask', label: 'Bid / ask', align: 'right', hideSm: true },
+            ...(t.status === 'open' ? [{ key: 'bidask', label: 'Bid / ask', align: 'right' as const, hideSm: true }] : []),
             { key: 'volume', label: 'Volume', align: 'right', hideSm: true },
             { key: 'traders', label: 'Traders', align: 'right', hideSm: true },
-            { key: 'record', label: 'Record', hideSm: true },
+            { key: 'record', label: 'Record on this version', hideSm: true },
             ...(t.status === 'open' ? [{ key: 'quick', label: '', sr: 'Trade' }] : []),
           ]}
         >
           {view.markets.map((m) => (
-            <AgentRow key={m.marketId} m={m} chosen={t.chosenAgent === m.executorId} columns={t.status === 'open' ? ['agent', 'chance', 'bidask', 'volume', 'traders', 'record', 'quick'] : ['agent', 'chance', 'bidask', 'volume', 'traders', 'record']} />
+            <AgentRow key={m.marketId} m={m} chosen={t.chosenAgent === m.executorId} columns={t.status === 'open' ? ['agent', 'chance', 'bidask', 'volume', 'traders', 'record', 'quick'] : ['agent', 'chance', 'volume', 'traders', 'record']} />
           ))}
         </Table>
       </Panel>
@@ -178,9 +178,8 @@ export function Task({ ctx, id }: { ctx: Ctx; id: string }) {
       )}
       {t.status === 'resolved' && chosen && (
         <>
-          <SectionHead title="Result" aside={t.runId ? <span class="mono">run {t.runId}</span> : undefined} />
+          <SectionHead title="Result" aside={t.runLogSha256 ? 'Signed by the runner' : undefined} />
           <SettlementPanel outcome={t.outcome === 'infra_error' ? 'infra_error' : t.passed ? 'passed' : 'failed'} agentName={chosen.executor.name} log={t.runLog} settledAt={t.resolvedAt} closingPrice={chosen.closingPrice} lines={14} animate={animateSettle} onDone={() => void ctx.refreshMe()} />
-          {t.runLogSha256 && <p class="t-caption ink-3 task-hash">Log sha256 {t.runLogSha256}</p>}
           {t.corrections?.length > 0 && (
             <Panel class="task-note" testId="corrections">
               <PanelBody>

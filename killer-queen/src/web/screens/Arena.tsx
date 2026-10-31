@@ -68,9 +68,9 @@ export function Arena({ ctx }: { ctx: Ctx }) {
   const settledTab = filter === 'settled';
   const now = Date.now();
   const emptyWords: Record<Filter, [string, string]> = {
-    soon: ['No markets are open', 'Markets open when a customer submits a task and the baseline check passes.'],
-    traded: ['No markets are open', 'Markets open when a customer submits a task and the baseline check passes.'],
-    new: ['No markets are open', 'Markets open when a customer submits a task and the baseline check passes.'],
+    soon: ['No markets are open', 'Markets open when a customer submits a task and the baseline check confirms its tests fail.'],
+    traded: ['No markets are open', 'Markets open when a customer submits a task and the baseline check confirms its tests fail.'],
+    new: ['No markets are open', 'Markets open when a customer submits a task and the baseline check confirms its tests fail.'],
     progress: ['Nothing in progress', 'Tasks appear here while trading is closed and a decision or a run is pending.'],
     settled: ['Nothing has settled yet', 'Markets settle when the chosen agent finishes its run.'],
   };
@@ -119,7 +119,7 @@ export function Arena({ ctx }: { ctx: Ctx }) {
               const n = e.markets.length;
               const st = taskStatus(e.task, now);
               const trail = (
-                <Td rowSpan={n} class="closes-cell">
+                <Td class="closes-cell">
                   {e.task.status === 'open' ? (
                     <Countdown closesAt={e.task.closesAt} />
                   ) : e.task.status === 'resolved' || e.task.status === 'skipped' || e.task.status === 'rejected' ? (
@@ -163,7 +163,7 @@ export function Arena({ ctx }: { ctx: Ctx }) {
                       </Td>
                     ) : undefined
                   }
-                  trail={i === 0 ? trail : undefined}
+                  trail={i === 0 ? trail : <Td class="closes-cell" />}
                 />
               ));
             })}

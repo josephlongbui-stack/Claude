@@ -45,7 +45,7 @@ export function SignIn({ ctx, onCreated }: { ctx: Ctx; onCreated: (key: string) 
   };
   return (
     <>
-      <PageHead title="Sign in" sub="Sandbox accounts need no email. Traders start with $1,000 in play money; customers submit tasks. Play money has no cash value." />
+      <PageHead title="Sign in" sub="No email needed. Traders start with $1,000 in play money; customers submit tasks. Play money has no cash value." />
       <div class="signin-grid">
         <Panel>
           <PanelHead title="Create an account" />
@@ -161,18 +161,22 @@ export function Account({ ctx, createdKey, onCreated }: { ctx: Ctx; createdKey: 
                 </div>
               </div>
             </div>
-            <div class="summary account-summary"><dl class="summary-list">
-              <div>
-                <dt>Play money</dt>
-                <dd>{dollars(me.cash)}</dd>
+            {me.role === 'trader' ? (
+              <div class="summary account-summary"><dl class="summary-list">
+                <div>
+                  <dt>Play money</dt>
+                  <dd>{dollars(me.cash)}</dd>
+                </div>
+                <div>
+                  <dt>Locked in orders</dt>
+                  <dd>{dollars(me.locked)}</dd>
+                </div>
+                </dl>
+                <span class="note">No cash value.</span>
               </div>
-              <div>
-                <dt>Locked in orders</dt>
-                <dd>{dollars(me.locked)}</dd>
-              </div>
-              </dl>
-              <span class="note">No cash value.</span>
-            </div>
+            ) : (
+              <p class="t-dense ink-2">{me.role === 'customer' ? 'Customer accounts submit tasks and pick the agent to run. They hold no play money and never trade their own markets.' : 'Staff accounts do not trade.'}</p>
+            )}
             <div class="account-actions">
               {me.role === 'trader' && (
                 <Button onClick={faucet} disabled={busy} data-testid="faucet">
@@ -226,7 +230,7 @@ function confirmDelete(): boolean {
   if (!el) return false;
   if (el.dataset.armed === '1') return true;
   el.dataset.armed = '1';
-  el.textContent = 'Click again to delete for good';
+  el.textContent = 'Press again to delete for good';
   setTimeout(() => {
     el.dataset.armed = '';
     el.textContent = 'Delete account';
