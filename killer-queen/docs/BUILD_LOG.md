@@ -3,6 +3,36 @@
 Newest first. Each prompt appends what it did, what it decided, and anything
 blocked (with exactly what the owner needs to provide).
 
+## 2026-10-31 — Phase 6 (6.1 load test, 6.2 maintenance checklist, 6.3 incident drill)
+- 6.1 `scripts/load-test.ts` (built-in fetch; the session's policy refused
+  running autocannon as fetched external code). Exchange in its own process,
+  file journal with WAL + synchronous=FULL, no bots, rate limits off, 32
+  workers, 50 traders, 6 s per phase, this build host:
+  | phase | req/s | p50 | p95 | p99 |
+  | --- | --- | --- | --- | --- |
+  | orders, no streams | 1,227 | 22.5 ms | 43.6 ms | 68.2 ms |
+  | orders, 200 open event streams | 399 (was 269) | 70 ms | 138 ms | 185 ms |
+  | reads (task list + market view) | 845 | 33.7 ms | — | 82.8 ms |
+  Microbenchmark: engine + file journal alone does ~9,300 orders/s
+  (0.107 ms/order incl. fsync); memory journal ~127k/s; so the HTTP layer,
+  not the journal, bounds the no-stream case. First bottleneck found and
+  fixed: the event hub serialized every SSE frame once per subscriber; it now
+  serializes once per event (`frameOf`), which took the 200-stream case from
+  269 to 399 orders/s (356k frames delivered in 6 s). Next bottleneck: the
+  socket write fan-out itself (~150 writes per order with 100 subscribers per
+  market); coalescing `book` snapshots per market per ~50 ms would cut it but
+  changes the exactly-once semantics of book events, so it is deferred.
+  (The no-stream figure also rose from 758 because the first run had the
+  generator sharing the server's event loop; that was a measurement error,
+  not a server change.)
+- 6.2 Monthly maintenance checklist in docs/RUNBOOK.md (no upgrades performed
+  in this session: versions were installed today).
+- 6.3 `scripts/incident-drill.ts`: wrong settlement on a staging copy,
+  correction with new commands only (compensation deposits), pause/resume,
+  backup, restore, hash match. Findings in docs/RUNBOOK.md: no reversal
+  command exists; the track record keeps the wrong outcome; a
+  `correctSettlement` command is the follow-up before any real-money phase.
+
 ## 2026-10-31 — Phase 5 (5.3 GitHub app)
 - `src/server/github.ts`: RS256 app JWT, installation tokens (cached),
   webhook signature verification (constant time), delivery de-dup,

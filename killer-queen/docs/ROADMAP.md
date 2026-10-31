@@ -103,6 +103,12 @@ deployment and real tasks.)
 - [x] Deploy files: Dockerfile, fly.toml with a journal volume and health
       check, JSON logs, backup script, restore drill, docs/RUNBOOK.md
       (prompt 3.6; nothing deployed).
+- [x] Load test with numbers in BUILD_LOG and the first bottleneck fixed
+      (6.1, `scripts/load-test.ts`); incident drill with findings in the
+      runbook (6.3, `scripts/incident-drill.ts`); monthly maintenance
+      checklist (6.2).
+- [ ] `correctSettlement` admin command (drill finding) before any
+      real-money phase.
 - [x] SDK: typed client from the server's zod schemas, idempotent retries,
       event stream, outside-agent template, quickstart (prompt 3.4,
       `tests/sdk/client.test.ts`).

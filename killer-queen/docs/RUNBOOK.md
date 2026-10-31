@@ -97,3 +97,50 @@ commands (admin settle, pause).
   `src/server/log.ts` with the SDK (one call site).
 - `/api/health` returns mode, runner, applied command count, halted state and
   the trading pause.
+
+## Incident drill (run quarterly): `tsx scripts/incident-drill.ts`
+
+Runs on a throwaway journal: a wrong settlement, correction with new commands
+only, pause/resume, backup, restore, hash comparison. Last run 2026-10-31
+(37 ms end to end, restored hash matched live). What it found:
+
+- There is **no reversal command**. With today's commands the only correction
+  is compensation: `deposit` (reason `admin`) pays the wronged side what a
+  correct settlement would have paid, which mints play money and leaves the
+  other side's wrong payout in place. Acceptable for play money; impossible for
+  real money.
+- `task.passed` and the executor's record keep the wrong outcome; nothing
+  journaled can fix the track record today.
+- Follow-up before any real-money phase: a `correctSettlement` admin command
+  (journaled; requires the runner's corrected signed result; reverses the
+  payouts of the wrong settlement and re-settles with the right outcome).
+  Record every compensation in `docs/decisions/` until then.
+
+Steps for a real incident: pause trading → write the incident note (task id,
+wrong result, evidence from the runner log hash) → compensate with `deposit`
+(reason `admin`) per affected account → resume → take a backup → run
+`scripts/restore-drill.sh`.
+
+## Monthly maintenance (prompt 6.2)
+
+1. `npm outdated`; read each changelog for breaking changes before bumping
+   Node (engines ≥ 22.13), express, zod, preact, esbuild, tsx, typescript,
+   fast-check.
+2. Agent CLIs: bump `runner/agents.json` versions and `install` lines; re-check
+   each CLI's non-interactive flags against its docs (`claude -p`,
+   `codex exec`, `gemini -p`); a version change starts a new track record
+   (D4), so bump the executor version with `upsertExecutor` on the exchange.
+3. LLM model ids: `ANTHROPIC_MODEL`, `OPENAI_MODEL`, `GEMINI_MODEL` from each
+   provider's current docs; never guessed.
+4. Run `npm test`, `npm run typecheck`, `scripts/load-test.ts`, and the restore
+   drill; note results in `docs/BUILD_LOG.md`.
+5. Rotate `RUNNER_SECRET` and `ADMIN_KEY` if older than 90 days.
+
+## Load test: `tsx scripts/load-test.ts`
+
+In-process, production-like (file journal, WAL + synchronous=FULL, no bots,
+rate limits off). Prints orders/s and p50/p95/p99 for orders without streams,
+orders with N open event streams, and view reads. Numbers in
+`docs/BUILD_LOG.md`; re-run after any change to the engine, journal or event
+hub.
+

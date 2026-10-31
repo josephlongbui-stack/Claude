@@ -15,6 +15,12 @@ export interface StreamEvent {
   type: StreamEventType;
   seq: number;
   data: Record<string, unknown>;
+  /** The SSE frame, serialized once per event and shared by every subscriber (load test 6.1). */
+  frame?: string;
+}
+
+export function frameOf(e: StreamEvent): string {
+  return (e.frame ??= `id: ${e.id}\nevent: ${e.type}\ndata: ${JSON.stringify(e.data)}\n\n`);
 }
 
 export interface EventFilter {
@@ -101,7 +107,7 @@ export class EventHub {
     };
     const send = (e: StreamEvent) => {
       if (!matches(e)) return;
-      res.write(`id: ${e.id}\nevent: ${e.type}\ndata: ${JSON.stringify(e.data)}\n\n`);
+      res.write(frameOf(e));
     };
     const catchUp = this.since(lastId);
     if (catchUp.reset) res.write(`event: reset\ndata: ${JSON.stringify({ reason: 'last event id is older than the buffer; refetch' })}\n\n`);
