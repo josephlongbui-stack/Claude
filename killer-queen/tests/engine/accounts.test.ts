@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { FAUCET_COOLDOWN_MS, sha256 } from '../../src/engine/index.js';
-import { apiKey, makeVenue, must, mustReject, seedExchange } from '../helpers/fixtures.js';
+import { FAUCET_COOLDOWN_MS, leaderboard, sha256 } from '../../src/engine/index.js';
+import { apiKey, buy, makeVenue, must, mustReject, seedExchange } from '../helpers/fixtures.js';
 
 describe('accounts, deposits, executors', () => {
   it('createAccount stores only the key hash and the key authenticates by hashing', () => {
@@ -123,5 +123,62 @@ describe('executors (D4)', () => {
     const task = f.venue.engine.task(f.taskId)!;
     assert.equal(task.candidateVersions['codex'], '0.48.0');
     assert.equal(task.candidateVersions['claude-code'], '2.1.0');
+  });
+});
+
+describe('identity limits and review (5.2)', () => {
+  it('caps accounts per email and per device, and a new email on a capped device still fails', () => {
+    const { venue } = makeVenue();
+    const mk = (id: string, emailHash: string | null, deviceHash: string | null) =>
+      venue.apply({ type: 'createAccount', id, name: id, kind: 'human', role: 'trader', org: '', keyHash: null, startingCash: 0, emailHash, deviceHash });
+    const e = 'e'.repeat(64);
+    const d = 'd'.repeat(64);
+    for (let i = 0; i < 3; i++) assert.equal(mk(`e${i}`, e, null).ok, true);
+    const r = mk('e3', e, null);
+    assert.equal(r.ok, false);
+    if (!r.ok) assert.equal(r.code, 'too_many_accounts');
+    for (let i = 0; i < 5; i++) assert.equal(mk(`d${i}`, `${i}`.repeat(64), d).ok, true);
+    const r2 = mk('d5', 'f'.repeat(64), d); // fresh email, capped device
+    assert.equal(r2.ok, false);
+    assert.equal(mk('free', null, null).ok, true, 'no hashes: no caps (sandbox agents)');
+    mustReject(venue, { type: 'createAccount', id: 'bad', name: 'b', kind: 'human', role: 'trader', org: '', keyHash: null, startingCash: 0, emailHash: 'nope' }, 'bad_hash');
+  });
+
+  it('one faucet per verified person across all of their accounts; flagged accounts cannot faucet', () => {
+    const { venue, clock } = makeVenue();
+    must(venue, { type: 'createAccount', id: 'p-a', name: 'a', kind: 'human', role: 'trader', org: '', keyHash: null, startingCash: 0, personId: 'person-1' });
+    must(venue, { type: 'createAccount', id: 'p-b', name: 'b', kind: 'agent', role: 'trader', org: '', keyHash: null, startingCash: 0, personId: 'person-1' });
+    must(venue, { type: 'createAccount', id: 'other', name: 'o', kind: 'human', role: 'trader', org: '', keyHash: null, startingCash: 0, personId: 'person-2' });
+    must(venue, { type: 'deposit', account: 'p-a', amount: 100_000, reason: 'faucet' });
+    mustReject(venue, { type: 'deposit', account: 'p-b', amount: 100_000, reason: 'faucet' }, 'faucet_cooldown');
+    must(venue, { type: 'deposit', account: 'other', amount: 100_000, reason: 'faucet' });
+    clock.advance(FAUCET_COOLDOWN_MS);
+    must(venue, { type: 'deposit', account: 'p-b', amount: 100_000, reason: 'faucet' });
+    mustReject(venue, { type: 'deposit', account: 'p-a', amount: 100_000, reason: 'faucet' }, 'faucet_cooldown');
+    must(venue, { type: 'createAccount', id: 'admin', name: 'admin', kind: 'human', role: 'admin', org: '', keyHash: null, startingCash: 0 });
+    must(venue, { type: 'reviewAccount', account: 'other', flagged: true, reason: 'wash trade alert', by: 'admin' });
+    clock.advance(FAUCET_COOLDOWN_MS);
+    mustReject(venue, { type: 'deposit', account: 'other', amount: 100_000, reason: 'faucet' }, 'account_flagged');
+  });
+
+  it('review: only admins; flagged accounts leave the leaderboard until cleared; vetting and person attach are journaled', () => {
+    const f = seedExchange();
+    const m = f.markets[0]!;
+    buy(f.venue, 'alice', m, 'no', 40, 10);
+    buy(f.venue, 'bob', m, 'yes', 60, 10);
+    mustReject(f.venue, { type: 'reviewAccount', account: 'alice', flagged: true, by: 'bob' }, 'forbidden');
+    mustReject(f.venue, { type: 'reviewAccount', account: 'alice', by: 'admin' }, 'nothing_to_review');
+    mustReject(f.venue, { type: 'reviewAccount', account: 'ghost', flagged: true, by: 'admin' }, 'account_not_found');
+    assert.ok(leaderboard(f.venue.engine).some((r) => r.id === 'alice'));
+    must(f.venue, { type: 'reviewAccount', account: 'alice', flagged: true, reason: 'spoofing', by: 'admin' });
+    assert.ok(!leaderboard(f.venue.engine).some((r) => r.id === 'alice'));
+    // flagged accounts still trade (nothing is auto-banned)
+    buy(f.venue, 'alice', m, 'no', 10, 1);
+    must(f.venue, { type: 'reviewAccount', account: 'alice', flagged: false, vetted: true, personId: 'person-9', by: null });
+    const a = f.venue.engine.account('alice')!;
+    assert.equal(a.flagged, false);
+    assert.equal(a.vetted, true);
+    assert.equal(a.personId, 'person-9');
+    assert.ok(leaderboard(f.venue.engine).some((r) => r.id === 'alice'));
   });
 });

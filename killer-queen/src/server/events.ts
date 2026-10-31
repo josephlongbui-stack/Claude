@@ -20,6 +20,8 @@ export interface StreamEvent {
 export interface EventFilter {
   markets?: Set<string>;
   tasks?: Set<string>;
+  /** 5.4: events of tasks the viewer may not see are never sent. */
+  canSeeTask?: (taskId: string) => boolean;
 }
 
 export function parseEventId(id: string | undefined | null): number | null {
@@ -91,6 +93,7 @@ export class EventHub {
       if (e.type === 'reset' || e.type === 'trading') return true;
       const m = e.data.marketId as string | undefined;
       const t = e.data.taskId as string | undefined;
+      if (t && filter.canSeeTask && !filter.canSeeTask(t)) return false;
       if (filter.markets && m && !filter.markets.has(m)) return false;
       if (filter.tasks && t && !filter.tasks.has(t)) return false;
       if (filter.markets && !m && filter.tasks === undefined) return false;

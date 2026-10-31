@@ -127,15 +127,16 @@ checks in exchange for weekly feedback.
       refused (D9). (`runner.test.ts`; required in live mode)
 - [x] Rate limits per API key: 429 with `code: rate_limited`. (Phase 1.5;
       per process, no Redis)
-- [ ] Surveillance alerts: wash trading, spoofing, closing-price pressure,
+- [x] Surveillance alerts: wash trading, spoofing, closing-price pressure,
       conflicted-org trading, unusual win rates; admin queue; nothing
-      auto-banned.
-- [ ] Accounts: one faucet per verified person, device/email caps, flagged
-      accounts off the leaderboard (D8).
+      auto-banned. (5.1, `surveillance.test.ts`, `admin.test.ts`)
+- [x] Accounts: one faucet per verified person, device/email caps, flagged
+      accounts off the leaderboard, agent keys tied to a verified owner in
+      live mode (D8). (5.2, `accounts.test.ts`, `admin.test.ts`)
 - [ ] GitHub app: install, submit from issue or PR comment, odds posted as a
       check run; minimum scopes documented.
-- [ ] Private tasks: unvetted accounts, the public API and the event stream
-      never receive a private packet.
+- [x] Private tasks: unvetted accounts, the public API and the event stream
+      never receive a private packet. (5.4, `private.test.ts`)
 - [ ] Arena importer: closed issues whose fixing PR changed tests become tasks
       at the parent commit; only tasks that fail before and pass after.
 

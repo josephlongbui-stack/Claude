@@ -108,7 +108,7 @@ export interface Portfolio {
   pnl: { realized: number; unrealized: number; fees: number; total: number };
 }
 
-export type PublicAccount = Omit<Account, 'keyHash'>;
+export type PublicAccount = Omit<Account, 'keyHash' | 'emailHash' | 'deviceHash'>;
 
 export interface LeaderboardRow {
   id: string;
@@ -145,7 +145,7 @@ export interface Stats {
 }
 
 export function publicAccount(a: Account): PublicAccount {
-  const { keyHash: _k, ...rest } = a;
+  const { keyHash: _k, emailHash: _e, deviceHash: _d, ...rest } = a;
   return rest;
 }
 
@@ -298,8 +298,12 @@ export function taskView(engine: Engine, taskId: string): TaskView {
   return { task: publicTask(task), markets, recommendation };
 }
 
-export function allTasks(engine: Engine): TaskView[] {
-  return [...engine.state.tasks.keys()].map((id) => taskView(engine, id)).sort((a, b) => b.task.createdAt - a.task.createdAt);
+/** Every task the viewer may see (private tasks only for the customer, admins, the house and vetted traders). */
+export function allTasks(engine: Engine, viewer?: Account | null): TaskView[] {
+  return [...engine.state.tasks.values()]
+    .filter((t) => engine.canSeeTask(viewer ?? null, t))
+    .map((t) => taskView(engine, t.id))
+    .sort((a, b) => b.task.createdAt - a.task.createdAt);
 }
 
 function markPrice(engine: Engine, market: Market): number {
@@ -366,6 +370,7 @@ export function leaderboard(engine: Engine): LeaderboardRow[] {
   const rows: LeaderboardRow[] = [];
   for (const a of s.accounts.values()) {
     if (a.role !== 'trader') continue;
+    if (a.flagged) continue; // under review: off the board until cleared (5.2)
     const p = portfolio(engine, a.id);
     let se = 0;
     let scored = 0;
@@ -492,6 +497,7 @@ export function agentMarkets(engine: Engine, accountId: string): AgentMarket[] {
   for (const m of engine.state.markets.values()) {
     if (m.status !== 'open') continue;
     const task = engine.task(m.taskId)!;
+    if (!engine.canSeeTask(account, task)) continue;
     const executor = engine.state.executors.get(m.executorId)!;
     const pos = engine.position(m.id, accountId);
     const conflict = engine.conflictReason(account, task, executor);

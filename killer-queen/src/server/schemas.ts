@@ -7,8 +7,20 @@ export const accountBody = z
     kind: z.enum(['human', 'agent']),
     role: z.enum(['trader', 'customer']),
     org: z.string().trim().max(80).default(''),
+    /** Optional sign-up email; stored only as a hash and used for the per-email account cap (5.2). */
+    email: z.string().trim().email().max(200).optional(),
   })
   .strict();
+
+/** Admin provisioning (live mode): an account tied to a verified person. */
+export const adminAccountBody = accountBody
+  .extend({ personId: z.string().min(1).max(128), vetted: z.boolean().optional(), kind: z.enum(['human', 'agent', 'system']), role: z.enum(['trader', 'customer', 'admin']) })
+  .strict();
+
+export const adminReviewBody = z
+  .object({ flagged: z.boolean().optional(), vetted: z.boolean().optional(), personId: z.string().min(1).max(128).nullable().optional(), reason: z.string().max(500).optional() })
+  .strict()
+  .refine((b) => b.flagged !== undefined || b.vetted !== undefined || b.personId !== undefined, { message: 'set flagged, vetted or personId' });
 
 export const orderBody = z
   .object({
@@ -44,6 +56,7 @@ export const taskBody = z
     protectedPaths: z.array(z.string().min(1)).max(50).optional(),
     forceOutcome: z.enum(['pass', 'fail']).nullable().optional(),
     forceBaseline: z.enum(['trivial', 'flaky']).nullable().optional(),
+    visibility: z.enum(['public', 'private']).optional(),
   })
   .strict();
 

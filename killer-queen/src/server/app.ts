@@ -8,6 +8,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
   agentMarkets,
+  alerts,
   allTasks,
   constantTimeEqual,
   executorRecords,
@@ -26,10 +27,10 @@ import {
   type RunOutcome,
   type Venue,
 } from '../engine/index.js';
-import { newApiKey, requireAccount, requireAdminKey, requireRole, requireSecret, type AuthedRequest } from './auth.js';
+import { newApiKey, optionalAccount, requireAccount, requireAdminKey, requireRole, requireSecret, type AuthedRequest } from './auth.js';
 import type { Config } from './config.js';
 import { HttpError, errorHandler, statusForCode } from './errors.js';
-import { accountBody, adminSettleBody, adminTradingBody, commentBody, decideBody, orderBody, resultBody, taskBody } from './schemas.js';
+import { accountBody, adminAccountBody, adminReviewBody, adminSettleBody, adminTradingBody, commentBody, decideBody, orderBody, resultBody, taskBody } from './schemas.js';
 import { RateLimiter, rateLimit } from './rateLimit.js';
 import type { EventHub } from './events.js';
 
@@ -90,7 +91,20 @@ export function createApp(deps: AppDeps): Express {
       const body = accountBody.parse(req.body);
       const key = newApiKey();
       const startingCash = body.role === 'trader' ? config.startingCashCents : 0;
-      const { account } = unwrap(venue.apply({ type: 'createAccount', name: body.name, kind: body.kind, role: body.role, org: body.org, keyHash: key.hash, startingCash }));
+      const device = req.headers['x-device-id'];
+      const { account } = unwrap(
+        venue.apply({
+          type: 'createAccount',
+          name: body.name,
+          kind: body.kind,
+          role: body.role,
+          org: body.org,
+          keyHash: key.hash,
+          startingCash,
+          emailHash: body.email ? sha256(body.email.toLowerCase()) : null,
+          deviceHash: typeof device === 'string' && device.trim() ? sha256(device.trim()) : null,
+        }),
+      );
       res.status(201).json({ account: publicAccount(account), apiKey: key.raw });
     }),
   );
@@ -108,20 +122,25 @@ export function createApp(deps: AppDeps): Express {
   );
 
   /* ---- tasks and markets ---- */
-  api.get('/tasks', limitAnon, (_req, res) => res.json({ tasks: allTasks(venue.engine) }));
+  const viewer = optionalAccount(venue);
+  api.get('/tasks', viewer, limitAnon, wrap((req, res) => res.json({ tasks: allTasks(venue.engine, req.account ?? null) })));
   api.get(
     '/tasks/:id',
+    viewer,
     limitAnon,
     wrap((req, res) => {
-      if (!venue.engine.task(req.params.id!)) throw new HttpError(404, 'task_not_found', `no task ${req.params.id}`);
+      const task = venue.engine.task(req.params.id!);
+      if (!task || !venue.engine.canSeeTask(req.account ?? null, task)) throw new HttpError(404, 'task_not_found', `no task ${req.params.id}`);
       res.json(taskView(venue.engine, req.params.id!));
     }),
   );
   api.get(
     '/markets/:id',
+    viewer,
     limitAnon,
     wrap((req, res) => {
-      if (!venue.engine.market(req.params.id!)) throw new HttpError(404, 'market_not_found', `no market ${req.params.id}`);
+      const market = venue.engine.market(req.params.id!);
+      if (!market || !venue.engine.canSeeTask(req.account ?? null, venue.engine.task(market.taskId)!)) throw new HttpError(404, 'market_not_found', `no market ${req.params.id}`);
       res.json(marketView(venue.engine, req.params.id!));
     }),
   );
@@ -157,6 +176,7 @@ export function createApp(deps: AppDeps): Express {
           forceOutcome: body.forceOutcome ?? null,
           forceBaseline: body.forceBaseline ?? null,
           requireBaseline: config.baselineCheck,
+          visibility: body.visibility,
         }),
       );
       res.status(201).json(taskView(venue.engine, task.id));
@@ -315,17 +335,47 @@ export function createApp(deps: AppDeps): Express {
   /* ---- live events (SSE) ---- */
   api.get(
     '/events',
+    viewer,
     limitAnon,
     wrap((req, res) => {
       if (!deps.events) throw new HttpError(404, 'not_found', 'event stream is off');
+      const account = req.account ?? null;
+      const canSeeTask = (taskId: string) => {
+        const t = venue.engine.task(taskId);
+        return !t || venue.engine.canSeeTask(account, t);
+      };
       const lastId = (typeof req.headers['last-event-id'] === 'string' ? req.headers['last-event-id'] : undefined) ?? (typeof req.query.lastEventId === 'string' ? req.query.lastEventId : null);
-      const filter: { markets?: Set<string>; tasks?: Set<string> } = {};
+      const filter: { markets?: Set<string>; tasks?: Set<string>; canSeeTask?: (id: string) => boolean } = {};
       if (typeof req.query.markets === 'string' && req.query.markets) filter.markets = new Set(req.query.markets.split(',').filter(Boolean).slice(0, 100));
       if (typeof req.query.tasks === 'string' && req.query.tasks) filter.tasks = new Set(req.query.tasks.split(',').filter(Boolean).slice(0, 100));
-      deps.events.attach(res, lastId ?? null, filter);
+      deps.events.attach(res, lastId ?? null, { ...filter, canSeeTask });
     }),
   );
 
+  /* ---- admin: surveillance queue, account review, provisioning ---- */
+  api.get('/admin/alerts', requireAdminKey(config.adminKey), (_req, res) => res.json({ alerts: alerts(venue.engine) }));
+  api.post(
+    '/admin/accounts/:id/review',
+    requireAdminKey(config.adminKey),
+    wrap((req, res) => {
+      const body = adminReviewBody.parse(req.body);
+      const { account } = unwrap(venue.apply({ type: 'reviewAccount', account: req.params.id!, flagged: body.flagged, vetted: body.vetted, personId: body.personId, reason: body.reason, by: null }));
+      res.json({ account: publicAccount(account) });
+    }),
+  );
+  api.post(
+    '/admin/accounts',
+    requireAdminKey(config.adminKey),
+    wrap((req, res) => {
+      const body = adminAccountBody.parse(req.body);
+      const key = newApiKey();
+      const startingCash = body.role === 'trader' && config.mode === 'sandbox' ? config.startingCashCents : 0;
+      const { account } = unwrap(
+        venue.apply({ type: 'createAccount', name: body.name, kind: body.kind, role: body.role, org: body.org, keyHash: key.hash, startingCash, personId: body.personId, vetted: body.vetted, emailHash: body.email ? sha256(body.email.toLowerCase()) : null }),
+      );
+      res.status(201).json({ account: publicAccount(account), apiKey: key.raw });
+    }),
+  );
   api.get('/admin/trading', requireAdminKey(config.adminKey), (_req, res) => res.json({ trading: venue.engine.state.trading }));
   api.get('/admin/state-hash', requireAdminKey(config.adminKey), (_req, res) => res.json({ hash: stateHash(venue.engine.state), applied: venue.engine.state.applied }));
   api.post(

@@ -3,6 +3,26 @@
 Newest first. Each prompt appends what it did, what it decided, and anything
 blocked (with exactly what the owner needs to provide).
 
+## 2026-10-31 — Phase 5 (5.1 surveillance, 5.2 identity limits, 5.4 private tasks)
+- 5.1 `src/engine/surveillance.ts`: alerts derived from state (D32): wash
+  trades between linked accounts, spoofing (orders now carry cancelledAt and
+  cancelReason), closing-price pressure on unchosen/skipped markets,
+  conflicted trades/comments, unusual win rates. `GET /api/admin/alerts`.
+  Tests replay crafted sequences that must and must not fire each kind.
+- 5.2 Accounts carry emailHash/deviceHash/personId/flagged/vetted; caps of 3
+  per email and 5 per device; faucet once per 24 h per verified person across
+  accounts; flagged accounts off the leaderboard and off the faucet, never
+  auto-banned; `reviewAccount` command (13th) with
+  `POST /api/admin/accounts/:id/review`; `POST /api/admin/accounts` provisions
+  verified accounts (the only sign-up path in live mode, no play money there).
+- 5.4 `visibility: private` on tasks; `Engine.canSeeTask` gates task/market
+  routes (optional Bearer viewer, 404 otherwise), task list, agent markets,
+  orders/comments (`private_task`) and the event stream (viewer-aware).
+- Golden journal hash now 19137381… (Account and Task gained the fields
+  above; Order gained cancelledAt/cancelReason). Golden commands unchanged.
+- Not done: 5.3 GitHub app (next), 5.2's "verified person" is an admin-set
+  id; real identity verification needs a vendor and counsel (v2).
+
 ## 2026-10-31 — Phase 3 (3.2/3.3 design system and screen pass)
 - docs/DESIGN_SYSTEM.md; tokens for dark and light (OS preference + header
   toggle stored per browser); components in src/web/components (Pill,

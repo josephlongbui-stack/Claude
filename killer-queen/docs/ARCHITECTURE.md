@@ -42,6 +42,7 @@ Pure TypeScript, no I/O, no clock, no randomness.
 | `settle` | task running, outcome, log string, unused runId | chosen market pays 100/0 or closing price (infra_error); task resolved |
 | `pauseTrading` (D26, added in Phase 1) | boolean, short reason, `by` is an admin or null | `state.trading` flips; placeOrder rejects `trading_paused` while paused |
 | `baseline` (D2, added in Phase 2) | task pending, exactly 3 results, log, unused runId | all failed: task and markets open, `openedAt`, `closesAt = at + window`; else task `rejected` (trivial/flaky), markets `cancelled`; log hash stored |
+| `reviewAccount` (D8/D33, added in Phase 5) | account exists, `by` is an admin or null, at least one of flagged/vetted/personId | sets `flagged` (off the leaderboard, no faucet), `vetted` (private tasks), `personId` |
 
 Ids: `acc_n`, `tsk_n`, `o<n>`, `f<n>`, `c<n>` from engine counters that skip
 explicitly supplied ids; replay therefore reproduces them (D12). `placeOrder`
@@ -123,6 +124,25 @@ behind an egress-allowlist proxy, non-root, capability-dropped, resource
 limited; not run on this build host). `runner/SANDBOX.md` is the threat list.
 The sandbox exchange keeps its in-process `SimulatedRunner` for the laptop
 loop, which now also answers baseline jobs.
+
+## Surveillance (`src/engine/surveillance.ts`)
+
+`alerts(engine, options)` derives every alert from state: wash trades between
+linked accounts, spoofing from `cancelledAt`/`cancelReason` on orders,
+closing-price pressure on unchosen/skipped markets, conflicted trades or
+comments, unusual win rates (D32). `GET /api/admin/alerts` returns them with
+evidence; admins act with `reviewAccount` through
+`POST /api/admin/accounts/:id/review`. Nothing is automatic.
+
+## Identity limits and private tasks
+
+Accounts carry `emailHash`, `deviceHash`, `personId`, `flagged`, `vetted`
+(D8, D33). `POST /api/accounts` hashes the optional `email` and the
+`x-device-id` header; the engine caps accounts per hash; the faucet cooldown is
+shared across a person's accounts. `Engine.canSeeTask(viewer, task)` gates
+every read of a private task: the task and market routes (optional Bearer
+viewer → 404), `allTasks`, `agentMarkets`, the event stream (`canSeeTask`
+filter), and the engine rejects orders/comments with `private_task`.
 
 ## Live events (`src/server/events.ts`)
 

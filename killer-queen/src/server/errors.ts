@@ -14,10 +14,10 @@ export class HttpError extends Error {
 
 /** Map engine rejection codes to 4xx statuses. Everything stays 4xx with { error, code }. */
 export function statusForCode(code: string): number {
-  if (code.endsWith('_not_found') || code === 'not_a_candidate') return 404;
+  if (code.endsWith('_not_found') || code === 'not_a_candidate' || code === 'private_task') return 404;
   if (code === 'conflict' || code.startsWith('forbidden')) return 403;
   if (code === 'unauthorized' || code === 'bad_signature') return 401;
-  if (code === 'duplicate_id' || code === 'duplicate_key' || code.startsWith('task_not_') || code === 'market_closed' || code === 'order_not_open' || code === 'run_id_used' || code === 'faucet_cooldown' || code === 'trading_paused' || code === 'duplicate_client_key' || code === 'market_pending') return 409;
+  if (code === 'duplicate_id' || code === 'duplicate_key' || code.startsWith('task_not_') || code === 'market_closed' || code === 'order_not_open' || code === 'run_id_used' || code === 'faucet_cooldown' || code === 'trading_paused' || code === 'duplicate_client_key' || code === 'market_pending' || code === 'account_flagged' || code === 'too_many_accounts') return 409;
   if (code === 'rate_limited') return 429;
   return 400;
 }

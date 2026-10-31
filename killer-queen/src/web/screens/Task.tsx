@@ -43,7 +43,7 @@ export function Task({ ctx, id }: { ctx: Ctx; id: string }) {
   return (
     <div>
       <h1>
-        {t.title} <Pill status={t.status} />
+        {t.title} <Pill status={t.status} /> {t.visibility === 'private' && <Pill status="pending">private</Pill>}
         <span class="sr-only" data-testid="task-status">
           {t.status}
         </span>

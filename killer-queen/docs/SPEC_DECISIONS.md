@@ -58,12 +58,18 @@ but land in a later phase (see docs/ROADMAP.md).
   price if any trade happened; else 50. The same formula gives the live
   `chance` on a quote. v1 surveillance flags moves over 20¢ in the final
   minute. Status: engine test `lifecycle.test.ts` (closing price cases).
-- **D8 Accounts.** *Adopted; sandbox rule enforced in v0.* The faucet is a
-  `deposit` command with `reason: "faucet"`; it is rejected with code
-  `faucet_cooldown` if the account's last faucet is less than 24 hours before
-  the command's `at`. Faucet amount is `STARTING_CASH_CENTS`. v1 adds one
-  faucet per verified person, per-device and per-email limits and flagged
-  accounts off the leaderboard. Status: engine test `accounts.test.ts`.
+- **D8 Accounts.** *Adopted; enforced (v0 sandbox rule + Phase 5 limits).* The
+  faucet is a `deposit` command with `reason: "faucet"`, rejected with
+  `faucet_cooldown` if the last faucet of the account, or of any account of
+  the same verified `personId`, is less than 24 hours before `at`; flagged
+  accounts cannot faucet (`account_flagged`). Sign-up stores only
+  `sha256(email)` and `sha256(device id)`; the engine caps 3 accounts per email
+  hash and 5 per device hash (`too_many_accounts`). An admin `reviewAccount`
+  command flags/clears an account (flagged accounts stay off the leaderboard,
+  keep trading, nothing is auto-banned), vets it for private tasks, or attaches
+  a `personId`. In live mode accounts exist only through admin provisioning
+  with a `personId`, so agent keys are tied to a verified owner. Status:
+  `accounts.test.ts` "identity limits and review", `admin.test.ts`.
 - **D9 Signed results.** *Adopted; v0 accepts the spec's body too.* The runner
   posts JSON `{ kind, taskId, runId, outcome | results, log, logSha256, timestamp }` with header
   `x-kq-signature: sha256=<hex HMAC-SHA256 of the raw body under RUNNER_SECRET>`.
@@ -182,4 +188,28 @@ but land in a later phase (see docs/ROADMAP.md).
 - **D31 Baseline that cannot run.** If the runner hits infrastructure failures
   on a baseline job after its retries, it posts nothing and the task stays
   `pending` for a later poll; only `run` jobs post `infra_error`.
+- **D32 Surveillance is derived, not stored.** `alerts(engine)` recomputes every
+  alert from state (so from the journal) on each call: wash trades between
+  linked accounts (same org, person, email hash or device hash), spoofing
+  (≥ 3 orders of ≥ 100 contracts cancelled by the user within 10 s with no
+  fill, per account and market), closing-price pressure (≥ 15¢ move between
+  the last trade before the final 60 s and the closing price on a market
+  settled unchosen/skipped, naming the takers who benefited), conflicted
+  trades/comments (should be impossible), unusual win rates (≥ 90% right over
+  ≥ 10 scored markets). Thresholds are options with these defaults. The admin
+  queue is `GET /api/admin/alerts`; acting on an alert is a `reviewAccount`
+  command. Orders record `cancelledAt` and `cancelReason` (user/close/ioc) for
+  this.
+- **D33 Private tasks.** `createTask.visibility: "private"` makes the packet
+  and markets visible only to the customer, admins, the house accounts (house,
+  market maker) and `vetted` traders; everyone else gets 404 on the task and
+  market routes, no entry in `/api/tasks` or `/api/agent/markets`, no events
+  on the stream (the stream accepts an optional Bearer key to identify the
+  viewer), and `private_task` (404) on orders and comments. Leaderboard and
+  stats stay aggregate. House traders are not vetted by default, so no packet
+  of a private task reaches a third-party model unless an admin vets that
+  trader.
+- **D34 Live provisioning.** `POST /api/admin/accounts` (admin key) creates
+  accounts with a `personId` (and optional vetting); it is the only way to get
+  an account in live mode and credits no play money there.
 

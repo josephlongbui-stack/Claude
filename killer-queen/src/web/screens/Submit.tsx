@@ -4,7 +4,7 @@ import type { Ctx } from '../main.js';
 
 export function Submit({ ctx }: { ctx: Ctx }) {
   const [execs, setExecs] = useState<any[]>([]);
-  const [f, setF] = useState({ title: '', prompt: '', repo: '', commit: '', testCommand: '', minutes: 10, autoDecide: false, minimumChance: 60 });
+  const [f, setF] = useState({ title: '', prompt: '', repo: '', commit: '', testCommand: '', minutes: 10, autoDecide: false, minimumChance: 60, privateTask: false });
   const [chosen, setChosen] = useState<Set<string>>(new Set());
   const [errors, setErrors] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -30,6 +30,7 @@ export function Submit({ ctx }: { ctx: Ctx }) {
         tradingWindowMs: Math.max(1, Number(f.minutes)) * 60_000,
         autoDecide: f.autoDecide,
         minimumChance: Number(f.minimumChance),
+        visibility: f.privateTask ? 'private' : 'public',
       });
       ctx.toast('Task submitted; markets are open.');
       location.hash = `#/task/${encodeURIComponent(r.task.id)}`;
@@ -96,6 +97,12 @@ export function Submit({ ctx }: { ctx: Ctx }) {
             <label>Auto-decide</label>
             <div>
               <input type="checkbox" style="width:auto" checked={f.autoDecide} onChange={set('autoDecide')} /> pick the highest-priced agent at close
+            </div>
+          </div>
+          <div>
+            <label>Private task</label>
+            <div>
+              <input type="checkbox" style="width:auto" checked={f.privateTask} onChange={set('privateTask')} data-testid="f-private" /> only vetted traders see the packet
             </div>
           </div>
           <div>

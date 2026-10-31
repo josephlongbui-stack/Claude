@@ -43,6 +43,18 @@ export function requireAccount(venue: Venue) {
   };
 }
 
+/** Attach the account when a valid key is present; anonymous otherwise (for public reads with private-task gating). */
+export function optionalAccount(venue: Venue) {
+  return (req: AuthedRequest, _res: Response, next: NextFunction): void => {
+    const token = bearer(req);
+    if (token) {
+      const account = findAccountByKey(venue, token);
+      if (account) req.account = account;
+    }
+    next();
+  };
+}
+
 export function requireRole(...roles: Account['role'][]) {
   return (req: AuthedRequest, _res: Response, next: NextFunction): void => {
     if (!req.account) return next(new HttpError(401, 'unauthorized', 'not signed in'));

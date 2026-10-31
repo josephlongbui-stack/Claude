@@ -33,6 +33,14 @@ export interface Account {
   deposited: Cents;
   createdAt: number;
   lastFaucetAt: number | null;
+  /** Identity limits (D8, 5.2): hashes of the sign-up email and device, and the verified person behind the account. */
+  emailHash: string | null;
+  deviceHash: string | null;
+  personId: string | null;
+  /** Flagged by surveillance review: off the leaderboard until an admin clears it. */
+  flagged: boolean;
+  /** Vetted traders may see and trade private tasks (5.4). */
+  vetted: boolean;
 }
 
 export interface Executor {
@@ -81,6 +89,8 @@ export interface Task {
   forceBaseline: RejectReason | null;
   /** Where an imported task came from (issue URL); unique per source for idempotent imports. */
   source: string | null;
+  /** Private tasks (5.4): packet and markets visible only to the customer, admins, the house and vetted traders. */
+  visibility: 'public' | 'private';
 }
 
 export interface Market {
@@ -115,6 +125,8 @@ export interface Order {
   /** 1 for traders, 0 for the house market maker (D13). */
   feeRate: 0 | 1;
   createdAt: number;
+  cancelledAt: number | null;
+  cancelReason: 'user' | 'close' | 'ioc' | null;
   /** Monotonic placement sequence; oldest first within a price level. */
   seq: number;
 }
@@ -184,6 +196,21 @@ export interface CreateAccountCommand extends Stamped {
   keyHash: string | null;
   /** Play money credited at creation; recorded as a deposit. */
   startingCash: Cents;
+  emailHash?: string | null;
+  deviceHash?: string | null;
+  personId?: string | null;
+  vetted?: boolean;
+}
+
+/** Admin review (5.2/5.4): flag or clear an account, attach a verified person, vet for private tasks. */
+export interface ReviewAccountCommand extends Stamped {
+  type: 'reviewAccount';
+  account: string;
+  flagged?: boolean;
+  vetted?: boolean;
+  personId?: string | null;
+  reason?: string;
+  by?: string | null;
 }
 
 export interface DepositCommand extends Stamped {
@@ -221,6 +248,7 @@ export interface CreateTaskCommand extends Stamped {
   /** D2: start `pending` and wait for a baseline result before the markets open. */
   requireBaseline?: boolean;
   source?: string | null;
+  visibility?: 'public' | 'private';
 }
 
 export interface PlaceOrderCommand extends Stamped {
@@ -305,7 +333,8 @@ export type Command =
   | DecideCommand
   | SettleCommand
   | PauseTradingCommand
-  | BaselineCommand;
+  | BaselineCommand
+  | ReviewAccountCommand;
 
 export type CommandType = Command['type'];
 
@@ -322,6 +351,7 @@ export const COMMAND_TYPES: readonly CommandType[] = [
   'settle',
   'pauseTrading',
   'baseline',
+  'reviewAccount',
 ] as const;
 
 /** A command as callers build it: the Venue stamps `at` when missing. */
@@ -344,6 +374,7 @@ export interface CommandResults {
   settle: { task: Task; market: Market };
   pauseTrading: { paused: boolean; reason: string };
   baseline: { task: Task; opened: boolean; rejectedReason: RejectReason | null };
+  reviewAccount: { account: Account };
 }
 
 export type EngineOk<T extends CommandType = CommandType> = { ok: true; seq: number; data: CommandResults[T] };

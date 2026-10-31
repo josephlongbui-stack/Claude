@@ -34,6 +34,7 @@ import {
   type PlaceOrderCommand,
   type Position,
   type RejectReason,
+  type ReviewAccountCommand,
   type SettleCommand,
   type Side,
   type Task,
@@ -46,6 +47,8 @@ export const DEFAULT_MINIMUM_CHANCE = 50;
 export const FAUCET_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 export const MAX_ORDER_QUANTITY = 1_000_000;
 export const MAX_CLOSING_SPREAD = 20;
+export const MAX_ACCOUNTS_PER_EMAIL = 3;
+export const MAX_ACCOUNTS_PER_DEVICE = 5;
 
 export class EngineError extends Error {
   constructor(
@@ -139,6 +142,8 @@ export class Engine {
         return this.pauseTrading(cmd);
       case 'baseline':
         return this.baseline(cmd);
+      case 'reviewAccount':
+        return this.reviewAccount(cmd);
       default:
         return assertNever(cmd);
     }
@@ -241,6 +246,13 @@ export class Engine {
     return null;
   }
 
+  /** 5.4: who may see a task's packet and markets. */
+  canSeeTask(account: Account | null | undefined, task: Task): boolean {
+    if (task.visibility === 'public') return true;
+    if (!account) return false;
+    return account.id === task.customer || account.role === 'admin' || account.role === 'house' || account.role === 'market_maker' || account.vetted;
+  }
+
   /* ---------------------------------------------------------------- */
   /* Commands                                                          */
   /* ---------------------------------------------------------------- */
@@ -259,6 +271,22 @@ export class Engine {
     if (c.id !== undefined && s.accounts.has(c.id)) reject('duplicate_id', `account ${c.id} already exists`);
     if (c.keyHash !== null && this.accountByKeyHash(c.keyHash)) reject('duplicate_key', 'an account with that key already exists');
     if (c.role === 'house' && this.houseAccount()) reject('duplicate_house', 'there is already a house account');
+    for (const [field, value] of [['emailHash', c.emailHash], ['deviceHash', c.deviceHash]] as const) {
+      if (value !== undefined && value !== null && (typeof value !== 'string' || !/^[0-9a-f]{64}$/.test(value))) reject('bad_hash', `${field} must be a SHA-256 hex digest or null`);
+    }
+    if (c.personId !== undefined && c.personId !== null && (typeof c.personId !== 'string' || c.personId === '' || c.personId.length > 128)) reject('bad_person', 'personId must be a short string');
+    const emailHash = c.emailHash ?? null;
+    const deviceHash = c.deviceHash ?? null;
+    if (emailHash !== null) {
+      let n = 0;
+      for (const a of s.accounts.values()) if (a.emailHash === emailHash) n += 1;
+      if (n >= MAX_ACCOUNTS_PER_EMAIL) reject('too_many_accounts', `that email already has ${n} accounts (limit ${MAX_ACCOUNTS_PER_EMAIL})`);
+    }
+    if (deviceHash !== null) {
+      let n = 0;
+      for (const a of s.accounts.values()) if (a.deviceHash === deviceHash) n += 1;
+      if (n >= MAX_ACCOUNTS_PER_DEVICE) reject('too_many_accounts', `that device already has ${n} accounts (limit ${MAX_ACCOUNTS_PER_DEVICE})`);
+    }
 
     const id = c.id ?? nextId(s.counters, 'account', 'acc_', (x) => s.accounts.has(x));
     const account: Account = {
@@ -273,6 +301,11 @@ export class Engine {
       deposited: c.startingCash,
       createdAt: c.at,
       lastFaucetAt: null,
+      emailHash,
+      deviceHash,
+      personId: c.personId ?? null,
+      flagged: false,
+      vetted: c.vetted ?? false,
     };
     s.accounts.set(id, account);
     s.totals.deposited += c.startingCash;
@@ -287,9 +320,13 @@ export class Engine {
     if (!['signup', 'faucet', 'admin', 'seed'].includes(c.reason)) reject('bad_reason', `unknown reason ${String(c.reason)}`);
     if (c.reason === 'faucet') {
       if (account.role !== 'trader' && account.role !== 'market_maker') reject('forbidden_role', 'only traders use the faucet');
-      if (account.lastFaucetAt !== null && c.at - account.lastFaucetAt < FAUCET_COOLDOWN_MS) {
-        reject('faucet_cooldown', 'faucet is once per 24 hours');
+      if (account.flagged) reject('account_flagged', 'this account is under review');
+      // One faucet per person: every account of a verified person shares the cooldown (D8).
+      let last = account.lastFaucetAt;
+      if (account.personId !== null) {
+        for (const a of s.accounts.values()) if (a.personId === account.personId && a.lastFaucetAt !== null && (last === null || a.lastFaucetAt > last)) last = a.lastFaucetAt;
       }
+      if (last !== null && c.at - last < FAUCET_COOLDOWN_MS) reject('faucet_cooldown', 'faucet is once per 24 hours');
     }
     account.cash += c.amount;
     account.deposited += c.amount;
@@ -349,6 +386,8 @@ export class Engine {
     if (c.requireBaseline !== undefined && typeof c.requireBaseline !== 'boolean') reject('bad_require_baseline', 'requireBaseline must be boolean');
     const requireBaseline = c.requireBaseline ?? false;
     const source = c.source ?? null;
+    const visibility = c.visibility ?? 'public';
+    if (visibility !== 'public' && visibility !== 'private') reject('bad_visibility', 'visibility must be public or private');
     if (source !== null && (typeof source !== 'string' || source === '' || source.length > 500)) reject('bad_source', 'source must be a short string');
     if (source !== null) for (const t of s.tasks.values()) if (t.source === source) reject('duplicate_source', `task ${t.id} was already imported from ${source}`);
     const tradingWindowMs = c.closesAt !== undefined ? c.closesAt - c.at : (c.tradingWindowMs ?? DEFAULT_TRADING_WINDOW_MS);
@@ -388,6 +427,7 @@ export class Engine {
       forceOutcome: c.forceOutcome ?? null,
       forceBaseline: c.forceBaseline ?? null,
       source,
+      visibility,
     };
     s.tasks.set(id, task);
     const markets: Market[] = [];
@@ -422,6 +462,7 @@ export class Engine {
     if (!market) reject('market_not_found', `no market ${c.market}`);
     const task = s.tasks.get(market.taskId)!;
     const executor = s.executors.get(market.executorId)!;
+    if (!this.canSeeTask(account, task)) reject('private_task', `market ${market.id} is on a private task`);
     const conflict = this.conflictReason(account, task, executor);
     if (conflict) reject('conflict', conflict);
     if (market.status === 'pending') reject('market_pending', `market ${market.id} is waiting for the baseline check`);
@@ -473,6 +514,8 @@ export class Engine {
       lockedRemaining: lock,
       feeRate,
       createdAt: c.at,
+      cancelledAt: null,
+      cancelReason: null,
       seq: ++s.counters.seq,
     };
     account.cash -= lock;
@@ -490,6 +533,8 @@ export class Engine {
       } else {
         this.releaseLock(order, account);
         order.status = 'cancelled';
+        order.cancelledAt = c.at;
+        order.cancelReason = 'ioc';
       }
     } else {
       order.status = 'filled';
@@ -624,6 +669,8 @@ export class Engine {
     this.removeFromBook(order);
     this.releaseLock(order, owner);
     order.status = 'cancelled';
+    order.cancelledAt = c.at;
+    order.cancelReason = 'user';
     return { order, refunded };
   }
 
@@ -641,6 +688,7 @@ export class Engine {
     if (!market) reject('market_not_found', `no market ${c.market}`);
     const task = s.tasks.get(market.taskId)!;
     const executor = s.executors.get(market.executorId)!;
+    if (!this.canSeeTask(account, task)) reject('private_task', `market ${market.id} is on a private task`);
     const conflict = this.conflictReason(account, task, executor);
     if (conflict) reject('conflict', conflict);
     if (market.status === 'pending') reject('market_pending', `market ${market.id} is waiting for the baseline check`);
@@ -679,6 +727,8 @@ export class Engine {
         const owner = s.accounts.get(order.account)!;
         this.releaseLock(order, owner);
         order.status = 'cancelled';
+        order.cancelledAt = c.at;
+        order.cancelReason = 'close';
         cancelledOrders += 1;
       }
       book.yes = [];
@@ -799,6 +849,26 @@ export class Engine {
     const reason = c.paused ? (c.reason ?? '') : '';
     s.trading = { paused: c.paused, reason, since: c.paused ? c.at : null };
     return { paused: c.paused, reason };
+  }
+
+  private reviewAccount(c: ReviewAccountCommand): CommandResults['reviewAccount'] {
+    const s = this.state;
+    const account = s.accounts.get(c.account);
+    if (!account) reject('account_not_found', `no account ${c.account}`);
+    if (c.by !== undefined && c.by !== null) {
+      const by = s.accounts.get(c.by);
+      if (!by) reject('account_not_found', `no account ${c.by}`);
+      if (by.role !== 'admin') reject('forbidden', 'only an admin reviews accounts');
+    }
+    if (c.flagged !== undefined && typeof c.flagged !== 'boolean') reject('bad_flagged', 'flagged must be boolean');
+    if (c.vetted !== undefined && typeof c.vetted !== 'boolean') reject('bad_vetted', 'vetted must be boolean');
+    if (c.personId !== undefined && c.personId !== null && (typeof c.personId !== 'string' || c.personId === '' || c.personId.length > 128)) reject('bad_person', 'personId must be a short string');
+    if (c.reason !== undefined && (typeof c.reason !== 'string' || c.reason.length > 500)) reject('bad_reason', 'reason must be a short string');
+    if (c.flagged === undefined && c.vetted === undefined && c.personId === undefined) reject('nothing_to_review', 'set flagged, vetted or personId');
+    if (c.flagged !== undefined) account.flagged = c.flagged;
+    if (c.vetted !== undefined) account.vetted = c.vetted;
+    if (c.personId !== undefined) account.personId = c.personId;
+    return { account };
   }
 
   /** Pay every position at `price` for Yes (100 − price for No); escrow must reach exactly 0. */

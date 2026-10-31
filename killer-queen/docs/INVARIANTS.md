@@ -93,4 +93,20 @@ rejection and a replay-hash check per sequence).
     Proof: `tests/engine/lifecycle.test.ts` "a second order with the same
     client key is rejected…"; `tests/server/hardening.test.ts`
     "Idempotency-Key: a retry never places two orders, survives a restart".
+15. **Private tasks stay private.** No route, list, stream or command hands a
+    private task's packet, id or events to anyone but the customer, admins,
+    house accounts and vetted traders.
+    Proof: `tests/server/private.test.ts` (engine gate, every read route, agent
+    markets, orders/comments, the event stream, leaderboard);
+    `tests/engine/property.test.ts` mixes private tasks into random sequences.
+16. **Identity limits.** At most 3 accounts per email hash and 5 per device
+    hash; one faucet per 24 h per verified person across all their accounts;
+    flagged accounts are off the leaderboard and cannot faucet but are never
+    auto-banned.
+    Proof: `tests/engine/accounts.test.ts` "identity limits and review";
+    `tests/server/admin.test.ts`.
+17. **Surveillance is reproducible.** Alerts are a pure function of state
+    (and so of the journal); the same journal yields the same alerts.
+    Proof: `tests/engine/surveillance.test.ts` (each alert kind must and must
+    not fire; determinism and stable ids).
 
