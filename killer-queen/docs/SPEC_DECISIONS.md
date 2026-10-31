@@ -114,11 +114,14 @@ but land in a later phase (see docs/ROADMAP.md).
   refuses every further command so memory and journal cannot diverge.
 - **D22 Leaderboard accuracy.** For each account, over markets that settled on
   a test result (`passed`/`failed`) where the account held a net position at
-  close: implied probability = average Yes cost / 100 for Yes holders,
-  1 − average No cost / 100 for No holders; `brier` is the mean squared error
-  against the outcome (lower is better) and `hits` counts markets where the net
-  side was right. Profit rank uses realized + unrealized P&L, marking open
-  positions at the live `chance`.
+  close: the entry Yes price `p` is the average Yes cost / 100 for Yes holders
+  and 1 − average No cost / 100 for No holders; the implied forecast is
+  side-aware, `(1 + p) / 2` for a Yes holder and `p / 2` for a No holder (the
+  midpoint between the price paid and that side's certainty, so both parties
+  to one trade are not scored identically); `brier` is the mean squared error
+  of that forecast against the outcome (lower is better) and `hits` counts
+  markets where the net side was right. Profit rank uses realized + unrealized
+  P&L minus fees, marking open positions at the live `chance`.
 - **D23 Trading window.** `createTask` sets `closesAt = at + TRADING_WINDOW_MS`
   (default 600000) unless the command supplies `closesAt`. Boot auto-closes any
   open task whose `closesAt` has passed and then auto-decides it if

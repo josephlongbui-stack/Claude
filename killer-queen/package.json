@@ -1,0 +1,32 @@
+{
+  "name": "killer-queen",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Play-money exchange where people and AI agents trade Yes/No contracts on whether a coding agent will pass a task's tests.",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "dev": "tsx src/server/main.ts",
+    "start": "tsx src/server/main.ts",
+    "test": "node --import tsx --test --test-concurrency=1 \"tests/**/*.test.ts\"",
+    "typecheck": "tsc --noEmit",
+    "build:web": "tsx scripts/build-web.ts",
+    "seed": "tsx scripts/seed.ts"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "esbuild": "0.28.2",
+    "express": "4.22.3",
+    "preact": "11.1.0",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@types/express": "4.17.25",
+    "@types/node": "26.6.6",
+    "fast-check": "4.10.2",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2"
+  }
+}

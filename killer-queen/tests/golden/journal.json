@@ -1,0 +1,221 @@
+{
+  "hash": "81aff1598d953d97786b3e28d21f619ad73be0e1b46336b5a8374a8e95b0db0f",
+  "commands": [
+    {
+      "type": "createAccount",
+      "id": "house",
+      "name": "House",
+      "kind": "system",
+      "role": "house",
+      "org": "Killer Queen",
+      "keyHash": null,
+      "startingCash": 0,
+      "at": 1700000000000
+    },
+    {
+      "type": "createAccount",
+      "id": "mm",
+      "name": "MM",
+      "kind": "system",
+      "role": "market_maker",
+      "org": "Killer Queen",
+      "keyHash": null,
+      "startingCash": 10000000,
+      "at": 1700000000000
+    },
+    {
+      "type": "createAccount",
+      "id": "cust",
+      "name": "Customer",
+      "kind": "human",
+      "role": "customer",
+      "org": "Example",
+      "keyHash": null,
+      "startingCash": 0,
+      "at": 1700000000000
+    },
+    {
+      "type": "createAccount",
+      "id": "alice",
+      "name": "Alice",
+      "kind": "human",
+      "role": "trader",
+      "org": "",
+      "keyHash": null,
+      "startingCash": 100000,
+      "at": 1700000000000
+    },
+    {
+      "type": "createAccount",
+      "id": "botty",
+      "name": "Botty",
+      "kind": "agent",
+      "role": "trader",
+      "org": "Indie",
+      "keyHash": null,
+      "startingCash": 100000,
+      "at": 1700000000000
+    },
+    {
+      "type": "deposit",
+      "account": "alice",
+      "amount": 100000,
+      "reason": "faucet",
+      "at": 1700000000000
+    },
+    {
+      "type": "upsertExecutor",
+      "id": "codex",
+      "name": "Codex",
+      "org": "OpenAI",
+      "version": "0.48.0",
+      "at": 1700000000000
+    },
+    {
+      "type": "upsertExecutor",
+      "id": "claude-code",
+      "name": "Claude Code",
+      "org": "Anthropic",
+      "version": "2.1.0",
+      "at": 1700000000000
+    },
+    {
+      "type": "createTask",
+      "id": "tsk_g",
+      "customer": "cust",
+      "title": "Golden",
+      "prompt": "p",
+      "repo": "r",
+      "commit": "c",
+      "testCommand": "npm test",
+      "candidateAgents": [
+        "codex",
+        "claude-code"
+      ],
+      "tradingWindowMs": 60000,
+      "at": 1700000000000
+    },
+    {
+      "type": "placeOrder",
+      "account": "mm",
+      "market": "tsk_g:codex",
+      "side": "yes",
+      "action": "buy",
+      "orderType": "limit",
+      "price": 46,
+      "quantity": 30,
+      "at": 1700000000000
+    },
+    {
+      "type": "placeOrder",
+      "account": "mm",
+      "market": "tsk_g:codex",
+      "side": "no",
+      "action": "buy",
+      "orderType": "limit",
+      "price": 46,
+      "quantity": 30,
+      "at": 1700000000000
+    },
+    {
+      "type": "placeOrder",
+      "account": "alice",
+      "market": "tsk_g:codex",
+      "side": "yes",
+      "action": "buy",
+      "orderType": "limit",
+      "price": 60,
+      "quantity": 10,
+      "at": 1700000000000
+    },
+    {
+      "type": "placeOrder",
+      "account": "botty",
+      "market": "tsk_g:codex",
+      "side": "no",
+      "action": "buy",
+      "orderType": "limit",
+      "price": 60,
+      "quantity": 5,
+      "at": 1700000000000
+    },
+    {
+      "type": "placeOrder",
+      "account": "alice",
+      "market": "tsk_g:codex",
+      "side": "yes",
+      "action": "sell",
+      "orderType": "limit",
+      "price": 50,
+      "quantity": 4,
+      "at": 1700000000000
+    },
+    {
+      "type": "placeOrder",
+      "account": "botty",
+      "market": "tsk_g:claude-code",
+      "side": "yes",
+      "action": "buy",
+      "orderType": "market",
+      "quantity": 7,
+      "at": 1700000000000
+    },
+    {
+      "type": "placeOrder",
+      "account": "alice",
+      "market": "tsk_g:claude-code",
+      "side": "no",
+      "action": "buy",
+      "orderType": "limit",
+      "price": 70,
+      "quantity": 7,
+      "tif": "ioc",
+      "at": 1700000000000
+    },
+    {
+      "type": "comment",
+      "account": "botty",
+      "market": "tsk_g:codex",
+      "text": "Easy task.",
+      "probability": 61,
+      "at": 1700000000000
+    },
+    {
+      "type": "placeOrder",
+      "account": "alice",
+      "market": "tsk_g:claude-code",
+      "side": "yes",
+      "action": "buy",
+      "orderType": "limit",
+      "price": 33,
+      "quantity": 3,
+      "at": 1700000000000
+    },
+    {
+      "type": "cancelOrder",
+      "account": "alice",
+      "orderId": "o8",
+      "at": 1700000000000
+    },
+    {
+      "type": "closeTask",
+      "taskId": "tsk_g",
+      "at": 1700000000000
+    },
+    {
+      "type": "decide",
+      "taskId": "tsk_g",
+      "executorId": "codex",
+      "by": "cust",
+      "at": 1700000000000
+    },
+    {
+      "type": "settle",
+      "taskId": "tsk_g",
+      "outcome": "passed",
+      "log": "ok",
+      "runId": "golden-run",
+      "at": 1700000000000
+    }
+  ]
+}
