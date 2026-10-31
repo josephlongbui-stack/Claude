@@ -5,7 +5,7 @@
  */
 import { z } from 'zod';
 import express, { type NextFunction, type Request, type Response, type Express } from 'express';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
   agentMarkets,
@@ -447,8 +447,15 @@ export function createApp(deps: AppDeps): Express {
 
   const publicDir = deps.publicDir ?? resolve(process.cwd(), 'public');
   if (existsSync(publicDir)) {
-    app.use(express.static(publicDir, { index: 'index.html' }));
-    app.get(/^\/(?!api\/).*/, (_req, res) => res.sendFile(resolve(publicDir, 'index.html')));
+    // The page carries absolute Open Graph URLs, so the public URL is filled in at serve time.
+    let indexHtml: string | null = null;
+    const sendIndex = (_req: Request, res: Response) => {
+      indexHtml ??= readFileSync(resolve(publicDir, 'index.html'), 'utf8').replaceAll('__PUBLIC_URL__', config.publicUrl.replace(/\/$/, ''));
+      res.type('html').send(indexHtml);
+    };
+    app.get(['/', '/index.html'], sendIndex);
+    app.use(express.static(publicDir, { index: false }));
+    app.get(/^\/(?!api\/).*/, sendIndex);
   }
   app.use(errorHandler);
   return app;
