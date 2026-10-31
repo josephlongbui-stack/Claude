@@ -124,6 +124,36 @@ limited; not run on this build host). `runner/SANDBOX.md` is the threat list.
 The sandbox exchange keeps its in-process `SimulatedRunner` for the laptop
 loop, which now also answers baseline jobs.
 
+## Live events (`src/server/events.ts`)
+
+`EventHub` listens to the Venue: each applied command becomes events (`book`
+with quote and levels, `trade` per fill, `task` on create/baseline/close/
+decide/settle, `thesis`, `trading`) with ids `<seq>-<n>` in a bounded ring
+buffer (`EVENTS_BUFFER_SIZE`). `GET /api/events` is server-sent events with
+optional `markets`/`tasks` filters; a reconnect with `Last-Event-ID` replays
+exactly the missed events in order, or sends `reset` when the id is older than
+the buffer. The web app subscribes with `EventSource` and keeps a slow poll as
+the fallback; the SDK's `events()` resumes automatically.
+
+## SDK (`sdk/`)
+
+`KillerQueenClient` has one method per route. Request types are
+`z.input` of the server's schemas in `src/server/schemas.ts` (shared with
+`app.ts`, so they cannot drift); response types are the engine's view types.
+Retries (network, 429 with `Retry-After`, 5xx) reuse one `Idempotency-Key`
+per `placeOrder` call. `sdk/src/agentTemplate.ts` is the outside-agent loop
+(thesis once per market, buy the edge within a position limit, skip
+conflicts); `sdk/README.md` is the hackathon quickstart.
+
+## Deployment (`Dockerfile`, `fly.toml`, `docs/RUNBOOK.md`)
+
+One container, non-root, the journal on a persistent volume at `/data`,
+health check on `/api/health`, JSON logs (`src/server/log.ts`,
+`LOG_FORMAT=json`), optional error webhook (`ERROR_REPORT_URL`).
+`scripts/backup-journal.ts` snapshots the journal with `VACUUM INTO` and
+uploads it; `scripts/restore-drill.sh` boots a fresh instance from the latest
+backup and compares `scripts/state-hash.ts` with `GET /api/admin/state-hash`.
+
 ## House bots (`src/bots`)
 
 `client.ts` defines `ExchangeClient` (open markets, trades, cash, place,

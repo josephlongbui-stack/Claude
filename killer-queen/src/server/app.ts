@@ -6,7 +6,6 @@
 import express, { type NextFunction, type Request, type Response, type Express } from 'express';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { z } from 'zod';
 import {
   agentMarkets,
   allTasks,
@@ -19,6 +18,7 @@ import {
   publicAccount,
   publicTask,
   sha256,
+  stateHash,
   stats,
   taskView,
   type Clock,
@@ -29,7 +29,9 @@ import {
 import { newApiKey, requireAccount, requireAdminKey, requireRole, requireSecret, type AuthedRequest } from './auth.js';
 import type { Config } from './config.js';
 import { HttpError, errorHandler, statusForCode } from './errors.js';
+import { accountBody, adminSettleBody, adminTradingBody, commentBody, decideBody, orderBody, resultBody, taskBody } from './schemas.js';
 import { RateLimiter, rateLimit } from './rateLimit.js';
+import type { EventHub } from './events.js';
 
 export const RESULT_TIMESTAMP_WINDOW_MS = 5 * 60 * 1000;
 
@@ -37,6 +39,8 @@ export interface AppDeps {
   venue: Venue;
   config: Config;
   clock: Clock;
+  /** Live event stream (GET /api/events); optional so bare apps still work. */
+  events?: EventHub;
   /** Directory with the built web app (index.html); served when present. */
   publicDir?: string;
 }
@@ -51,70 +55,6 @@ function unwrap<T extends EngineResult>(r: T): Extract<T, { ok: true }>['data'] 
   if (!r.ok) throw new HttpError(statusForCode(r.code), r.code, r.error);
   return (r as Extract<T, { ok: true }>).data;
 }
-
-const accountBody = z
-  .object({
-    name: z.string().trim().min(1).max(80),
-    kind: z.enum(['human', 'agent']),
-    role: z.enum(['trader', 'customer']),
-    org: z.string().trim().max(80).default(''),
-  })
-  .strict();
-
-const orderBody = z
-  .object({
-    marketId: z.string().min(1),
-    side: z.enum(['yes', 'no']),
-    action: z.enum(['buy', 'sell']).default('buy'),
-    type: z.enum(['limit', 'market']).default('limit'),
-    price: z.number().int().min(1).max(99).optional(),
-    quantity: z.number().int().min(1),
-    tif: z.enum(['gtc', 'ioc']).optional(),
-  })
-  .strict()
-  .refine((o) => o.type === 'market' || o.price !== undefined, { message: 'price is required for limit orders', path: ['price'] });
-
-const commentBody = z
-  .object({
-    text: z.string().trim().min(1).max(4000),
-    probability: z.number().int().min(1).max(99).nullable().optional(),
-  })
-  .strict();
-
-const taskBody = z
-  .object({
-    title: z.string().trim().min(1).max(200),
-    prompt: z.string().min(1).max(20_000),
-    repo: z.string().trim().min(1).max(300),
-    commit: z.string().trim().min(1).max(64),
-    testCommand: z.string().trim().min(1).max(500),
-    candidateAgents: z.array(z.string().min(1)).min(1).max(10),
-    tradingWindowMs: z.number().int().min(1_000).max(7 * 24 * 3_600_000).optional(),
-    autoDecide: z.boolean().optional(),
-    minimumChance: z.number().int().min(1).max(99).optional(),
-    protectedPaths: z.array(z.string().min(1)).max(50).optional(),
-    forceOutcome: z.enum(['pass', 'fail']).nullable().optional(),
-    forceBaseline: z.enum(['trivial', 'flaky']).nullable().optional(),
-  })
-  .strict();
-
-const decideBody = z.object({ executorId: z.string().min(1).nullable() }).strict();
-
-const resultBody = z
-  .object({
-    kind: z.enum(['run', 'baseline']).default('run'),
-    taskId: z.string().min(1),
-    passed: z.boolean().optional(),
-    outcome: z.enum(['passed', 'failed', 'infra_error']).optional(),
-    results: z.array(z.enum(['passed', 'failed'])).length(3).optional(),
-    log: z.string().max(5_000_000).default(''),
-    logSha256: z.string().regex(/^[0-9a-f]{64}$/).optional(),
-    runId: z.string().min(1).max(200).optional(),
-    timestamp: z.number().int().optional(),
-  })
-  .strict()
-  .refine((b) => b.kind === 'baseline' || b.passed !== undefined || b.outcome !== undefined, { message: 'passed or outcome is required', path: ['outcome'] })
-  .refine((b) => b.kind !== 'baseline' || b.results !== undefined, { message: 'results is required for a baseline', path: ['results'] });
 
 export function createApp(deps: AppDeps): Express {
   const { venue, config, clock } = deps;
@@ -366,18 +306,33 @@ export function createApp(deps: AppDeps): Express {
     requireAdminKey(config.adminKey),
     wrap((req, res) => {
       if (config.mode !== 'sandbox') throw new HttpError(403, 'forbidden', 'hand settlement is sandbox-only');
-      const body = z.object({ outcome: z.enum(['passed', 'failed', 'infra_error']), log: z.string().max(100_000).default('settled by admin') }).strict().parse(req.body);
+      const body = adminSettleBody.parse(req.body);
       const data = unwrap(venue.apply({ type: 'settle', taskId: req.params.id!, outcome: body.outcome, log: body.log, runId: null }));
       res.json({ task: publicTask(data.task), market: data.market });
     }),
   );
 
+  /* ---- live events (SSE) ---- */
+  api.get(
+    '/events',
+    limitAnon,
+    wrap((req, res) => {
+      if (!deps.events) throw new HttpError(404, 'not_found', 'event stream is off');
+      const lastId = (typeof req.headers['last-event-id'] === 'string' ? req.headers['last-event-id'] : undefined) ?? (typeof req.query.lastEventId === 'string' ? req.query.lastEventId : null);
+      const filter: { markets?: Set<string>; tasks?: Set<string> } = {};
+      if (typeof req.query.markets === 'string' && req.query.markets) filter.markets = new Set(req.query.markets.split(',').filter(Boolean).slice(0, 100));
+      if (typeof req.query.tasks === 'string' && req.query.tasks) filter.tasks = new Set(req.query.tasks.split(',').filter(Boolean).slice(0, 100));
+      deps.events.attach(res, lastId ?? null, filter);
+    }),
+  );
+
   api.get('/admin/trading', requireAdminKey(config.adminKey), (_req, res) => res.json({ trading: venue.engine.state.trading }));
+  api.get('/admin/state-hash', requireAdminKey(config.adminKey), (_req, res) => res.json({ hash: stateHash(venue.engine.state), applied: venue.engine.state.applied }));
   api.post(
     '/admin/trading',
     requireAdminKey(config.adminKey),
     wrap((req, res) => {
-      const body = z.object({ paused: z.boolean(), reason: z.string().max(500).optional() }).strict().parse(req.body);
+      const body = adminTradingBody.parse(req.body);
       unwrap(venue.apply({ type: 'pauseTrading', paused: body.paused, reason: body.reason, by: null }));
       res.json({ trading: venue.engine.state.trading });
     }),

@@ -1,0 +1,13 @@
+node_modules
+data
+public
+dist
+.env
+.env.*
+!.env.example
+.git
+mobile
+docs/source
+*.db
+*.db-wal
+*.db-shm

@@ -96,9 +96,14 @@ deployment and real tasks.)
       traders per market, time to tradable market (baseline duration), settled
       count. (`views.test.ts`, `runner.test.ts`) Decision lift needs a
       customer default agent (v1).
-- [ ] Server-sent events instead of polling (prompt 3.1).
-- [ ] Deploy: Dockerfile, persistent volume for the journal, nightly backup and
-      restore drill (prompt 3.6).
+- [x] Server-sent events instead of polling, resume by Last-Event-ID (prompt 3.1,
+      `events.test.ts`).
+- [x] Deploy files: Dockerfile, fly.toml with a journal volume and health
+      check, JSON logs, backup script, restore drill, docs/RUNBOOK.md
+      (prompt 3.6; nothing deployed).
+- [x] SDK: typed client from the server's zod schemas, idempotent retries,
+      event stream, outside-agent template, quickstart (prompt 3.4,
+      `tests/sdk/client.test.ts`).
 
 ## v1 · Design partners
 

@@ -3,6 +3,30 @@
 Newest first. Each prompt appends what it did, what it decided, and anything
 blocked (with exactly what the owner needs to provide).
 
+## 2026-10-31 — Phase 3 (3.1 events, 3.4 SDK, 3.5 metrics, 3.6 deploy files)
+- 3.1 `src/server/events.ts`: events derived from journaled commands with
+  ids `<seq>-<n>`, SSE at GET /api/events with market/task filters, resume
+  by Last-Event-ID from a ring buffer (EVENTS_BUFFER_SIZE), `reset` when too
+  far behind. Web app uses EventSource (slow poll as fallback).
+  `tests/server/events.test.ts` proves a reconnect receives every missed
+  event exactly once, in order.
+- 3.4 `sdk/`: typed client (request types from `src/server/schemas.ts`, now
+  shared with app.ts; response types from engine views), retries reusing the
+  Idempotency-Key, SSE resume, agent template, README quickstart;
+  `tests/sdk/client.test.ts` runs the loop, a retry that replays instead of
+  double-placing, 429 backoff, and the template's limits/conflicts.
+- 3.5 Gate metrics were already in /api/stats (v0); medianMsToTradable now
+  reflects the baseline (Phase 2). Decision lift still needs a customer
+  default agent (not in the data model).
+- 3.6 Dockerfile (non-root, volume /data, healthcheck), fly.toml, JSON logs
+  (`src/server/log.ts`) + ERROR_REPORT_URL webhook as the Sentry hook point
+  (no Sentry SDK dependency added), `scripts/backup-journal.ts` (VACUUM INTO
+  + BACKUP_UPLOAD_CMD), `scripts/restore-drill.sh`, `scripts/state-hash.ts`,
+  `GET /api/admin/state-hash`, docs/RUNBOOK.md. Not deployed (per
+  supervision note and prompt). Owner needs: a Fly app + volume, object
+  storage credentials for backups, a Sentry DSN or webhook if wanted.
+- Not done: 3.2/3.3 design system and screen pass (next).
+
 ## 2026-10-31 — Phase 2: the runner (prompts 2.1–2.5)
 - 2.1 docs/RUNNER_PROTOCOL.md (job types baseline/run, job states, signed
   result with logSha256 + timestamp + runId, HMAC rules, skew window,

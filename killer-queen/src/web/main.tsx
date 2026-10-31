@@ -63,8 +63,20 @@ function App() {
   };
   useEffect(() => {
     void refreshMe();
-    const t = setInterval(() => setTick((x) => x + 1), 1000); // live poll every second (v0)
-    return () => clearInterval(t);
+    // Live updates over server-sent events; a slow poll stays as the fallback and for countdowns.
+    const bump = () => setTick((x) => x + 1);
+    let es: EventSource | null = null;
+    try {
+      es = new EventSource('/api/events');
+      for (const type of ['book', 'trade', 'task', 'thesis', 'trading', 'reset']) es.addEventListener(type, bump);
+    } catch {
+      es = null;
+    }
+    const t = setInterval(bump, es ? 10_000 : 1_000);
+    return () => {
+      clearInterval(t);
+      es?.close();
+    };
   }, []);
   useEffect(() => {
     if (tick % 5 === 0) void refreshMe();

@@ -11,6 +11,8 @@ import { ConfigError, loadConfig, type Config } from './config.js';
 import { Journal, openVenue } from './journal.js';
 import { SimulatedRunner } from './runners/simulated.js';
 import { ensureExecutors } from './seed.js';
+import { EventHub } from './events.js';
+import { createLogger } from './log.js';
 
 export const HOUSE_ACCOUNT_ID = 'house';
 export const MM_ACCOUNT_ID = 'mm';
@@ -48,6 +50,7 @@ export interface Booted {
   url: string | null;
   runner: SimulatedRunner | null;
   bots: BotHandle[];
+  events: EventHub;
   /** Auto-close due tasks, auto-decide, then let every bot act once (in order). */
   tick(): Promise<{ closed: string[]; decided: string[] }>;
   stop(): Promise<void>;
@@ -59,7 +62,8 @@ export async function boot(opts: BootOptions = {}): Promise<Booted> {
     throw new ConfigError('KQ_MODE=live refuses to start with RUNNER=simulated');
   }
   const clock = opts.clock ?? systemClock;
-  const log = opts.log ?? ((msg: string) => (config.logLevel === 'silent' ? undefined : console.log(`[kq] ${msg}`)));
+  const logger = createLogger({ level: config.logLevel === 'silent' ? 'silent' : config.logLevel });
+  const log = opts.log ?? ((msg: string) => logger(msg));
   const { venue, journal, replayed } = openVenue(config.dbPath, clock);
   log(`journal ${config.dbPath}: replayed ${replayed} commands`);
 
@@ -129,7 +133,9 @@ export async function boot(opts: BootOptions = {}): Promise<Booted> {
     );
   }
 
-  const app = createApp({ venue, config, clock, publicDir: opts.publicDir ?? resolve(process.cwd(), 'public') });
+  const events = new EventHub(venue, config.eventsBufferSize);
+  events.start();
+  const app = createApp({ venue, config, clock, events, publicDir: opts.publicDir ?? resolve(process.cwd(), 'public') });
   let server: Server | null = null;
   let url: string | null = null;
   if (opts.listen !== false) {
@@ -149,11 +155,17 @@ export async function boot(opts: BootOptions = {}): Promise<Booted> {
     for (const t of timers) clearInterval(t);
     runner?.stop();
     for (const b of bots) b.stop?.();
-    if (server) await new Promise<void>((r) => server!.close(() => r()));
+    events.stop();
+    if (server) {
+      await new Promise<void>((r) => {
+        server!.close(() => r());
+        server!.closeAllConnections();
+      });
+    }
     journal.close();
   };
 
-  return { config, venue, journal, clock, app, server, url, runner, bots, tick, stop };
+  return { config, venue, journal, clock, app, server, url, runner, bots, events, tick, stop };
 }
 
 /** House fee account and the market maker exist on every boot (idempotent). */

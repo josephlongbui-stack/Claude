@@ -1,0 +1,9 @@
+{
+  "name": "killer-queen-sdk",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Typed client for the Killer Queen HTTP API and a template for an outside trading agent.",
+  "main": "src/index.ts",
+  "license": "UNLICENSED"
+}

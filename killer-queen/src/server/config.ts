@@ -29,6 +29,7 @@ const envSchema = z.object({
   RATE_LIMIT_WRITES_PER_MIN: z.coerce.number().int().nonnegative().default(60),
   RATE_LIMIT_READS_PER_MIN: z.coerce.number().int().nonnegative().default(120),
   RATE_LIMIT_ANON_PER_MIN: z.coerce.number().int().nonnegative().default(300),
+  EVENTS_BUFFER_SIZE: z.coerce.number().int().min(10).default(5000),
   BASELINE_CHECK: z
     .string()
     .default('true')
@@ -59,6 +60,7 @@ export interface Config {
   rateLimits: { orders: number; tasks: number; writes: number; reads: number; anon: number };
   /** D2: new tasks wait for a 3-run baseline before their markets open. */
   baselineCheck: boolean;
+  eventsBufferSize: number;
 }
 
 export class ConfigError extends Error {}
@@ -104,6 +106,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     simTraders: e.SIM_TRADERS,
     logLevel: e.LOG_LEVEL,
     baselineCheck: e.BASELINE_CHECK,
+    eventsBufferSize: e.EVENTS_BUFFER_SIZE,
     rateLimits: { orders: e.RATE_LIMIT_ORDERS_PER_MIN, tasks: e.RATE_LIMIT_TASKS_PER_MIN, writes: e.RATE_LIMIT_WRITES_PER_MIN, reads: e.RATE_LIMIT_READS_PER_MIN, anon: e.RATE_LIMIT_ANON_PER_MIN },
   };
 }

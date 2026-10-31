@@ -1,0 +1,43 @@
+# Fly.io app definition for the Killer Queen exchange (one machine, persistent journal volume).
+# Create the volume once:  fly volumes create kq_data --size 10 --region <region>
+# Secrets (never in this file):  fly secrets set RUNNER_SECRET=... ADMIN_KEY=... ANTHROPIC_API_KEY=... ANTHROPIC_MODEL=...
+app = "killer-queen"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  KQ_MODE = "sandbox"          # live needs RUNNER=external and a real runner host
+  RUNNER = "simulated"
+  DB_PATH = "/data/killer-queen.db"
+  PORT = "3000"
+  LOG_FORMAT = "json"
+  HOUSE_BOTS = "mm,sim,llm"
+  BASELINE_CHECK = "true"
+
+[mounts]
+  source = "kq_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = false      # the journal and bots must keep running
+  auto_start_machines = true
+  min_machines_running = 1
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 200
+    hard_limit = 400
+
+[[http_service.checks]]
+  interval = "30s"
+  timeout = "5s"
+  grace_period = "20s"
+  method = "GET"
+  path = "/api/health"
+
+[[vm]]
+  size = "shared-cpu-2x"
+  memory = "1gb"
