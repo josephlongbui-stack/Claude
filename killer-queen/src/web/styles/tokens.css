@@ -1,0 +1,69 @@
+/* Killer Queen design tokens (docs/DESIGN_SYSTEM.md). The only file allowed to hold colour literals and raw sizes. */
+:root {
+  color-scheme: light;
+  --canvas: #F1F3F6;
+  --surface: #FFFFFF;
+  --surface-sunken: #E9ECF1;
+  --ink: #15181E;
+  --ink-2: #4A5261;
+  --ink-3: #6B7385;
+  --rule: #DDE1E8;
+  --rule-strong: #C3C9D3;
+  --yes: #00875A;
+  --yes-tint: #E3F5EE;
+  --no: #C8295F;
+  --no-tint: #FBE7EE;
+  --warn: #B25E00;
+  --warn-tint: #FFF1DD;
+  --focus: #2F6BFF;
+  --on-ink: #FFFFFF;
+  --shadow-float: 0 8px 24px rgba(16, 24, 40, 0.12), 0 1px 2px rgba(16, 24, 40, 0.08);
+  --scrim: rgba(21, 24, 30, 0.4);
+
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-cond: "IBM Plex Sans Condensed", "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --t-caption: 12px; --t-caption-lh: 16px;
+  --t-dense: 13px; --t-dense-lh: 18px;
+  --t-ui: 14px; --t-ui-lh: 20px;
+  --t-body: 16px; --t-body-lh: 24px;
+  --t-h3: 20px; --t-h3-lh: 26px;
+  --t-h2: 24px; --t-h2-lh: 30px;
+  --t-h1: 32px; --t-h1-lh: 36px;
+  --t-num-m: 20px; --t-num-m-lh: 24px;
+  --t-num-l: 44px; --t-num-l-lh: 44px;
+  --t-num-xl: 72px; --t-num-xl-lh: 72px;
+  --tracking-tight: -0.01em;
+
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-6: 24px; --sp-8: 32px; --sp-12: 48px; --sp-16: 64px;
+  --r-control: 4px; --r-panel: 8px; --r-round: 999px;
+  --hairline: 1px; --tick: 2px; --focus-w: 2px; --bar: 6px; --bar-lg: 10px;
+  --control-h: 32px; --control-h-lg: 40px; --touch: 44px;
+  --icon: 16px; --icon-lg: 20px;
+  --content-max: 1280px; --gutter: 24px; --gutter-mobile: 16px; --side-col: 320px; --measure: 75ch;
+  --topbar-h: 56px;
+  --chart-h: 180px; --chart-h-sm: 140px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --canvas: #0E1116; --surface: #161A21; --surface-sunken: #1D222B;
+    --ink: #E8EBF0; --ink-2: #A9B1BE; --ink-3: #8590A0;
+    --rule: #2A303A; --rule-strong: #3A414D;
+    --yes: #2FC28A; --yes-tint: #10261E; --no: #FF5C8F; --no-tint: #2B1520;
+    --warn: #F0A23B; --warn-tint: #2A1D0B; --focus: #6E9BFF; --on-ink: #0E1116;
+    --shadow-float: 0 8px 24px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
+    --scrim: rgba(0, 0, 0, 0.6);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --canvas: #0E1116; --surface: #161A21; --surface-sunken: #1D222B;
+  --ink: #E8EBF0; --ink-2: #A9B1BE; --ink-3: #8590A0;
+  --rule: #2A303A; --rule-strong: #3A414D;
+  --yes: #2FC28A; --yes-tint: #10261E; --no: #FF5C8F; --no-tint: #2B1520;
+  --warn: #F0A23B; --warn-tint: #2A1D0B; --focus: #6E9BFF; --on-ink: #0E1116;
+  --shadow-float: 0 8px 24px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --scrim: rgba(0, 0, 0, 0.6);
+}

@@ -3,6 +3,17 @@
 Newest first. Each prompt appends what it did, what it decided, and anything
 blocked (with exactly what the owner needs to provide).
 
+## 2026-10-31 — Design overhaul D3 (design board)
+- No Figma in this session, so the fallback: `src/web/design-board/` is a
+  static page drawn only from the new tokens (`src/web/styles/tokens.css`,
+  `base.css`, self-hosted IBM Plex via `fonts.css`) with the demo content:
+  Arena, Task with the odds rail, Market open and settled, Portfolio.
+  Screenshotted at 1440 and 390 in light and dark (`docs/design/board/`),
+  critiqued against the Ship checklist three times; the last round has no
+  overflow at either width. Decisions recorded in `docs/design/FIGMA.md` and
+  appended to `docs/DESIGN_SYSTEM.md`. The build bundles the board at
+  `/design-board/` (`npm run build:web`, skip with `--no-board`).
+
 ## 2026-10-31 — Design overhaul D-setup, D1, D2
 - D-setup: docs/DESIGN_SYSTEM.md replaced with the design overhaul brief
   (IBM Plex, light default, odds rail, settlement animation, Never list, Ship

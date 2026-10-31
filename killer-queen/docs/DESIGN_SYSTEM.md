@@ -251,3 +251,28 @@ A screen ships when every answer is yes.
 7. Does it pass axe with zero violations in light and dark?
 8. Does nothing on it appear in the "Never" list?
 9. Would a designer at a top fintech company ship it as is?
+
+## Decisions from the design board (D3)
+
+The four reference frames live in `docs/design/board/` (see
+`docs/design/FIGMA.md`; no Figma connection existed, so the board stands in for
+the Figma file). Where the frames sharpen this document:
+
+- Phone top bar: wordmark, balance, menu button; the theme toggle and the
+  "Demo data" badge live in the menu sheet.
+- Arena on phones stays one table, reflowed per task group: task line, then
+  agent | chance | change | quick buttons; Volume and Closes hidden under
+  720 px.
+- Odds rail labels stack into rows on collision; lower-row labels end at their
+  pin so pins never cross labels.
+- Chart: step line, 1–99 axis, hairlines at 1/25/50/75/99, caption labels at
+  the right edge.
+- Order book: Yes bids | Price | No bids around a spread row, depth bars in
+  the tints.
+- Ticket shows Cost, Fee and "Pays if right"; the submit is "Buy Yes at 61¢".
+- A settled market replaces the ticket with "Your result" and puts the
+  settlement panel under the chart.
+- Portfolio opens with four label/value pairs in condensed numerals and the
+  play-money note; page titles are `--t-h2`, section titles `--t-h3`.
+- Wordmark: name in IBM Plex Sans Condensed 600 with a Lucide crown.
+- Change cells: "▲ 3" in --yes, "▼ 5" in --no, "0" in --ink-3.
