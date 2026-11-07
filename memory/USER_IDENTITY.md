@@ -1,7 +1,6 @@
 # User identity
 
 - **Name:** Joseph
-- **Email:** josephlongbui2@gmail.com
 - **GitHub:** josephlongbui-stack
 - **Passions:** Software and startups.
 
